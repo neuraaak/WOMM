@@ -2,96 +2,54 @@
 """
 Custom exceptions for Works On My Machine.
 
-This module contains all custom exceptions used throughout the WOMM codebase.
+This package contains all custom exceptions used throughout the WOMM project.
 """
 
-from .installation_exceptions import (  # Installation Manager exceptions; Installation Utility exceptions; Base exceptions
-    EnvironmentRefreshError,
-    ExecutableCreationError,
+from .installation import (  # Installation exceptions
+    DirectoryAccessError,
     ExecutableVerificationError,
-    FileCopyError,
-    FileUtilityError,
+    FileScanError,
     FileVerificationError,
-    InstallationBackupError,
-    InstallationFailedError,
+    InstallationFileError,
     InstallationManagerError,
     InstallationPathError,
-    InstallationRestoreError,
-    InstallationRollbackError,
+    InstallationSystemError,
     InstallationUtilityError,
     InstallationVerificationError,
     PathUtilityError,
-    WOMMInstallationError,
-)
-from .uninstallation_exceptions import (  # Uninstallation Manager exceptions; Base exceptions
-    CommandAccessibilityError,
-    DirectoryRemovalError,
-    DirectoryScanError,
-    FileListError,
-    FileRemovalError,
-    FileRemovalVerificationError,
-    FileScanError,
-    InstallationDirectoryError,
-    InstallationNotFoundError,
-    PathCleanupError,
-    PathRemovalError,
-    UninstallationBackupError,
-    UninstallationDirectoryAccessError,
-    UninstallationFailedError,
-    UninstallationFileListError,
+    UninstallationFileError,
     UninstallationManagerError,
-    UninstallationPermissionError,
-    UninstallationProgressError,
-    UninstallationRestoreError,
+    UninstallationManagerVerificationError,
+    UninstallationPathError,
     UninstallationUtilityError,
     UninstallationVerificationError,
-    UninstallationVerificationUtilityError,
-    WOMMUninstallationError,
 )
+from .system import FileSystemError, RegistryError, UserPathError  # System exceptions
 
 __all__ = [
-    # Base exceptions
-    "WOMMInstallationError",
-    "WOMMUninstallationError",
-    # Installation Manager exceptions
-    "InstallationManagerError",
-    "InstallationFailedError",
-    "InstallationVerificationError",
-    "FileCopyError",
-    "ExecutableCreationError",
-    "EnvironmentRefreshError",
-    "InstallationRollbackError",
-    # Uninstallation Manager exceptions
-    "UninstallationManagerError",
-    "UninstallationFailedError",
-    "UninstallationVerificationError",
-    "FileRemovalError",
-    "DirectoryRemovalError",
-    "FileScanError",
-    "DirectoryScanError",
-    "FileListError",
-    "PathCleanupError",
-    "PathRemovalError",
-    "InstallationNotFoundError",
-    "UninstallationProgressError",
     # Installation Utility exceptions
     "InstallationUtilityError",
-    "FileUtilityError",
-    "PathUtilityError",
-    "InstallationPathError",
     "FileVerificationError",
+    "PathUtilityError",
     "ExecutableVerificationError",
-    "InstallationBackupError",
-    "InstallationRestoreError",
+    # Installation Manager exceptions
+    "InstallationManagerError",
+    "InstallationFileError",
+    "InstallationPathError",
+    "InstallationVerificationError",
+    "InstallationSystemError",
     # Uninstallation Utility exceptions
     "UninstallationUtilityError",
-    "FileRemovalVerificationError",
-    "CommandAccessibilityError",
-    "UninstallationVerificationUtilityError",
-    "InstallationDirectoryError",
-    "UninstallationBackupError",
-    "UninstallationRestoreError",
-    "UninstallationFileListError",
-    "UninstallationDirectoryAccessError",
-    "UninstallationPermissionError",
+    "FileScanError",
+    "DirectoryAccessError",
+    "UninstallationVerificationError",
+    # Uninstallation Manager exceptions
+    "UninstallationManagerError",
+    "UninstallationFileError",
+    "UninstallationPathError",
+    "UninstallationManagerVerificationError",
+    # System exceptions
+    "UserPathError",
+    "RegistryError",
+    "FileSystemError",
 ]
