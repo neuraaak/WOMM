@@ -11,37 +11,17 @@ This package contains all command modules for the WOMM CLI interface.
 Each module represents a specific command group with related functionality.
 """
 
+from __future__ import annotations
+
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Local imports
-from .context import context_group
-from .install import install, path_cmd, uninstall
-from .lint import lint_group
-from .new import new_group
-from .setup import setup_group
-from .spell import spell_group
-from .system import system_group
-from .template import template_group
+# Note: Imports are done lazily in cli.py to avoid loading all modules at startup
+# This prevents import errors when modules have dependencies that aren't yet migrated
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
-__all__ = [
-    # Installation commands
-    "install",
-    "uninstall",
-    "path_cmd",
-    # Project commands
-    "new_group",
-    "setup_group",
-    "template_group",
-    # System commands
-    "system_group",
-    # Quality commands
-    "spell_group",
-    "lint_group",
-    # Context commands
-    "context_group",
-]
+__all__: list[str] = []
