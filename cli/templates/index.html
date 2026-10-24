@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -2770,7 +2770,7 @@ Create, manage, and use project templates for rapid development</p>
 </ul>
 <p><strong>Examples:</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Direct mode</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;My awesome template&quot;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">"My awesome template"</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># With custom name</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>my-custom-template<span class="w"> </span>--from-project<span class="w"> </span>./my-project
@@ -2798,7 +2798,7 @@ Create, manage, and use project templates for rapid development</p>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>python-django-blog<span class="w"> </span>--project-name<span class="w"> </span>my-blog
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># With custom path and author</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>react-app<span class="w"> </span>--project-name<span class="w"> </span>my-app<span class="w"> </span>--path<span class="w"> </span>./projects/<span class="w"> </span>--author-name<span class="w"> </span><span class="s2">&quot;John Doe&quot;</span><span class="w"> </span>--author-email<span class="w"> </span><span class="s2">&quot;john@example.com&quot;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>react-app<span class="w"> </span>--project-name<span class="w"> </span>my-app<span class="w"> </span>--path<span class="w"> </span>./projects/<span class="w"> </span>--author-name<span class="w"> </span><span class="s2">"John Doe"</span><span class="w"> </span>--author-email<span class="w"> </span><span class="s2">"john@example.com"</span>
 </span></code></pre></div>
 <h3 id="womm-template-delete"><strong>🗑️ <code>womm template delete</code></strong><a class="headerlink" href="#womm-template-delete" title="Anchor link to this section">&para;</a></h3>
 <p>Delete one or more templates.</p>
@@ -2921,14 +2921,14 @@ Create, manage, and use project templates for rapid development</p>
 </ul>
 <p><strong>Example Generalization:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Original content</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;my-awesome-blog&quot;</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">author</span> <span class="o">=</span> <span class="s2">&quot;John Doe&quot;</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">email</span> <span class="o">=</span> <span class="s2">&quot;john@example.com&quot;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">project_name</span> <span class="o">=</span> <span class="s2">"my-awesome-blog"</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">author</span> <span class="o">=</span> <span class="s2">"John Doe"</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">email</span> <span class="o">=</span> <span class="s2">"john@example.com"</span>
 </span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>
 </span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="c1"># Generalized content</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;{{PROJECT_NAME}}&quot;</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="n">author</span> <span class="o">=</span> <span class="s2">&quot;{{AUTHOR_NAME}}&quot;</span>
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">email</span> <span class="o">=</span> <span class="s2">&quot;{{AUTHOR_EMAIL}}&quot;</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">project_name</span> <span class="o">=</span> <span class="s2">"{{PROJECT_NAME}}"</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="n">author</span> <span class="o">=</span> <span class="s2">"{{AUTHOR_NAME}}"</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">email</span> <span class="o">=</span> <span class="s2">"{{AUTHOR_EMAIL}}"</span>
 </span></code></pre></div>
 <h2 id="template-storage">📁 Template Storage<a class="headerlink" href="#template-storage" title="Anchor link to this section">&para;</a></h2>
 <h3 id="storage-location"><strong>Storage Location</strong><a class="headerlink" href="#storage-location" title="Anchor link to this section">&para;</a></h3>
@@ -2946,22 +2946,22 @@ Create, manage, and use project templates for rapid development</p>
 <h3 id="template-metadata"><strong>Template Metadata</strong><a class="headerlink" href="#template-metadata" title="Anchor link to this section">&para;</a></h3>
 <p>Each template includes a <code>template.json</code> file:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">{</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;python-django-blog&quot;</span><span class="p">,</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Template Django blog complet&quot;</span><span class="p">,</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="nt">&quot;author&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;WOMM CLI&quot;</span><span class="p">,</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">  </span><span class="nt">&quot;project_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nt">&quot;source_project&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/original/project&quot;</span><span class="p">,</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">  </span><span class="nt">&quot;created&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-01-15T10:30:00Z&quot;</span><span class="p">,</span>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nt">&quot;variables&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="nt">&quot;PROJECT_NAME&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Project name&quot;</span><span class="p">,</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">    </span><span class="nt">&quot;AUTHOR_NAME&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Author name&quot;</span><span class="p">,</span>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">    </span><span class="nt">&quot;AUTHOR_EMAIL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Author email&quot;</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python-django-blog"</span><span class="p">,</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Template Django blog complet"</span><span class="p">,</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.0.0"</span><span class="p">,</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="nt">"author"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WOMM CLI"</span><span class="p">,</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">  </span><span class="nt">"project_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"python"</span><span class="p">,</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nt">"source_project"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/original/project"</span><span class="p">,</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">  </span><span class="nt">"created"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2024-01-15T10:30:00Z"</span><span class="p">,</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nt">"variables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="nt">"PROJECT_NAME"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Project name"</span><span class="p">,</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">    </span><span class="nt">"AUTHOR_NAME"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Author name"</span><span class="p">,</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">    </span><span class="nt">"AUTHOR_EMAIL"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Author email"</span>
 </span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">  </span><span class="nt">&quot;files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">    </span><span class="s2">&quot;pyproject.toml&quot;</span><span class="p">,</span>
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">    </span><span class="s2">&quot;src/{{PROJECT_NAME}}/main.py&quot;</span><span class="p">,</span>
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">    </span><span class="s2">&quot;tests/test_main.py&quot;</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">  </span><span class="nt">"files"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">    </span><span class="s2">"pyproject.toml"</span><span class="p">,</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">    </span><span class="s2">"src/{{PROJECT_NAME}}/main.py"</span><span class="p">,</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">    </span><span class="s2">"tests/test_main.py"</span>
 </span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">  </span><span class="p">]</span>
 </span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="p">}</span>
 </span></code></pre></div>
@@ -2969,7 +2969,7 @@ Create, manage, and use project templates for rapid development</p>
 <h3 id="1-standardize-project-structure"><strong>1. Standardize Project Structure</strong><a class="headerlink" href="#1-standardize-project-structure" title="Anchor link to this section">&para;</a></h3>
 <p>Create templates for consistent project layouts across your team.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Create template from well-structured project</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./standard-python-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Standard Python project structure&quot;</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./standard-python-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Standard Python project structure"</span>
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
 </span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Use template for new projects</span>
 </span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>standard-python<span class="w"> </span>--project-name<span class="w"> </span>new-feature
@@ -2977,18 +2977,18 @@ Create, manage, and use project templates for rapid development</p>
 <h3 id="2-framework-templates"><strong>2. Framework Templates</strong><a class="headerlink" href="#2-framework-templates" title="Anchor link to this section">&para;</a></h3>
 <p>Create templates for different frameworks and configurations.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Django template</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./django-blog<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Django blog template&quot;</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./django-blog<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Django blog template"</span>
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
 </span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># React template</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./react-app<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;React application template&quot;</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./react-app<span class="w"> </span>--description<span class="w"> </span><span class="s2">"React application template"</span>
 </span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
 </span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># FastAPI template</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./fastapi-service<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;FastAPI microservice template&quot;</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./fastapi-service<span class="w"> </span>--description<span class="w"> </span><span class="s2">"FastAPI microservice template"</span>
 </span></code></pre></div>
 <h3 id="3-team-onboarding"><strong>3. Team Onboarding</strong><a class="headerlink" href="#3-team-onboarding" title="Anchor link to this section">&para;</a></h3>
 <p>Help new team members get started quickly.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Create onboarding template</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./team-starter<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Team onboarding template&quot;</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./team-starter<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Team onboarding template"</span>
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
 </span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># New team member uses template</span>
 </span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>team-starter<span class="w"> </span>--project-name<span class="w"> </span>my-first-project
@@ -2996,7 +2996,7 @@ Create, manage, and use project templates for rapid development</p>
 <h3 id="4-microservices"><strong>4. Microservices</strong><a class="headerlink" href="#4-microservices" title="Anchor link to this section">&para;</a></h3>
 <p>Create consistent microservice templates.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Create microservice template</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./microservice<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Standard microservice template&quot;</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./microservice<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Standard microservice template"</span>
 </span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
 </span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Use for new services</span>
 </span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>microservice<span class="w"> </span>--project-name<span class="w"> </span>user-service
@@ -3043,7 +3043,7 @@ Create, manage, and use project templates for rapid development</p>
 </span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="c1"># ... customize project ...</span>
 </span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>
 </span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="c1"># 3. Create template from the project</span>
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-standard-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;My standard Python project template&quot;</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-standard-project<span class="w"> </span>--description<span class="w"> </span><span class="s2">"My standard Python project template"</span>
 </span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>
 </span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="c1"># 4. List templates to verify</span>
 </span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>womm<span class="w"> </span>template<span class="w"> </span>list
@@ -3061,7 +3061,7 @@ Create, manage, and use project templates for rapid development</p>
 </span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="c1"># ... add standard components, configs, etc ...</span>
 </span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>
 </span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="c1"># 3. Create template</span>
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-react-template<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Standard React app with my setup&quot;</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./my-react-template<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Standard React app with my setup"</span>
 </span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>
 </span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="c1"># 4. Use template</span>
 </span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>womm<span class="w"> </span>template<span class="w"> </span>use<span class="w"> </span>my-react-template<span class="w"> </span>--project-name<span class="w"> </span>new-app<span class="w"> </span>--path<span class="w"> </span>./projects/
@@ -3075,7 +3075,7 @@ Create, manage, and use project templates for rapid development</p>
 </span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="c1"># ... add team linting rules, testing setup, etc ...</span>
 </span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>
 </span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="c1"># 3. Create team template</span>
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./team-standard<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Team standard Python project&quot;</span>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>womm<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>--from-project<span class="w"> </span>./team-standard<span class="w"> </span>--description<span class="w"> </span><span class="s2">"Team standard Python project"</span>
 </span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a>
 </span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a><span class="c1"># 4. Share with team (templates are stored locally)</span>
 </span><span id="__span-29-12"><a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a><span class="c1"># Team members can copy ~/.womm/.templates/team-standard/ to their machines</span>
@@ -3205,10 +3205,10 @@ Create, manage, and use project templates for rapid development</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "navigation.footer", "navigation.indexes", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "navigation.footer", "navigation.indexes", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
     
   </body>

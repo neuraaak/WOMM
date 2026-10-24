@@ -4,14 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for womm/utils/security/__init__.py: 0.00%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
-    <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
-    <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
+    <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
+    <script src="coverage_html_cb_54cfdca1.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>womm&#8201;/&#8201;utils&#8201;/&#8201;security&#8201;/&#8201;__init__.py</b>:
+            <span class="text">Coverage for </span><b>womm<span class="sep">/</span>utils<span class="sep">/</span>security<span class="sep">/</span>__init__.py</b>:
             <span class="pc_cov">0.00%</span>
         </h1>
         <aside id="help_panel_wrapper">
@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="covindex.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_ebcc6a377c324701_security_validation_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-11 17:19 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-24 22:21 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -88,12 +88,12 @@
     <p class="pln"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="com"># Project: works-on-my-machine</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="com"># ///////////////////////////////////////////////////////////////</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t"><span class="str">Pure utility functions for security validation operations.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="str">This package contains stateless utility functions for security</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="str">validation and command/path validation operations.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">__future__</span> <span class="key">import</span> <span class="nam">annotations</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -117,14 +117,14 @@
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="com"># ///////////////////////////////////////////////////////////////</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="nam">__all__</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="str">"has_dangerous_command_patterns"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="str">"has_dangerous_file_patterns"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="str">"has_excessive_traversal"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="str">"is_dangerous_argument"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="str">"is_system_directory"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">    <span class="str">"validate_chmod_permissions"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="str">"validate_chown_owner"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="str">"validate_permission_command"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="str">&quot;has_dangerous_command_patterns&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="str">&quot;has_dangerous_file_patterns&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="str">&quot;has_excessive_traversal&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="str">&quot;is_dangerous_argument&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">    <span class="str">&quot;is_system_directory&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">    <span class="str">&quot;validate_chmod_permissions&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="str">&quot;validate_chown_owner&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis mis2 show_mis"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="str">&quot;validate_permission_command&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t"><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
@@ -134,8 +134,8 @@
             <a class="nav" href="covindex.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_ebcc6a377c324701_security_validation_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-02-11 17:19 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-24 22:21 +0000
         </p>
     </div>
 </footer>
