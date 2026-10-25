@@ -67,6 +67,7 @@ def test_returns_none_for_a_directory(tmp_path):
         "/etc/passwd",
         "C:\\Windows\\System32\\evil.json",
         "real.json:ads",
+        "a\x00b",
     ],
 )
 def test_rejects_names_escaping_the_directory(tmp_path, hostile_name):

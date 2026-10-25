@@ -44,7 +44,14 @@ def resolve_backup_name(backup_dir: Path, name: str) -> Path | None:
     # also caught by ":"): a containment filter must not depend on the
     # ordering of its own sub-clauses to stay correct, so each is kept
     # even where another already covers the same input.
-    if not name or ".." in name or "/" in name or "\\" in name or ":" in name:
+    if (
+        not name
+        or "\x00" in name
+        or ".." in name
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+    ):
         return None
     if Path(name).is_absolute() or Path(name).drive:
         return None
