@@ -18,10 +18,10 @@
 - [x] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
   de `setup_interface.py` ; le setup rend maintenant la configuration VS Code
   depuis le template Copier du projet.
-- [ ] Rechercher les consommateurs des anciennes tables de variantes dans
+- [x] Rechercher les consommateurs des anciennes tables de variantes dans
   `shared/configs/project/` et `utils/project/`, puis supprimer le code
-  devenu mort en cascade. Garder le contrat `--force` de
-  `destination_guard.py`.
+  devenu mort en cascade. Le contrôle `--force` de `destination_guard.py`
+  reste inchangé.
 - [ ] Vérifier les suggestions affichées à la fin de `create` et `setup` :
   elles doivent correspondre aux commandes et à l'outillage réellement
   générés.

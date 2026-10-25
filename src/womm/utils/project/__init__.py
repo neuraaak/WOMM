@@ -64,14 +64,12 @@ from .validation_utils import (
     validate_project_path,
     validate_project_type,
 )
-from .variant_detection_utils import VariantDetectionUtils
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
 __all__ = [
-    "VariantDetectionUtils",
     "analyze_csharp_config",
     "analyze_go_config",
     "analyze_java_config",

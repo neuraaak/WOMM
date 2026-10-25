@@ -17,20 +17,12 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
-# Third-party imports
-import pytest
-
 # Local imports
 from womm.shared.configs.context.context_file_types_config import (
     ContextFileTypesConfig,
 )
 from womm.shared.configs.context.context_limits_config import ContextLimitsConfig
 from womm.shared.configs.context.context_paths_config import ContextPathsConfig
-from womm.shared.configs.project.javascript_project_config import (
-    JavaScriptProjectConfig,
-)
-from womm.shared.configs.project.variant_mappings_config import VariantMappingsConfig
-from womm.shared.configs.project.variant_ui_config import VariantUIConfig
 from womm.shared.configs.system.system_detector_config import (
     PackageManagerConfig,
     SystemDetectorConfig,
@@ -38,45 +30,6 @@ from womm.shared.configs.system.system_detector_config import (
 from womm.shared.configs.system.system_environment_config import (
     SystemEnvironmentConfig,
 )
-
-# ///////////////////////////////////////////////////////////////
-# VARIANT MAPPINGS CONFIG
-# ///////////////////////////////////////////////////////////////
-
-
-def test_get_assets_path_builds_language_variant_path():
-    assert VariantMappingsConfig.get_assets_path("python", "django") == "python/django"
-
-
-def test_get_assets_path_unsupported_language_raises():
-    with pytest.raises(ValueError, match="Unsupported language"):
-        VariantMappingsConfig.get_assets_path("ruby", "rails")
-
-
-def test_get_assets_path_unsupported_variant_raises():
-    with pytest.raises(ValueError, match="not supported"):
-        VariantMappingsConfig.get_assets_path("python", "flask")
-
-
-def test_validate_variant_true_for_known_pair():
-    assert VariantMappingsConfig.validate_variant("javascript", "react") is True
-
-
-def test_validate_variant_false_for_unknown_language():
-    assert VariantMappingsConfig.validate_variant("ruby", "rails") is False
-
-
-def test_validate_variant_false_for_unknown_variant():
-    assert VariantMappingsConfig.validate_variant("python", "flask") is False
-
-
-def test_get_default_variant_known_language():
-    assert VariantMappingsConfig.get_default_variant("python") == "py"
-
-
-def test_get_default_variant_unknown_language_returns_none():
-    assert VariantMappingsConfig.get_default_variant("ruby") is None
-
 
 # ///////////////////////////////////////////////////////////////
 # CONTEXT FILE TYPES CONFIG
@@ -182,38 +135,6 @@ def test_get_all_context_types_lists_directory():
 
 
 # ///////////////////////////////////////////////////////////////
-# VARIANT UI CONFIG
-# ///////////////////////////////////////////////////////////////
-
-
-def test_get_variants_for_ui_returns_descriptions_in_order():
-    variants = VariantUIConfig.get_variants_for_ui("python")
-
-    assert variants[0][0] == "py"
-    assert "Python" in variants[0][1]
-
-
-def test_get_variants_for_ui_unknown_language_returns_empty_list():
-    assert VariantUIConfig.get_variants_for_ui("ruby") == []
-
-
-def test_get_javascript_project_type_choices_for_ui_lists_node():
-    choices = VariantUIConfig.get_javascript_project_type_choices_for_ui()
-
-    assert any(value == "node" for value, _ in choices)
-
-
-def test_get_variant_description_known_pair():
-    description = VariantUIConfig.get_variant_description("javascript", "react")
-
-    assert "React" in description
-
-
-def test_get_variant_description_unknown_pair_returns_variant_name():
-    assert VariantUIConfig.get_variant_description("ruby", "rails") == "rails"
-
-
-# ///////////////////////////////////////////////////////////////
 # SYSTEM DETECTOR CONFIG
 # ///////////////////////////////////////////////////////////////
 
@@ -271,53 +192,3 @@ def test_get_shell_config_files_empty_home_returns_empty_list(tmp_path, monkeypa
     )
 
     assert SystemEnvironmentConfig.get_shell_config_files() == []
-
-
-# ///////////////////////////////////////////////////////////////
-# JAVASCRIPT PROJECT CONFIG
-# ///////////////////////////////////////////////////////////////
-
-
-def test_get_dev_dependencies_react_extends_common():
-    deps = JavaScriptProjectConfig.get_dev_dependencies("react")
-
-    assert set(JavaScriptProjectConfig.COMMON_DEV_DEPENDENCIES).issubset(set(deps))
-    assert set(JavaScriptProjectConfig.REACT_DEV_DEPENDENCIES).issubset(set(deps))
-
-
-def test_get_dev_dependencies_node_is_just_common():
-    deps = JavaScriptProjectConfig.get_dev_dependencies("node")
-
-    assert deps == list(JavaScriptProjectConfig.COMMON_DEV_DEPENDENCIES)
-
-
-def test_get_runtime_dependencies_vue_returns_vue_deps():
-    deps = JavaScriptProjectConfig.get_runtime_dependencies("vue")
-
-    assert deps == JavaScriptProjectConfig.VUE_DEPENDENCIES
-
-
-def test_get_runtime_dependencies_defaults_to_node():
-    deps = JavaScriptProjectConfig.get_runtime_dependencies("unknown")
-
-    assert deps == JavaScriptProjectConfig.NODE_DEPENDENCIES
-
-
-def test_get_directories_react_returns_react_directories():
-    assert JavaScriptProjectConfig.get_directories("react") == list(
-        JavaScriptProjectConfig.REACT_DIRECTORIES
-    )
-
-
-def test_get_directories_defaults_to_javascript_directories():
-    assert JavaScriptProjectConfig.get_directories("unknown") == list(
-        JavaScriptProjectConfig.JAVASCRIPT_DIRECTORIES
-    )
-
-
-def test_get_variant_known_project_type():
-    assert JavaScriptProjectConfig.get_variant("react") == "react"
-
-
-def test_get_variant_unknown_project_type_defaults_to_js():
-    assert JavaScriptProjectConfig.get_variant("unknown") == "js"
