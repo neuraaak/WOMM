@@ -8,29 +8,6 @@
 
 ---
 
-## Priorité 2 — terminer le rework `create` / `template`
-
-### 2.3 Nettoyage du flux legacy après le setup générique
-
-- [x] Corriger l'installation des dépendances par `create --setup` pour les
-  templates Python qui déclarent leurs dépendances dans `pyproject.toml` :
-  sans `requirements-dev.txt`, installer le projet et son groupe `dev`.
-- [x] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
-  de `setup_interface.py` ; le setup rend maintenant la configuration VS Code
-  depuis le template Copier du projet.
-- [x] Rechercher les consommateurs des anciennes tables de variantes dans
-  `shared/configs/project/` et `utils/project/`, puis supprimer le code
-  devenu mort en cascade. Le contrôle `--force` de `destination_guard.py`
-  reste inchangé.
-- [x] Vérifier les suggestions affichées à la fin de `create` et `setup` :
-  elles doivent correspondre aux commandes et à l'outillage réellement
-  générés.
-- [x] Corriger les écarts relevés à l'audit : test des assets Copier,
-  transmission des avertissements du setup, cohérence du venv avec VS Code
-  et rendu des templates personnalisés avec le vrai nom du projet.
-
----
-
 ## Priorité 3 — reliquats non bloquants des templates
 
 - [ ] Préserver la variante choisie dans les réponses Copier
