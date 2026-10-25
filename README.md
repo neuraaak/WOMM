@@ -1,15 +1,42 @@
 # 🛠️ Works On My Machine (WOMM)
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/works-on-my-machine)
-[![Version](https://img.shields.io/badge/Version-3.2.2-orange.svg?style=for-the-badge)](https://github.com/neuraaak/works-on-my-machine)
-[![PyPI](https://img.shields.io/badge/PyPI-works--on--my--machine-green.svg?style=for-the-badge&logo=pypi)](https://pypi.org/project/works-on-my-machine/)
-[![Docs](https://img.shields.io/badge/Docs-Online-blue.svg?style=for-the-badge&logo=readthedocs)](https://neuraaak.github.io/works-on-my-machine/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Beta-yellow.svg?style=for-the-badge)](https://github.com/neuraaak/works-on-my-machine)
-[![Tests](https://img.shields.io/badge/Tests-TODO-orange.svg?style=for-the-badge)](https://github.com/neuraaak/works-on-my-machine)
+> ## ⚠️ This package has been renamed
+>
+> **`works-on-my-machine` is no longer maintained under this name on PyPI.**
+> Development continues as **[`womm-cli`](https://pypi.org/project/womm-cli/)** —
+> same tool, same `womm` command, same repository.
+>
+> ```bash
+> pip uninstall works-on-my-machine
+> pip install womm-cli
+> ```
+>
+> `3.2.4` is the final release published under this name. The repository has
+> moved to **[github.com/neuraaak/WOMM](https://github.com/neuraaak/WOMM)** and
+> the documentation to **[neuraaak.github.io/WOMM](https://neuraaak.github.io/WOMM/)**.
+>
+> ### 🚫 Do not install `3.2.4`
+>
+> This release exists **only to carry this notice**. On PyPI it jumps straight
+> from `2.6.8` to `3.2.4`: every version in between was developed but never
+> published, and this build has never been validated through the PyPI install
+> path. Treat it as a tombstone, not as working software — assume it may be
+> broken or incomplete, and install
+> **[`womm-cli`](https://pypi.org/project/womm-cli/)** instead.
+>
+> The name change is purely administrative: the PyPI name `womm` was already
+> taken by an unrelated project, so `womm-cli` was chosen instead.
 
-<!-- [![Coverage](https://img.shields.io/badge/Coverage-29%25-yellow.svg?style=for-the-badge)](https://github.com/neuraaak/works-on-my-machine) -->
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
+[![Version](https://img.shields.io/badge/Version-3.2.4-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
+[![PyPI](https://img.shields.io/badge/PyPI-works--on--my--machine-green.svg?style=for-the-badge&logo=pypi)](https://pypi.org/project/works-on-my-machine/)
+[![Docs](https://img.shields.io/badge/Docs-Online-blue.svg?style=for-the-badge&logo=readthedocs)](https://neuraaak.github.io/WOMM/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Deprecated-red.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
+[![Tests](https://img.shields.io/badge/Tests-TODO-orange.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
+
+<!-- [![Coverage](https://img.shields.io/badge/Coverage-29%25-yellow.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM) -->
 
 ![WOMM Logo](docs/assets/logo-min.png)
 
@@ -45,7 +72,7 @@ pip install works-on-my-machine
 pip install womm
 
 # Option 2: Install from source
-git clone https://github.com/neuraaak/works-on-my-machine.git
+git clone https://github.com/neuraaak/WOMM.git
 cd works-on-my-machine
 python womm.py install
 
@@ -250,7 +277,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone and setup development environment
-git clone https://github.com/neuraaak/works-on-my-machine.git
+git clone https://github.com/neuraaak/WOMM.git
 cd works-on-my-machine
 
 # Install in development mode

@@ -17,7 +17,7 @@ from pathlib import Path
 # PACKAGE METADATA
 # ///////////////////////////////////////////////////////////////
 
-__version__ = "3.2.2"
+__version__ = "3.2.4"
 __author__ = "Neuraaak"
 __description__ = (
     "Universal development tools for multiple languages - "
