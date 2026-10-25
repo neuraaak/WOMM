@@ -10,7 +10,7 @@
 
 ## Priorité 2 — terminer le rework `create` / `template`
 
-### 2.1 Setup générique — tâches 9 à 11 restantes
+### 2.1 Setup générique — tâches 10 et 11 restantes
 
 Les tâches 1 à 8 sont intégrées à la branche. `setup_project` est piloté par
 `_womm.setup` dans les templates Copier ; la liste figée des types de projet
@@ -20,8 +20,6 @@ a été supprimée. Le plan et sa spécification sont disponibles dans
 - `.superpowers/plans/2026-08-07-generic-project-setup.md`
 - `.superpowers/specs/2026-08-07-generic-project-setup-design.md`
 
-- [ ] **Tâche 9** — faire lister par `womm setup detect` les types réellement
-  acceptés, au lieu d'un message codé en dur. Vérifier le test CLI.
 - [ ] **Tâche 10** — confirmer l'absence d'appelant en production de
   `ConflictResolutionService`, puis supprimer ce service, ses réexports et
   son test. Vérifier la suite après la suppression.
@@ -111,7 +109,7 @@ sont vérifiés avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Terminer les tâches 9 à 11 du setup générique.
+1. Terminer les tâches 10 et 11 du setup générique.
 2. Nettoyer le flux legacy et traiter la perte de variante de `--setup`.
 3. Reconstruire la documentation produit.
 4. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal

@@ -27,6 +27,7 @@ from ezpl import LogLevel
 
 # Local imports
 from ...interfaces import ProjectManagerInterface
+from ...services.project.setup_profile_resolver import list_setup_identifiers
 from ...ui.common import ezpl_bridge, ezprinter
 from ...ui.project import ProjectWizard, print_project_setup_result
 
@@ -109,9 +110,10 @@ def setup_detect(
                 ezprinter.error(
                     "No suitable project type detected in the specified directory"
                 )
-                ezprinter.info(
-                    "Supported project types: python, javascript, react, vue"
+                known = ", ".join(
+                    identifier for identifier, _description in list_setup_identifiers()
                 )
+                ezprinter.info(f"Supported project types: {known}")
             sys.exit(1)
 
         ezprinter.success(

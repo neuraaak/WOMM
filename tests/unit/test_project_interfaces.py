@@ -278,6 +278,29 @@ def test_setup_python_command_renders_a_successful_result(
     assert _FakeProjectManager.instances[0].calls[0]["project_type"] == "python"
 
 
+def test_setup_detect_lists_types_from_the_catalog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    class UnknownProjectManager:
+        def detect_project_type(self, _project_path: Path) -> ProjectDetectionResult:
+            return ProjectDetectionResult(success=True, project_type="unknown")
+
+    messages: list[str] = []
+    monkeypatch.setattr(
+        "womm.commands.project.setup.ProjectManagerInterface", UnknownProjectManager
+    )
+    monkeypatch.setattr(
+        "womm.commands.project.setup.list_setup_identifiers",
+        lambda: [("custom", "Custom project"), ("react", "React project")],
+    )
+    monkeypatch.setattr("womm.commands.project.setup.ezprinter.info", messages.append)
+
+    result = CliRunner().invoke(setup_group, ["detect", "--path", str(tmp_path)])
+
+    assert result.exit_code == 1
+    assert messages == ["Supported project types: custom, react"]
+
+
 def test_setup_project_unsupported_type_returns_failed_result(tmp_path: Path):
     interface = ProjectSetupInterface()
 
