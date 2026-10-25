@@ -12,9 +12,9 @@
 
 ### 2.3 Nettoyage du flux legacy après le setup générique
 
-- [ ] Corriger l'installation des dépendances par `create --setup` pour les
+- [x] Corriger l'installation des dépendances par `create --setup` pour les
   templates Python qui déclarent leurs dépendances dans `pyproject.toml` :
-  l'absence de `requirements-dev.txt` est actuellement traitée comme un succès.
+  sans `requirements-dev.txt`, installer le projet et son groupe `dev`.
 - [ ] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
   encore utilisé par `setup_interface.py`, après avoir remplacé ce flux par
   les assets issus des templates Copier.

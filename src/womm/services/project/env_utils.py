@@ -21,6 +21,7 @@ from __future__ import annotations
 # Standard library imports
 import logging
 import shutil
+import tomllib
 import venv
 from pathlib import Path
 
@@ -166,7 +167,7 @@ def find_pip_executable(venv_path: Path) -> Path:
 def install_python_dependencies(
     project_path: Path, requirements_file: str = "requirements-dev.txt"
 ) -> bool:
-    """Install Python dependencies from requirements file.
+    """Install Python dependencies from requirements file or pyproject.toml.
 
     Args:
         project_path: Path to the project
@@ -191,23 +192,36 @@ def install_python_dependencies(
     # Find pip executable
     pip_exe = find_pip_executable(venv_path)
 
-    # Check if requirements file exists
-    req_file = project_path / requirements_file
-    if not req_file.exists():
-        logger.warning(f"Requirements file {requirements_file} not found, skipping")
-        return True
-
-    # Install dependencies
     command_runner = CommandRunnerService()
-    result = command_runner.run(
-        [str(pip_exe), "install", "-r", requirements_file],
-        cwd=str(project_path),
-    )
 
-    if not result:
-        raise RuntimeError(f"Failed to install dependencies: {result.stderr}")
+    # Install dependencies from the legacy requirements file when available.
+    req_file = project_path / requirements_file
+    if req_file.exists():
+        commands = [[str(pip_exe), "install", "-r", requirements_file]]
+    else:
+        pyproject_file = project_path / PythonProjectConfig.PYPROJECT_FILE
+        if not pyproject_file.exists():
+            logger.warning(f"Requirements file {requirements_file} not found, skipping")
+            return True
 
-    logger.info(f"Successfully installed dependencies from {requirements_file}")
+        with pyproject_file.open("rb") as file:
+            pyproject = tomllib.load(file)
+
+        commands = []
+        if "project" in pyproject:
+            commands.append([str(pip_exe), "install", "."])
+        if "dev" in pyproject.get("dependency-groups", {}):
+            commands.append([str(pip_exe), "install", "--group", "dev"])
+
+    for command in commands:
+        result = command_runner.run(command, cwd=str(project_path))
+        if not result:
+            raise RuntimeError(f"Failed to install dependencies: {result.stderr}")
+
+    if req_file.exists():
+        logger.info(f"Successfully installed dependencies from {requirements_file}")
+    else:
+        logger.info("Successfully installed dependencies from pyproject.toml")
     return True
 
 
