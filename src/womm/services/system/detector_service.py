@@ -127,7 +127,7 @@ class SystemDetectorService:
                 node=platform.node(),
                 user=os.environ.get("USER", os.environ.get("USERNAME", "unknown")),
                 home=str(Path.home()),
-                shell=os.environ.get("SHELL", "unknown"),
+                shell=os.environ.get("SHELL", "unknown"),  # nosec B604 - dataclass field named `shell`, not a subprocess argument
                 terminal=os.environ.get("TERM", "unknown"),
                 path_separator=os.pathsep,
                 line_separator=os.linesep,

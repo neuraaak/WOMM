@@ -21,7 +21,7 @@ from __future__ import annotations
 # Standard library imports
 import logging
 import re
-import subprocess
+import subprocess  # nosec B404 - running external tools is this package's purpose
 import time
 from pathlib import Path
 from threading import Lock
@@ -364,7 +364,7 @@ class CommandRunnerService:
 
             # Execute command with explicit security validation
             # The command has already been validated by the calling method
-            return subprocess.run(cmd, check=False, **subprocess_args)
+            return subprocess.run(cmd, check=False, **subprocess_args)  # nosec B603 - cmd validated by SecurityValidatorService upstream
 
         except (
             CommandUtilityError,

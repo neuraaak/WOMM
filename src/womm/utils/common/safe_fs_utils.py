@@ -49,7 +49,7 @@ _CRITICAL_PATHS_UNIX: set[str] = {
     "/sbin",
     "/sys",
     # Protected path in delete blocklist, not a temp-file usage.
-    "/tmp",  # noqa: S108
+    "/tmp",  # noqa: S108  # nosec B108 - blocklist entry, never a temp path we write to
     "/usr",
     "/var",
 }
