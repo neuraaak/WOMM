@@ -32,11 +32,14 @@ from ...services import (
     PythonEnvironmentService,
 )
 from ...services.dependencies import probe
+from ...services.project.setup_profile_resolver import (
+    SetupProfile,
+    resolve_setup_profile,
+)
 from ...shared.results import ProjectSetupResult
 from ...utils.project import (
     copy_asset_type,
     validate_project_path,
-    validate_project_type,
 )
 
 # ///////////////////////////////////////////////////////////////
@@ -124,11 +127,21 @@ class ProjectSetupInterface:
                     error="Project type is required",
                 )
 
-            # Validate project type
-            validate_project_type(project_type)
+            # Resolve the setup profile (language + VS Code variant)
+            profile = resolve_setup_profile(project_type)
+            if profile is None:
+                return ProjectSetupResult(
+                    success=False,
+                    project_path=project_path,
+                    project_type=project_type,
+                    error=(
+                        f"Unsupported project type for setup: {project_type}. "
+                        "Run 'womm setup detect --help' to see known types."
+                    ),
+                )
 
             # Check dependencies
-            deps_error = self._check_dependencies(project_type)
+            deps_error = self._check_dependencies(profile)
             if deps_error:
                 return ProjectSetupResult(
                     success=False,
@@ -143,14 +156,14 @@ class ProjectSetupInterface:
 
             # Copy VSCode configuration
             try:
-                self._copy_vscode_config(project_path, project_type)
+                self._copy_vscode_config(project_path, profile)
                 tools_configured.append("vscode")
             except Exception as e:
                 logger.warning(f"Failed to copy VSCode config: {e}")
                 warnings.append(f"VSCode configuration skipped: {e}")
 
-            # Set up project based on type
-            if project_type == "python":
+            # Set up project based on language family
+            if profile.language == "python":
                 result = self._setup_python_project(
                     project_path,
                     virtual_env=virtual_env,
@@ -158,10 +171,7 @@ class ProjectSetupInterface:
                     setup_dev_tools=setup_dev_tools,
                     setup_git_hooks=setup_git_hooks,
                 )
-                files_modified.extend(result.get("files_modified", []))
-                tools_configured.extend(result.get("tools_configured", []))
-                warnings.extend(result.get("warnings", []))
-            elif project_type in ["javascript", "react", "vue"]:
+            else:
                 result = self._setup_javascript_project(
                     project_path,
                     project_type,
@@ -169,19 +179,9 @@ class ProjectSetupInterface:
                     setup_dev_tools=setup_dev_tools,
                     setup_git_hooks=setup_git_hooks,
                 )
-                files_modified.extend(result.get("files_modified", []))
-                tools_configured.extend(result.get("tools_configured", []))
-                warnings.extend(result.get("warnings", []))
-            else:
-                return ProjectSetupResult(
-                    success=False,
-                    project_path=project_path,
-                    project_type=project_type,
-                    error=(
-                        f"Unsupported project type for setup: {project_type}. "
-                        "Only python, javascript, react, and vue are supported"
-                    ),
-                )
+            files_modified.extend(result.get("files_modified", []))
+            tools_configured.extend(result.get("tools_configured", []))
+            warnings.extend(result.get("warnings", []))
 
             return ProjectSetupResult(
                 success=True,
@@ -443,54 +443,37 @@ class ProjectSetupInterface:
             "warnings": warnings,
         }
 
-    def _copy_vscode_config(self, project_path: Path, project_type: str) -> None:
+    def _copy_vscode_config(self, project_path: Path, profile: SetupProfile) -> None:
         """Copy VSCode configuration from assets to project.
 
         Args:
             project_path: Path to the project
-            project_type: Type of project (python, javascript, react, vue)
+            profile: Resolved setup profile (language + VS Code variant)
         """
-        # Map project_type to language and variant
-        language_map = {
-            "python": "python",
-            "javascript": "javascript",
-            "react": "javascript",
-            "vue": "javascript",
-        }
-        variant_map = {
-            "python": "py",
-            "javascript": "js",
-            "react": "react",
-            "vue": "vue",
-        }
+        vscode_dir = project_path / ".vscode"
+        copy_asset_type(
+            profile.language,
+            profile.vscode_variant,
+            "vscode",
+            vscode_dir,
+            overwrite=False,
+        )
 
-        language = language_map.get(project_type)
-        variant = variant_map.get(project_type)
-
-        if language and variant:
-            vscode_dir = project_path / ".vscode"
-            copy_asset_type(language, variant, "vscode", vscode_dir, overwrite=False)
-        else:
-            logger.warning(
-                f"No specific VSCode assets found for project type: {project_type}"
-            )
-
-    def _check_dependencies(self, project_type: str) -> str:
+    def _check_dependencies(self, profile: SetupProfile) -> str:
         """Check if required dependencies are available.
 
         Args:
-            project_type: Type of project
+            profile: Resolved setup profile (language + VS Code variant)
 
         Returns:
             Empty string if dependencies are satisfied, otherwise an error message.
         """
         try:
-            if project_type == "python":
+            if profile.language == "python":
                 result = probe("python")
                 if not result.success:
                     return "Python runtime not found. Python runtime is required for Python projects"
-
-            elif project_type in ["javascript", "react", "vue"]:
+            else:
                 result = probe("node")
                 if not result.success:
                     return "Node.js runtime not found. Node.js runtime is required for JavaScript projects"

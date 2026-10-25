@@ -175,12 +175,6 @@ def validate_project_type(project_type: str) -> None:
     if not project_type:
         raise ValueError("Project type cannot be empty")
 
-    if project_type not in ProjectConfig.SUPPORTED_PROJECT_TYPES:
-        raise ValueError(
-            f"Unsupported project type: {project_type}. "
-            f"Supported types: {', '.join(ProjectConfig.SUPPORTED_PROJECT_TYPES)}"
-        )
-
 
 def validate_project_config(config: dict[str, str]) -> None:
     """Validate a project configuration.

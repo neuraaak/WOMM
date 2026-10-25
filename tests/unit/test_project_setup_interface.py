@@ -20,6 +20,7 @@ import pytest
 
 # Local imports
 from womm.interfaces.project.setup_interface import ProjectSetupInterface
+from womm.services.project.setup_profile_resolver import SetupProfile
 from womm.shared.results import ProjectCreationResult, ProjectDetectionResult
 
 # ///////////////////////////////////////////////////////////////
@@ -103,6 +104,41 @@ def test_setup_project_keeps_vscode_copy_failure_as_warning(
     assert result.tools_configured is not None
     assert "vscode" not in result.tools_configured
     assert result.warnings == ["VSCode configuration skipped: assets unavailable"]
+
+
+def test_setup_project_rejects_unknown_type_via_resolver(tmp_path: Path) -> None:
+    result = ProjectSetupInterface().setup_project(tmp_path, project_type="cobol")
+
+    assert not result.success
+    assert "Unsupported project type for setup: cobol" in result.error
+
+
+def test_setup_project_resolves_a_catalog_identifier_beyond_the_legacy_list(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A future catalog entry (e.g. "django") must reach the python branch
+    once it declares setup_language="python", without editing this file."""
+    interface = ProjectSetupInterface()
+    monkeypatch.setattr(
+        "womm.interfaces.project.setup_interface.resolve_setup_profile",
+        lambda _identifier: SetupProfile(language="python", vscode_variant="py"),
+    )
+    monkeypatch.setattr(interface, "_check_dependencies", lambda _profile: "")
+    monkeypatch.setattr(interface, "_copy_vscode_config", lambda *_args: None)
+    monkeypatch.setattr(
+        interface,
+        "_setup_python_project",
+        lambda *_args, **_kwargs: {
+            "files_modified": [],
+            "tools_configured": ["venv"],
+            "warnings": [],
+        },
+    )
+
+    result = interface.setup_project(tmp_path, project_type="django")
+
+    assert result.success
+    assert result.project_type == "django"
 
 
 def test_setup_development_environment_forwards_complete_defaults(
@@ -292,18 +328,17 @@ def test_setup_javascript_collects_unsuccessful_results(
 
 
 @pytest.mark.parametrize(
-    ("project_type", "language", "variant"),
+    ("language", "variant"),
     [
-        ("python", "python", "py"),
-        ("javascript", "javascript", "js"),
-        ("react", "javascript", "react"),
-        ("vue", "javascript", "vue"),
+        ("python", "py"),
+        ("javascript", "js"),
+        ("javascript", "react"),
+        ("javascript", "vue"),
     ],
 )
 def test_copy_vscode_config_maps_project_variant(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    project_type: str,
     language: str,
     variant: str,
 ) -> None:
@@ -313,23 +348,23 @@ def test_copy_vscode_config_maps_project_variant(
         lambda *args, **_kwargs: captured.append(args),
     )
 
-    ProjectSetupInterface()._copy_vscode_config(tmp_path, project_type)
+    ProjectSetupInterface()._copy_vscode_config(
+        tmp_path, SetupProfile(language=language, vscode_variant=variant)
+    )
 
     assert captured == [(language, variant, "vscode", tmp_path / ".vscode")]
 
 
 @pytest.mark.parametrize(
-    ("project_type", "runtime"),
+    ("language", "runtime"),
     [
         ("python", "python"),
         ("javascript", "node"),
-        ("react", "node"),
-        ("vue", "node"),
     ],
 )
 def test_check_dependencies_probes_expected_runtime(
     monkeypatch: pytest.MonkeyPatch,
-    project_type: str,
+    language: str,
     runtime: str,
 ) -> None:
     captured: list[str] = []
@@ -342,7 +377,9 @@ def test_check_dependencies_probes_expected_runtime(
         "womm.interfaces.project.setup_interface.probe", successful_probe
     )
 
-    error = ProjectSetupInterface()._check_dependencies(project_type)
+    error = ProjectSetupInterface()._check_dependencies(
+        SetupProfile(language=language, vscode_variant="")
+    )
 
     assert error == ""
     assert captured == [runtime]
@@ -356,6 +393,8 @@ def test_check_dependencies_translates_probe_error(
 
     monkeypatch.setattr("womm.interfaces.project.setup_interface.probe", fail_probe)
 
-    error = ProjectSetupInterface()._check_dependencies("python")
+    error = ProjectSetupInterface()._check_dependencies(
+        SetupProfile(language="python", vscode_variant="py")
+    )
 
     assert error == "Error checking dependencies: probe unavailable"

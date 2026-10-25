@@ -1,6 +1,9 @@
 _womm:
   description: "JavaScript or TypeScript project (optional React or Vue)"
   version: "2.0.0"
+  setup:
+    language: javascript
+    vscode_variant: js
 
 _subdirectory: template
 

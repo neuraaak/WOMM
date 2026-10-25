@@ -115,5 +115,8 @@ def test_get_available_project_types_returns_configured_types() -> None:
 
     types = manager.get_available_project_types()
 
-    assert ("python", "Python") in types or any(t[0] == "python" for t in types)
-    assert all(isinstance(entry, tuple) and len(entry) == 2 for entry in types)
+    ids = [project_type for project_type, _description in types]
+    assert "python" in ids
+    assert "javascript" in ids
+    assert "react" in ids
+    assert "vue" in ids

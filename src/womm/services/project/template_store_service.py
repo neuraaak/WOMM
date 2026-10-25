@@ -206,6 +206,8 @@ class TemplateStoreService:
             if not manifest.is_file():
                 continue
             metadata = self._read_metadata(manifest)
+            setup = metadata.get("setup", {})
+            setup = setup if isinstance(setup, dict) else {}
             entries.append(
                 TemplateEntry(
                     id=candidate.name,
@@ -213,6 +215,8 @@ class TemplateStoreService:
                     source=candidate,
                     version=str(metadata.get("version", "")),
                     description=str(metadata.get("description", "")),
+                    setup_language=str(setup.get("language", "")),
+                    setup_vscode_variant=str(setup.get("vscode_variant", "")),
                 )
             )
         return entries
@@ -322,12 +326,16 @@ class TemplateStoreService:
         """Build a user entry, reading metadata from the manifest."""
         resolved = source.expanduser().resolve()
         metadata = self._read_metadata(resolved / TEMPLATE_MANIFEST)
+        setup = metadata.get("setup", {})
+        setup = setup if isinstance(setup, dict) else {}
         return TemplateEntry(
             id=identifier,
             origin=TemplateOrigin.USER,
             source=resolved,
             version=str(metadata.get("version", "")),
             description=str(metadata.get("description", "")),
+            setup_language=str(setup.get("language", "")),
+            setup_vscode_variant=str(setup.get("vscode_variant", "")),
         )
 
 

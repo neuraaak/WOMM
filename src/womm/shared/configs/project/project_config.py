@@ -101,37 +101,6 @@ class ProjectConfig:
 
     MAX_PROJECT_NAME_LENGTH: ClassVar[int] = 50
 
-    SUPPORTED_PROJECT_TYPES: ClassVar[list[str]] = [
-        "python",
-        "javascript",
-        "react",
-        "vue",
-    ]
-
-    # ///////////////////////////////////////////////////////////
-    # UI DISPLAY CONFIGURATION
-    # ///////////////////////////////////////////////////////////
-
-    # Project type descriptions for UI (with emojis)
-    PROJECT_TYPE_DESCRIPTIONS: ClassVar[dict[str, str]] = {
-        "python": "🐍 Python project with virtual environment and development tools",
-        "javascript": "🟨 JavaScript/Node.js project with npm and development tools",
-        "react": "⚛️ React.js project with modern development setup",
-        "vue": "💚 Vue.js project with modern development setup",
-    }
-
-    @classmethod
-    def get_project_types_for_ui(cls) -> list[tuple[str, str]]:
-        """Get list of project types with descriptions for UI display.
-
-        Returns:
-            List of tuples (project_type, description) ordered by SUPPORTED_PROJECT_TYPES
-        """
-        return [
-            (ptype, cls.PROJECT_TYPE_DESCRIPTIONS.get(ptype, ptype))
-            for ptype in cls.SUPPORTED_PROJECT_TYPES
-        ]
-
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API

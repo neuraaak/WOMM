@@ -1,6 +1,9 @@
 _womm:
   description: "Python project (optional Django)"
   version: "2.0.0"
+  setup:
+    language: python
+    vscode_variant: py
 
 _subdirectory: template
 

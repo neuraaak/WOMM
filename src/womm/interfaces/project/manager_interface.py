@@ -24,7 +24,7 @@ import logging
 from pathlib import Path
 
 # Local imports
-from ...shared.configs.project import ProjectConfig
+from ...services.project.setup_profile_resolver import list_setup_identifiers
 from ...shared.results import (
     ProjectDetectionResult,
     ProjectSetupResult,
@@ -85,9 +85,10 @@ class ProjectManagerInterface:
         """Get list of available project types with descriptions.
 
         Returns:
-            List of tuples (project_type, description) from ProjectConfig
+            List of tuples (project_type, description), catalog entries
+            first then legacy aliases.
         """
-        return ProjectConfig.get_project_types_for_ui()
+        return list_setup_identifiers()
 
     def setup_project(
         self,

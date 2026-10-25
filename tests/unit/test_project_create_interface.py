@@ -3,6 +3,8 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from womm.interfaces.project.create_interface import ProjectCreateInterface
 
 
@@ -97,6 +99,41 @@ def test_setup_flag_delegates_to_the_setup_interface(tmp_path: Path):
         )
 
     setup.assert_called_once()
+
+
+def test_create_project_with_setup_resolves_through_the_catalog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """entry.id ("python") must resolve via the catalog-backed resolver,
+    not a fixed SUPPORTED_PROJECT_TYPES list."""
+    from womm.services.project import setup_profile_resolver
+
+    captured: dict[str, object] = {}
+
+    def fake_setup_project(self, project_path, **kwargs):  # noqa: ANN001, ARG001
+        captured["project_path"] = project_path
+        captured.update(kwargs)
+        from womm.shared.results import ProjectSetupResult
+
+        return ProjectSetupResult(success=True, project_path=project_path)
+
+    monkeypatch.setattr(
+        "womm.interfaces.project.setup_interface.ProjectSetupInterface.setup_project",
+        fake_setup_project,
+    )
+
+    interface = ProjectCreateInterface()
+    result = interface.create_project(
+        "python",
+        tmp_path / "generated",
+        answers={"project_name": "generated"},
+        defaults=True,
+        setup=True,
+    )
+
+    assert result.success
+    assert captured["project_type"] == "python"
+    assert setup_profile_resolver.resolve_setup_profile("python") is not None
 
 
 def test_pretend_reports_success_without_writing(tmp_path: Path):

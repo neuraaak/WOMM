@@ -27,6 +27,7 @@ from ...exceptions.common import ValidationServiceError
 from ...exceptions.project import ProjectServiceError
 from ...shared.configs.project import ProjectConfig
 from ...utils.project import suggest_project_name
+from .setup_profile_resolver import resolve_setup_profile
 
 # ///////////////////////////////////////////////////////////////
 # LOGGER SETUP
@@ -269,14 +270,12 @@ class ProjectValidationService:
                     value=project_type or "None",
                 )
 
-            if project_type not in ProjectConfig.SUPPORTED_PROJECT_TYPES:
+            if resolve_setup_profile(project_type) is None:
                 raise ValidationServiceError(
                     operation="validate_project_type",
                     field="project_type",
                     reason=f"Unsupported project type: {project_type}",
-                    details=(
-                        f"Supported types: {', '.join(ProjectConfig.SUPPORTED_PROJECT_TYPES)}"
-                    ),
+                    details="Run 'womm setup detect --help' to see known types.",
                     value=project_type,
                 )
 

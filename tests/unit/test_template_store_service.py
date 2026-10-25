@@ -187,3 +187,32 @@ def test_catalog_write_is_atomic(isolated_home: Path, user_template: Path):
     leftovers = list((isolated_home / "templates").glob("*.tmp"))
 
     assert leftovers == []
+
+
+def test_official_python_entry_carries_setup_metadata():
+    store = TemplateStoreService()
+
+    entry = store.resolve("python")
+
+    assert entry.setup_language == "python"
+    assert entry.setup_vscode_variant == "py"
+
+
+def test_official_javascript_entry_carries_setup_metadata():
+    store = TemplateStoreService()
+
+    entry = store.resolve("javascript")
+
+    assert entry.setup_language == "javascript"
+    assert entry.setup_vscode_variant == "js"
+
+
+def test_user_template_without_setup_metadata_leaves_fields_empty(
+    user_template: Path,
+):
+    store = TemplateStoreService()
+
+    entry = store.add("my-service", user_template)
+
+    assert entry.setup_language == ""
+    assert entry.setup_vscode_variant == ""
