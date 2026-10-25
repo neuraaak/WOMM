@@ -218,7 +218,18 @@ large du lot.
 
 ### 4.3 Canal standalone et Inno Setup
 
-- inventorier d'abord ce que `ezcompiler` couvre déjà ;
+> **Modèle retenu le 2026-10-25 : `flash-excel`.** Il répond à la question
+> « inventorier ce qu'ezcompiler couvre déjà » : compilation par
+> **`ezcompiler`**, pilotée par un `build.py` à la racine, avec des wrappers
+> `.cmd` dans `.scripts/build/` (`publish-release.cmd`, `publish-update.cmd`)
+> qui chargent le `.env` et forcent le backend de publication. C'est
+> **délibérément hors CI** chez lui — son `poe build` est commenté « needs
+> signing keys and credentials that are not in the repository », d'où
+> l'absence de workflows `03`/`04` dans ce dépôt de référence.
+> L'adaptation à WOMM est reportée à ce lot ; `.scripts/build/build_exe.py`
+> reste en l'état jusque-là.
+
+- compiler depuis `womm.cli:main`, vérifier la présence des assets ;
 - compiler depuis `womm.cli:main`, vérifier la présence des assets ;
 - installer sous `%LocalAppData%\Programs\WOMM` avec PATH utilisateur et
   désinstallation propre, sans toucher `~/.womm` ;
