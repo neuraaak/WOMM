@@ -18,7 +18,6 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import logging
-import winreg
 from threading import Lock
 from typing import ClassVar
 
@@ -148,6 +147,8 @@ class ContextRegistryService:
                     f"Icon path must be a string, got {type(icon_path).__name__}",
                 )
 
+            import winreg
+
             # Create the registry key
             try:
                 with winreg.CreateKey(winreg.HKEY_CURRENT_USER, registry_path) as key:
@@ -211,6 +212,8 @@ class ContextRegistryService:
                     "registry_removal",
                     f"Registry path must be a string, got {type(registry_path).__name__}",
                 )
+
+            import winreg
 
             try:
                 # First, try to delete all subkeys (like "command")
@@ -341,6 +344,8 @@ class ContextRegistryService:
                     registry_path="",
                     entries=[],
                 )
+
+            import winreg
 
             try:
                 with winreg.OpenKey(winreg.HKEY_CURRENT_USER, registry_path) as key:

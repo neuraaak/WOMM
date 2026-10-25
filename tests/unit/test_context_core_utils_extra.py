@@ -11,9 +11,6 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
-# Standard library imports
-import winreg
-
 # Third-party imports
 import pytest
 
@@ -99,6 +96,8 @@ def test_validate_icon_path_rejects_missing_file() -> None:
 def test_get_registry_entry_info_reads_display_name_icon_and_command(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    winreg = pytest.importorskip("winreg")
+
     class FakeCommandKey:
         def __enter__(self) -> FakeCommandKey:
             return self
@@ -141,6 +140,8 @@ def test_get_registry_entry_info_reads_display_name_icon_and_command(
 def test_get_registry_entry_info_defaults_when_values_missing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    winreg = pytest.importorskip("winreg")
+
     class FakeKey:
         def __enter__(self) -> FakeKey:
             return self

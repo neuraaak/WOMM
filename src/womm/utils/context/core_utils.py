@@ -27,7 +27,6 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import logging
-import winreg
 from pathlib import Path
 
 # Local imports
@@ -206,6 +205,8 @@ def get_registry_entry_info(
     Raises:
         OSError: If the registry key cannot be opened
     """
+    import winreg
+
     full_path = f"{base_path}\\{key_name}"
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, full_path) as key:
         info: dict[str, str | None] = {

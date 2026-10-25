@@ -8,6 +8,11 @@
 
 from __future__ import annotations
 
+# Standard library imports
+import os
+import subprocess
+import sys
+
 # Third-party imports
 from click.testing import CliRunner
 
@@ -49,6 +54,27 @@ def test_help_registers_all_operational_command_groups() -> None:
         "deps",
     ):
         assert command in result.output
+
+
+def test_help_loads_without_windows_registry(tmp_path) -> None:
+    environment = os.environ.copy()
+    environment["WOMM_HOME"] = str(tmp_path / "womm-home")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['winreg'] = None; "
+            "from click.testing import CliRunner; "
+            "from womm.cli import womm; "
+            "raise SystemExit(CliRunner().invoke(womm, ['--help']).exit_code)",
+        ],
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_help_does_not_expose_removed_self_installation_commands() -> None:

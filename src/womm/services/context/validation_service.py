@@ -19,7 +19,6 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import logging
-import winreg
 from pathlib import Path
 from threading import Lock
 from typing import ClassVar
@@ -397,6 +396,8 @@ class ContextValidationService:
                     has_permissions=False,
                 )
 
+            import winreg
+
             # Try to access registry for writing
             test_key = "Software\\Classes\\Directory\\shell\\WOMM_TEST_PERMISSIONS"
 
@@ -466,6 +467,8 @@ class ContextValidationService:
                     input_type="compatibility",
                     compatible=False,
                 )
+
+            import winreg
 
             # Check Windows version
             platform_version = ""

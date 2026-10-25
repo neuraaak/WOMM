@@ -286,6 +286,7 @@ line-ending = "auto"
 # ty: Type checking with minimal configuration
 [tool.ty.environment]
 python-version = "3.13"
+python-platform = "all"
 root = ["src", "src/womm"]
 
 [tool.ty.src]

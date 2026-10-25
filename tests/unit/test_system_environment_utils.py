@@ -13,7 +13,6 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import shutil
-import winreg
 from pathlib import Path
 
 # Third-party imports
@@ -39,6 +38,7 @@ def test_read_windows_registry_path_rejects_non_windows(
 def test_read_windows_registry_path_returns_both_values(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    winreg = pytest.importorskip("winreg")
     monkeypatch.setattr(environment_utils.platform, "system", lambda: "Windows")
 
     class FakeKey:
@@ -66,6 +66,7 @@ def test_read_windows_registry_path_returns_both_values(
 def test_read_windows_registry_path_returns_none_when_key_missing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    winreg = pytest.importorskip("winreg")
     monkeypatch.setattr(environment_utils.platform, "system", lambda: "Windows")
 
     def fail_open_key(_hive: int, _subkey: str) -> None:
