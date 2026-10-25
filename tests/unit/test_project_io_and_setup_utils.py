@@ -32,23 +32,6 @@ def test_copy_asset_file_and_directory_honor_overwrite_and_exclusions(
     assert (target / "keep.txt").read_text() == "new"
 
 
-def test_asset_path_and_copy_type_handle_validation_and_missing_source(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    monkeypatch.setattr(
-        asset_utils, "get_assets_module_path", lambda: tmp_path / "assets"
-    )
-    with pytest.raises(ValueError):
-        asset_utils.get_assets_path("unknown")
-    monkeypatch.setattr(
-        asset_utils, "get_assets_path", lambda *_args: tmp_path / "missing"
-    )
-    assert (
-        asset_utils.copy_asset_type("python", "basic", "templates", tmp_path / "out")
-        == []
-    )
-
-
 def test_environment_helpers_find_executables_and_npm(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -31,8 +31,6 @@ logger = logging.getLogger(__name__)
 # CONSTANTS
 # ///////////////////////////////////////////////////////////////
 
-LANGUAGES_PREFIX = "languages/"
-LANGUAGES_PREFIX_LENGTH = len(LANGUAGES_PREFIX)
 BIN_PREFIX = "bin/"
 BIN_PREFIX_LENGTH = len(BIN_PREFIX)
 ASSETS_PREFIX = "assets/"
@@ -80,7 +78,6 @@ def resolve_script_path(relative_path: str) -> Path:
     """Resolve a script path relative to assets, bin, or the working directory.
 
     The path is resolved based on its prefix:
-    - ``\"languages/\"``: resolved against `womm/assets/languages/`
     - ``\"bin/\"``: resolved against `womm/bin/`
     - ``\"assets/\"``: resolved against `womm/assets/`
     - Otherwise: resolved against the current working directory
@@ -91,9 +88,6 @@ def resolve_script_path(relative_path: str) -> Path:
     Returns:
         Path: Resolved absolute path.
     """
-    if relative_path.startswith(LANGUAGES_PREFIX):
-        assets_path = get_assets_module_path()
-        return assets_path / "languages" / relative_path[LANGUAGES_PREFIX_LENGTH:]
     if relative_path.startswith(BIN_PREFIX):
         bin_path = get_bin_module_path()
         return bin_path / relative_path[BIN_PREFIX_LENGTH:]

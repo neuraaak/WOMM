@@ -8,10 +8,8 @@
 Pure utility functions for asset management.
 
 This module provides stateless functions for:
-- Resolving asset paths by language and variant
 - Copying individual asset files
 - Copying asset directories recursively
-- Copying specific asset types (templates, vscode, configs, scripts)
 """
 
 from __future__ import annotations
@@ -24,72 +22,11 @@ import logging
 import shutil
 from pathlib import Path
 
-# Local imports
-from ...shared.configs.project import ProjectVariantConfig
-from ..common.path_resolver_utils import get_assets_module_path
-
 # ///////////////////////////////////////////////////////////////
 # LOGGER SETUP
 # ///////////////////////////////////////////////////////////////
 
 logger = logging.getLogger(__name__)
-
-# ///////////////////////////////////////////////////////////////
-# ASSET PATH RESOLUTION
-# ///////////////////////////////////////////////////////////////
-
-
-def get_assets_path(
-    language: str, variant: str | None = None, asset_type: str | None = None
-) -> Path:
-    """Get the path to assets for a given language and variant.
-
-    Args:
-        language: Project language (python, javascript)
-        variant: Project variant (py, js, react, vue, etc.). If None, uses default.
-        asset_type: Optional asset type subdirectory (templates, vscode, configs, scripts)
-
-    Returns:
-        Path: Path to the assets directory
-
-    Raises:
-        ValueError: If language or variant is invalid
-    """
-    assets_base = get_assets_module_path() / "languages"
-
-    # Validate language
-    if language not in ProjectVariantConfig.SUPPORTED_VARIANTS:
-        raise ValueError(
-            f"Unsupported language: {language}. "
-            f"Supported languages: {list(ProjectVariantConfig.SUPPORTED_VARIANTS.keys())}"
-        )
-
-    # Get variant (use default if not specified)
-    if variant is None:
-        variant = ProjectVariantConfig.DEFAULT_VARIANTS.get(language)
-        if variant is None:
-            raise ValueError(
-                f"No default variant for language: {language}. "
-                "Please specify a variant explicitly"
-            )
-
-    # Validate variant
-    if variant not in ProjectVariantConfig.SUPPORTED_VARIANTS[language]:
-        raise ValueError(
-            f"Unsupported variant '{variant}' for language '{language}'. "
-            f"Supported variants: {ProjectVariantConfig.SUPPORTED_VARIANTS[language]}"
-        )
-
-    # Get assets subdirectory
-    assets_subdir = ProjectVariantConfig.VARIANT_TO_ASSETS.get(variant, variant)
-    assets_path = assets_base / language / assets_subdir
-
-    # Add asset type subdirectory if specified
-    if asset_type:
-        assets_path = assets_path / asset_type
-
-    return assets_path
-
 
 # ///////////////////////////////////////////////////////////////
 # ASSET FILE OPERATIONS
@@ -207,49 +144,11 @@ def copy_assets_directory(
     return copied_files
 
 
-def copy_asset_type(
-    language: str,
-    variant: str | None,
-    asset_type: str,
-    target: Path,
-    overwrite: bool = False,
-) -> list[Path]:
-    """Copy a specific asset type (templates, vscode, configs, scripts) to target.
-
-    Args:
-        language: Project language (python, javascript)
-        variant: Project variant (py, js, react, vue, etc.)
-        asset_type: Asset type subdirectory (templates, vscode, configs, scripts)
-        target: Target directory path
-        overwrite: If True, overwrite existing files
-
-    Returns:
-        list[Path]: List of copied file paths
-
-    Raises:
-        ValueError: If language or variant is invalid
-        OSError: If the copy operation fails
-    """
-    # Get source path
-    source = get_assets_path(language, variant, asset_type)
-
-    if not source.exists():
-        logger.warning(
-            f"Asset type '{asset_type}' not found for {language}/{variant} at {source}"
-        )
-        return []
-
-    # Copy the directory
-    return copy_assets_directory(source, target, overwrite=overwrite)
-
-
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
 __all__ = [
     "copy_asset_file",
-    "copy_asset_type",
     "copy_assets_directory",
-    "get_assets_path",
 ]

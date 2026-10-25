@@ -43,8 +43,6 @@ class TemplateEntry:
         description: One-line human description, empty when unknown.
         setup_language: Language family driving `womm setup` ("python" or
             "javascript"), empty when the manifest declares none.
-        setup_vscode_variant: VS Code asset variant used by `womm setup`
-            (e.g. "py", "js", "react", "vue"), empty when none declared.
     """
 
     id: str
@@ -53,7 +51,6 @@ class TemplateEntry:
     version: str = ""
     description: str = ""
     setup_language: str = ""
-    setup_vscode_variant: str = ""
 
     @property
     def qualified_id(self) -> str:

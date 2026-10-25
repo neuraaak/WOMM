@@ -23,9 +23,7 @@ from __future__ import annotations
 # Local imports
 from .asset_utils import (
     copy_asset_file,
-    copy_asset_type,
     copy_assets_directory,
-    get_assets_path,
 )
 from .core_utils import (
     analyze_csharp_config,
@@ -83,7 +81,6 @@ __all__ = [
     "categorize_directory",
     "check_project_name",
     "copy_asset_file",
-    "copy_asset_type",
     "copy_assets_directory",
     "create_common_structure",
     "create_javascript_config_files",
@@ -97,7 +94,6 @@ __all__ = [
     "create_python_test_file",
     "create_react_main_files",
     "create_vue_main_files",
-    "get_assets_path",
     "get_node_paths",
     "get_platform_info",
     "get_python_paths",

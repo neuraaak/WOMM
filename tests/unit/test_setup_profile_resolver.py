@@ -23,27 +23,34 @@ class FakeStore:
         return self._entries
 
 
-def _entry(id_: str, language: str, variant: str) -> TemplateEntry:
+def _entry(id_: str, language: str) -> TemplateEntry:
     return TemplateEntry(
         id=id_,
         origin=TemplateOrigin.OFFICIAL,
         source=Path("/dev/null"),
         description=f"{id_} template",
         setup_language=language,
-        setup_vscode_variant=variant,
     )
 
 
 def test_resolve_setup_profile_hits_catalog_entry():
-    store = FakeStore([_entry("python", "python", "py")])
+    store = FakeStore([_entry("python", "python")])
 
     profile = resolve_setup_profile("python", store=store)
 
-    assert profile == SetupProfile(language="python", vscode_variant="py")
+    assert profile == SetupProfile(
+        language="python",
+        template_source=Path("/dev/null"),
+        answers={
+            "project_name": "womm-setup",
+            "description": "Project configured by WOMM",
+            "with_vscode": True,
+        },
+    )
 
 
 def test_resolve_setup_profile_ignores_catalog_entry_without_setup_metadata():
-    store = FakeStore([_entry("my-service", "", "")])
+    store = FakeStore([_entry("my-service", "")])
 
     profile = resolve_setup_profile("my-service", store=store)
 
@@ -51,13 +58,14 @@ def test_resolve_setup_profile_ignores_catalog_entry_without_setup_metadata():
 
 
 def test_resolve_setup_profile_falls_back_to_legacy_alias():
-    store = FakeStore([])
+    store = FakeStore([_entry("javascript", "javascript")])
 
     react = resolve_setup_profile("react", store=store)
     vue = resolve_setup_profile("vue", store=store)
 
-    assert react == SetupProfile(language="javascript", vscode_variant="react")
-    assert vue == SetupProfile(language="javascript", vscode_variant="vue")
+    assert react is not None and react.answers["framework"] == "react"
+    assert vue is not None and vue.answers["framework"] == "vue"
+    assert react.template_source == Path("/dev/null")
 
 
 def test_resolve_setup_profile_returns_none_for_unknown_identifier():
@@ -67,7 +75,7 @@ def test_resolve_setup_profile_returns_none_for_unknown_identifier():
 
 
 def test_list_setup_identifiers_lists_catalog_then_aliases():
-    store = FakeStore([_entry("python", "python", "py"), _entry("my-service", "", "")])
+    store = FakeStore([_entry("python", "python"), _entry("my-service", "")])
 
     identifiers = list_setup_identifiers(store=store)
 
@@ -78,4 +86,6 @@ def test_list_setup_identifiers_lists_catalog_then_aliases():
 def test_resolve_setup_profile_reads_the_real_official_catalog():
     profile = resolve_setup_profile("javascript", store=TemplateStoreService())
 
-    assert profile == SetupProfile(language="javascript", vscode_variant="js")
+    assert profile is not None
+    assert profile.language == "javascript"
+    assert profile.template_source.is_dir()

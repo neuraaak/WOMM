@@ -195,7 +195,6 @@ def test_official_python_entry_carries_setup_metadata():
     entry = store.resolve("python")
 
     assert entry.setup_language == "python"
-    assert entry.setup_vscode_variant == "py"
 
 
 def test_official_javascript_entry_carries_setup_metadata():
@@ -204,7 +203,6 @@ def test_official_javascript_entry_carries_setup_metadata():
     entry = store.resolve("javascript")
 
     assert entry.setup_language == "javascript"
-    assert entry.setup_vscode_variant == "js"
 
 
 def test_user_template_without_setup_metadata_leaves_fields_empty(
@@ -215,4 +213,3 @@ def test_user_template_without_setup_metadata_leaves_fields_empty(
     entry = store.add("my-service", user_template)
 
     assert entry.setup_language == ""
-    assert entry.setup_vscode_variant == ""

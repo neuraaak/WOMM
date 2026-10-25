@@ -121,7 +121,9 @@ def test_setup_project_resolves_a_catalog_identifier_beyond_the_legacy_list(
     interface = ProjectSetupInterface()
     monkeypatch.setattr(
         "womm.interfaces.project.setup_interface.resolve_setup_profile",
-        lambda _identifier: SetupProfile(language="python", vscode_variant="py"),
+        lambda _identifier: SetupProfile(
+            language="python", template_source=tmp_path, answers={}
+        ),
     )
     monkeypatch.setattr(interface, "_check_dependencies", lambda _profile: "")
     monkeypatch.setattr(interface, "_copy_vscode_config", lambda *_args: None)
@@ -328,31 +330,34 @@ def test_setup_javascript_collects_unsuccessful_results(
 
 
 @pytest.mark.parametrize(
-    ("language", "variant"),
+    "language",
     [
-        ("python", "py"),
-        ("javascript", "js"),
-        ("javascript", "react"),
-        ("javascript", "vue"),
+        "python",
+        "javascript",
     ],
 )
-def test_copy_vscode_config_maps_project_variant(
+def test_copy_vscode_config_renders_from_copier_template(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     language: str,
-    variant: str,
 ) -> None:
-    captured: list[tuple[object, ...]] = []
+    def render(_self, request):  # noqa: ANN001
+        source = request.destination / ".vscode"
+        source.mkdir(parents=True)
+        (source / "settings.json").write_text("{}")
+        return request.destination
+
     monkeypatch.setattr(
-        "womm.interfaces.project.setup_interface.copy_asset_type",
-        lambda *args, **_kwargs: captured.append(args),
+        "womm.interfaces.project.setup_interface.CopierProjectCreationService.create",
+        render,
     )
 
     ProjectSetupInterface()._copy_vscode_config(
-        tmp_path, SetupProfile(language=language, vscode_variant=variant)
+        tmp_path,
+        SetupProfile(language=language, template_source=tmp_path, answers={}),
     )
 
-    assert captured == [(language, variant, "vscode", tmp_path / ".vscode")]
+    assert (tmp_path / ".vscode" / "settings.json").read_text() == "{}"
 
 
 @pytest.mark.parametrize(
@@ -378,7 +383,7 @@ def test_check_dependencies_probes_expected_runtime(
     )
 
     error = ProjectSetupInterface()._check_dependencies(
-        SetupProfile(language=language, vscode_variant="")
+        SetupProfile(language=language, template_source=Path(), answers={})
     )
 
     assert error == ""
@@ -394,7 +399,7 @@ def test_check_dependencies_translates_probe_error(
     monkeypatch.setattr("womm.interfaces.project.setup_interface.probe", fail_probe)
 
     error = ProjectSetupInterface()._check_dependencies(
-        SetupProfile(language="python", vscode_variant="py")
+        SetupProfile(language="python", template_source=Path(), answers={})
     )
 
     assert error == "Error checking dependencies: probe unavailable"

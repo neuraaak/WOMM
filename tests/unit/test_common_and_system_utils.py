@@ -14,7 +14,6 @@ from womm.utils.system import detector_utils, environment_utils, path_utils
 @pytest.mark.parametrize(
     ("relative_path", "expected_base", "expected_suffix"),
     [
-        ("languages/python/template.py", "assets", "languages/python/template.py"),
         ("bin/womm", "bin", "womm"),
         ("assets/icon.svg", "assets", "icon.svg"),
         ("README.md", "root", "README.md"),

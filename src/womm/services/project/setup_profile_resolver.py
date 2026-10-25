@@ -17,7 +17,9 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
+from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 from .template_store_service import TemplateStoreService
 
@@ -33,12 +35,13 @@ class SetupProfile:
     Attributes:
         language: Language family selecting the environment service
             ("python" or "javascript").
-        vscode_variant: VS Code asset variant to copy (e.g. "py", "js",
-            "react", "vue").
+        template_source: Copier template used to render the VS Code settings.
+        answers: Template answers needed to render the settings.
     """
 
     language: str
-    vscode_variant: str
+    template_source: Path
+    answers: Mapping[str, object]
 
 
 # ///////////////////////////////////////////////////////////////
@@ -48,15 +51,9 @@ class SetupProfile:
 # Identifiers not yet backed by a separate catalog entry. Only reachable
 # via explicit --type or the interactive wizard: auto-detection never
 # returns them (see ProjectDetectionService.detect_project_type).
-_LEGACY_SETUP_ALIASES: dict[str, tuple[SetupProfile, str]] = {
-    "react": (
-        SetupProfile(language="javascript", vscode_variant="react"),
-        "React.js project (javascript template variant)",
-    ),
-    "vue": (
-        SetupProfile(language="javascript", vscode_variant="vue"),
-        "Vue.js project (javascript template variant)",
-    ),
+_LEGACY_SETUP_ALIASES: dict[str, tuple[str, str]] = {
+    "react": ("react", "React.js project (javascript template variant)"),
+    "vue": ("vue", "Vue.js project (javascript template variant)"),
 }
 
 # ///////////////////////////////////////////////////////////////
@@ -81,15 +78,37 @@ def resolve_setup_profile(
         known legacy alias.
     """
     store = store or TemplateStoreService()
-    for entry in store.list_templates():
+    entries = store.list_templates()
+    for entry in entries:
         if entry.id == identifier and entry.setup_language:
             return SetupProfile(
                 language=entry.setup_language,
-                vscode_variant=entry.setup_vscode_variant,
+                template_source=entry.source,
+                answers=_setup_answers(),
             )
 
     alias = _LEGACY_SETUP_ALIASES.get(identifier)
-    return alias[0] if alias else None
+    if alias is None:
+        return None
+    javascript_template = next(
+        (entry for entry in entries if entry.id == "javascript"), None
+    )
+    if javascript_template is None:
+        return None
+    return SetupProfile(
+        language="javascript",
+        template_source=javascript_template.source,
+        answers={**_setup_answers(), "framework": alias[0]},
+    )
+
+
+def _setup_answers() -> dict[str, object]:
+    """Supply non-interactive answers needed to render setup configuration."""
+    return {
+        "project_name": "womm-setup",
+        "description": "Project configured by WOMM",
+        "with_vscode": True,
+    }
 
 
 def list_setup_identifiers(
@@ -116,7 +135,7 @@ def list_setup_identifiers(
     )
     aliases = [
         (identifier, description)
-        for identifier, (_profile, description) in _LEGACY_SETUP_ALIASES.items()
+        for identifier, (_framework, description) in _LEGACY_SETUP_ALIASES.items()
     ]
     return catalog + aliases
 

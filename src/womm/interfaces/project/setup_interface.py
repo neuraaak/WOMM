@@ -21,6 +21,7 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import logging
+import tempfile
 from pathlib import Path
 
 # Local imports
@@ -32,13 +33,17 @@ from ...services import (
     PythonEnvironmentService,
 )
 from ...services.dependencies import probe
+from ...services.project.copier_project_creation_service import (
+    CopierProjectCreationService,
+    ProjectCreationRequest,
+)
 from ...services.project.setup_profile_resolver import (
     SetupProfile,
     resolve_setup_profile,
 )
 from ...shared.results import ProjectSetupResult
 from ...utils.project import (
-    copy_asset_type,
+    copy_asset_file,
     validate_project_path,
 )
 
@@ -444,26 +449,42 @@ class ProjectSetupInterface:
         }
 
     def _copy_vscode_config(self, project_path: Path, profile: SetupProfile) -> None:
-        """Copy VSCode configuration from assets to project.
+        """Render VS Code configuration from the project's Copier template.
 
         Args:
             project_path: Path to the project
-            profile: Resolved setup profile (language + VS Code variant)
+            profile: Resolved setup profile with its Copier template and answers.
         """
-        vscode_dir = project_path / ".vscode"
-        copy_asset_type(
-            profile.language,
-            profile.vscode_variant,
-            "vscode",
-            vscode_dir,
-            overwrite=False,
-        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            rendered_project = Path(temp_dir) / "project"
+            CopierProjectCreationService().create(
+                ProjectCreationRequest(
+                    template_source=profile.template_source,
+                    destination=rendered_project,
+                    answers=profile.answers,
+                    defaults=True,
+                )
+            )
+
+            source_dir = rendered_project / ".vscode"
+            if not source_dir.is_dir():
+                return
+
+            vscode_dir = project_path / ".vscode"
+            for source_file in source_dir.rglob("*"):
+                if source_file.is_file():
+                    relative_path = source_file.relative_to(source_dir)
+                    copy_asset_file(
+                        source_file,
+                        vscode_dir / relative_path,
+                        overwrite=False,
+                    )
 
     def _check_dependencies(self, profile: SetupProfile) -> str:
         """Check if required dependencies are available.
 
         Args:
-            profile: Resolved setup profile (language + VS Code variant)
+            profile: Resolved setup profile with its project language.
 
         Returns:
             Empty string if dependencies are satisfied, otherwise an error message.

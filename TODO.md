@@ -15,9 +15,9 @@
 - [x] Corriger l'installation des dépendances par `create --setup` pour les
   templates Python qui déclarent leurs dépendances dans `pyproject.toml` :
   sans `requirements-dev.txt`, installer le projet et son groupe `dev`.
-- [ ] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
-  encore utilisé par `setup_interface.py`, après avoir remplacé ce flux par
-  les assets issus des templates Copier.
+- [x] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
+  de `setup_interface.py` ; le setup rend maintenant la configuration VS Code
+  depuis le template Copier du projet.
 - [ ] Rechercher les consommateurs des anciennes tables de variantes dans
   `shared/configs/project/` et `utils/project/`, puis supprimer le code
   devenu mort en cascade. Garder le contrat `--force` de

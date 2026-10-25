@@ -216,7 +216,6 @@ class TemplateStoreService:
                     version=str(metadata.get("version", "")),
                     description=str(metadata.get("description", "")),
                     setup_language=str(setup.get("language", "")),
-                    setup_vscode_variant=str(setup.get("vscode_variant", "")),
                 )
             )
         return entries
@@ -335,7 +334,6 @@ class TemplateStoreService:
             version=str(metadata.get("version", "")),
             description=str(metadata.get("description", "")),
             setup_language=str(setup.get("language", "")),
-            setup_vscode_variant=str(setup.get("vscode_variant", "")),
         )
 
 
