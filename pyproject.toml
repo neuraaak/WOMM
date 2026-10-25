@@ -121,11 +121,11 @@ dev = [
 # ///////////////////////////////////////////////////////////////
 
 [project.urls]
-Homepage = "https://github.com/neuraaak/works-on-my-machine"
-Documentation = "https://neuraaak.github.io/works-on-my-machine/"
-Repository = "https://github.com/neuraaak/works-on-my-machine"
-Issues = "https://github.com/neuraaak/works-on-my-machine/issues"
-PyPI = "https://pypi.org/project/works-on-my-machine/"
+Homepage = "https://github.com/neuraaak/WOMM"
+Documentation = "https://neuraaak.github.io/WOMM/"
+Repository = "https://github.com/neuraaak/WOMM"
+Issues = "https://github.com/neuraaak/WOMM/issues"
+PyPI = "https://pypi.org/project/WOMM/"
 
 # ///////////////////////////////////////////////////////////////
 # 🖥️ SCRIPTS
