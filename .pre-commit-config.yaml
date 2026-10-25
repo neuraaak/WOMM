@@ -82,7 +82,9 @@ repos:
       - id: import-linter
         name: "Import Linter — layer contracts"
         language: system
-        entry: uv run --no-sync lint-imports --config pyproject.toml
+        # lint-imports localise le package par le cwd, pas par le .pth de
+        # l'install editable : il doit tourner depuis src/.
+        entry: uv run --directory src --no-sync lint-imports --config ../pyproject.toml
         pass_filenames: false
         always_run: true
 

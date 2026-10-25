@@ -135,7 +135,7 @@ format-check = { cmd = "ruff format --check src tests .scripts", help = "Check f
 lint = { cmd = "ruff check src tests .scripts", help = "Check code with Ruff" }
 lint-fix = { cmd = "ruff check --fix src tests .scripts", help = "Fix Ruff issues automatically" }
 types = { cmd = "ty check --output-format=concise", help = "Check types with Ty" }
-imports = { cmd = "lint-imports --config pyproject.toml", help = "Check architecture contracts" }
+imports = { cmd = "lint-imports --config ../pyproject.toml", cwd = "src", help = "Check architecture contracts" }
 security = { cmd = "bandit -c pyproject.toml -r src/womm", help = "Scan source code with Bandit" }
 test = { cmd = "pytest", help = "Run the test suite" }
 test-fast = { cmd = "pytest -m 'not slow'", help = "Run tests excluding slow tests" }
