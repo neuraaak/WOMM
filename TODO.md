@@ -10,22 +10,11 @@
 
 ## Priorité 2 — terminer le rework `create` / `template`
 
-### 2.1 Setup générique — tâche 11 restante
-
-Les tâches 1 à 8 sont intégrées à la branche. `setup_project` est piloté par
-`_womm.setup` dans les templates Copier ; la liste figée des types de projet
-a été supprimée. Le plan et sa spécification sont disponibles dans
-`.superpowers/` (gitignoré) :
-
-- `.superpowers/plans/2026-08-07-generic-project-setup.md`
-- `.superpowers/specs/2026-08-07-generic-project-setup-design.md`
-
-- [ ] **Tâche 11** — exécuter tests, Ruff, Ty et import-linter, puis exercer
-  manuellement `womm create python <destination> --defaults --setup` et
-  `womm setup detect --path <destination>`.
-
 ### 2.3 Nettoyage du flux legacy après le setup générique
 
+- [ ] Corriger l'installation des dépendances par `create --setup` pour les
+  templates Python qui déclarent leurs dépendances dans `pyproject.toml` :
+  l'absence de `requirements-dev.txt` est actuellement traitée comme un succès.
 - [ ] Retirer `src/womm/assets/languages/` et le chemin `copy_asset_type`
   encore utilisé par `setup_interface.py`, après avoir remplacé ce flux par
   les assets issus des templates Copier.
@@ -105,8 +94,8 @@ sont vérifiés avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Terminer la tâche 11 du setup générique.
-2. Nettoyer le flux legacy et traiter la perte de variante de `--setup`.
-3. Reconstruire la documentation produit.
-4. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
+1. Nettoyer le flux legacy, corriger l'installation des dépendances et traiter
+   la perte de variante de `--setup`.
+2. Reconstruire la documentation produit.
+3. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
    standalone, puis valider la chaîne CI/release complète.
