@@ -17,7 +17,6 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Local imports
-from .conflict_resolution_service import ConflictResolutionService
 from .detection_service import ProjectDetectionService
 from .env_utils import (
     check_npm_available,
@@ -36,7 +35,6 @@ from .validation_service import ProjectValidationService
 # ///////////////////////////////////////////////////////////////
 
 __all__ = [
-    "ConflictResolutionService",
     "JavaScriptEnvironmentService",
     "ProjectDetectionService",
     "ProjectValidationService",

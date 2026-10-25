@@ -83,7 +83,7 @@ def test_no_service_module_imports_the_ui_layer() -> None:
 def test_the_guard_detects_a_ui_import_at_a_real_module_depth() -> None:
     # The depth is derived exactly as the scan above derives it, so an
     # off-by-one there cannot make this guard silently vacuous.
-    module = SERVICES_ROOT / "project" / "conflict_resolution_service.py"
+    module = SERVICES_ROOT / "project" / "destination_guard.py"
     depth = len(module.relative_to(SERVICES_ROOT.parent).parts)
 
     found = _ui_imports("from ...ui.common.prompts import confirm\n", depth)
