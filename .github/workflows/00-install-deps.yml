@@ -1,0 +1,30 @@
+name: 00 · Install Deps
+
+# Logic-free cache primer: warms the uv download cache (keyed on uv.lock by
+# setup-uv) so every downstream job that repeats `uv sync` gets a cache hit
+# instead of a network resolve. Called via workflow_call by 01-ci and others.
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: false
+        type: string
+        default: "3.13"
+
+permissions: {}
+
+jobs:
+  install:
+    name: Install & cache deps
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - run: uv sync --frozen --no-build --all-groups

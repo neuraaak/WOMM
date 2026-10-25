@@ -18,9 +18,9 @@ git push origin main
 ```
 
 - Triggers when files are modified in:
-  - `docs/**` - Documentation markdown files
-  - `mkdocs.yml` - MkDocs configuration
-  - `ezcompiler/**` - Source code (for auto-generated API docs)
+    - `docs/**` - Documentation markdown files
+    - `mkdocs.yml` - MkDocs configuration
+    - `ezcompiler/**` - Source code (for auto-generated API docs)
 - Only deploys when pushing to the `main` branch
 - Automatically builds and deploys to GitHub Pages
 

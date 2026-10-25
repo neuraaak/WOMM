@@ -1,0 +1,28 @@
+name: 04 · Docs
+
+# The product documentation is being rebuilt; validate it without deploying.
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen --no-build --group docs
+      - name: Build docs
+        run: uv run --no-sync poe docs-build
