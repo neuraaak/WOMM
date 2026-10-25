@@ -1,0 +1,74 @@
+{%- set run = "npm run" if package_manager == "npm" else package_manager if package_manager in ("pnpm", "yarn") else "bun run" -%}
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+{%- if package_manager == "bun" %}
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+{%- else %}
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+{%- if package_manager in ("pnpm", "yarn") %}
+      - name: Enable Corepack
+        run: corepack enable
+{%- endif %}
+{%- endif %}
+      - name: Install dependencies
+{%- if package_manager == "npm" %}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+{%- elif package_manager == "pnpm" %}
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile
+          else
+            pnpm install
+          fi
+{%- elif package_manager == "yarn" %}
+        run: |
+          if [ -f yarn.lock ]; then
+            yarn install --immutable
+          else
+            yarn install
+          fi
+{%- else %}
+        run: |
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            bun install
+          fi
+{%- endif %}
+      - name: Format check
+        run: {{ run }} format:check
+      - name: Lint
+        run: {{ run }} lint
+{%- if typescript %}
+      - name: Type check
+        run: {{ run }} type-check
+{%- endif %}
+{%- if with_tests %}
+      - name: Test
+        run: {{ run }} test
+{%- endif %}
+      - name: Build
+        run: {{ run }} build

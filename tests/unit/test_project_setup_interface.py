@@ -12,6 +12,7 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -20,7 +21,10 @@ import pytest
 
 # Local imports
 from womm.interfaces.project.setup_interface import ProjectSetupInterface
-from womm.services.project.setup_profile_resolver import SetupProfile
+from womm.services.project.setup_profile_resolver import (
+    SetupProfile,
+    resolve_setup_profile,
+)
 from womm.shared.results import ProjectCreationResult, ProjectDetectionResult
 
 # ///////////////////////////////////////////////////////////////
@@ -50,7 +54,9 @@ def test_setup_project_auto_detects_and_aggregates_results(
         lambda _path: ProjectDetectionResult(success=True, project_type="python"),
     )
     monkeypatch.setattr(interface, "_check_dependencies", lambda _type: "")
-    monkeypatch.setattr(interface, "_copy_vscode_config", lambda *_args: None)
+    monkeypatch.setattr(
+        interface, "_copy_vscode_config", lambda *_args, **_kwargs: None
+    )
     monkeypatch.setattr(
         interface,
         "_setup_python_project",
@@ -93,7 +99,7 @@ def test_setup_project_keeps_vscode_copy_failure_as_warning(
     interface = ProjectSetupInterface()
     monkeypatch.setattr(interface, "_check_dependencies", lambda _type: "")
 
-    def fail_copy(_path: Path, _type: str) -> None:
+    def fail_copy(_path: Path, _type: str, **_kwargs: object) -> None:
         raise OSError("assets unavailable")
 
     monkeypatch.setattr(interface, "_copy_vscode_config", fail_copy)
@@ -126,7 +132,9 @@ def test_setup_project_resolves_a_catalog_identifier_beyond_the_legacy_list(
         ),
     )
     monkeypatch.setattr(interface, "_check_dependencies", lambda _profile: "")
-    monkeypatch.setattr(interface, "_copy_vscode_config", lambda *_args: None)
+    monkeypatch.setattr(
+        interface, "_copy_vscode_config", lambda *_args, **_kwargs: None
+    )
     monkeypatch.setattr(
         interface,
         "_setup_python_project",
@@ -360,12 +368,42 @@ def test_copy_vscode_config_renders_from_copier_template(
     assert (tmp_path / ".vscode" / "settings.json").read_text() == "{}"
 
 
+def test_copy_vscode_config_uses_template_answers_for_javascript_variant(
+    tmp_path: Path,
+) -> None:
+    profile = resolve_setup_profile("javascript")
+    assert profile is not None
+    project = tmp_path / "vue-project"
+    project.mkdir()
+
+    ProjectSetupInterface()._copy_vscode_config(
+        project,
+        profile,
+        template_answers={"framework": "vue", "typescript": True},
+    )
+
+    settings = json.loads((project / ".vscode/settings.json").read_text())
+    extensions = json.loads((project / ".vscode/extensions.json").read_text())
+    assert settings["editor.defaultFormatter"] == "esbenp.prettier-vscode"
+    assert "vue.volar" in extensions["recommendations"]
+
+
+def test_copy_vscode_config_keeps_default_javascript_variant(tmp_path: Path) -> None:
+    profile = resolve_setup_profile("javascript")
+    assert profile is not None
+    project = tmp_path / "plain-project"
+    project.mkdir()
+
+    ProjectSetupInterface()._copy_vscode_config(project, profile)
+
+    settings = json.loads((project / ".vscode/settings.json").read_text())
+    assert settings["editor.defaultFormatter"] == "biomejs.biome"
+
+
 @pytest.mark.parametrize("venv_name", [".venv", "venv"])
 def test_vscode_uses_real_project_name_and_environment(
     tmp_path: Path, venv_name: str
 ) -> None:
-    import json
-
     template = tmp_path / "template"
     settings = template / "content" / ".vscode"
     settings.mkdir(parents=True)
@@ -381,7 +419,11 @@ def test_vscode_uses_real_project_name_and_environment(
     (project / venv_name).mkdir(parents=True)
     profile = SetupProfile(language="python", template_source=template, answers={})
 
-    ProjectSetupInterface()._copy_vscode_config(project, profile)
+    ProjectSetupInterface()._copy_vscode_config(
+        project,
+        profile,
+        template_answers={"project_name": "wrong"},
+    )
 
     config = json.loads((project / ".vscode/settings.json").read_text())
     assert config["python.analysis.extraPaths"] == ["src/real-project"]

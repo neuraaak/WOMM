@@ -1,5 +1,6 @@
 """Generation matrix for the official Python template."""
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,11 @@ BASE_ANSWERS = {
 def render(destination: Path, **overrides: object) -> Path:
     """Render the official Python template with merged answers."""
     source = TemplateStoreService().resolve("official/python").source
+    return render_from_source(destination, source, **overrides)
+
+
+def render_from_source(destination: Path, source: Path, **overrides: object) -> Path:
+    """Render a Python template source with merged answers."""
     CopierProjectCreationService().create(
         ProjectCreationRequest(
             template_source=source,
@@ -30,6 +36,26 @@ def render(destination: Path, **overrides: object) -> Path:
         )
     )
     return destination
+
+
+def test_standard_copier_exclusions_are_preserved(tmp_path: Path):
+    source = TemplateStoreService().resolve("official/python").source
+    copied_source = tmp_path / "template-source"
+    shutil.copytree(source, copied_source)
+    template = copied_source / "template"
+    (template / ".DS_Store").write_text("metadata", encoding="utf-8")
+    (template / "scratch.pyc").write_bytes(b"bytecode")
+    (template / "~backup").write_text("backup", encoding="utf-8")
+    cache = template / "__pycache__"
+    cache.mkdir()
+    (cache / "cached.pyc").write_bytes(b"bytecode")
+
+    out = render_from_source(tmp_path / "rendered", copied_source)
+
+    assert not (out / ".DS_Store").exists()
+    assert not (out / "scratch.pyc").exists()
+    assert not (out / "~backup").exists()
+    assert not (out / "__pycache__").exists()
 
 
 def test_defaults_produce_a_coherent_project(tmp_path: Path):

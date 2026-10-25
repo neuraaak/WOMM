@@ -101,7 +101,7 @@ class ProjectCreateInterface:
 
         warnings: list[str] = []
         if setup and not pretend:
-            warnings = self._run_setup(destination, entry.id)
+            warnings = self._run_setup(destination, entry.id, answers)
 
         return ProjectCreationResult(
             success=True,
@@ -116,7 +116,12 @@ class ProjectCreateInterface:
     # PRIVATE METHODS
     # ///////////////////////////////////////////////////////////////
 
-    def _run_setup(self, destination: Path, project_type: str) -> list[str]:
+    def _run_setup(
+        self,
+        destination: Path,
+        project_type: str,
+        template_answers: Mapping[str, object],
+    ) -> list[str]:
         """Delegate environment setup to the setup vertical.
 
         Setup failures never fail the creation: the project is rendered, and
@@ -126,6 +131,7 @@ class ProjectCreateInterface:
             destination: Path to the rendered project.
             project_type: Template id, used to select the setup path
                 (e.g. "python").
+            template_answers: Answers used to render the project.
 
         Returns:
             list[str]: Warnings to surface, empty when setup succeeded.
@@ -135,6 +141,7 @@ class ProjectCreateInterface:
         result = ProjectSetupInterface().setup_project(
             destination,
             project_type=project_type,
+            template_answers=template_answers,
             virtual_env=True,
             install_deps=True,
             setup_dev_tools=True,

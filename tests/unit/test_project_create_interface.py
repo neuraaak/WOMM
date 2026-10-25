@@ -16,7 +16,7 @@ def test_create_preserves_partial_setup_warnings(tmp_path: Path):
             success=True, project_path=tmp_path, warnings=["Dependencies failed"]
         ),
     ):
-        assert ProjectCreateInterface()._run_setup(tmp_path, "python") == [
+        assert ProjectCreateInterface()._run_setup(tmp_path, "python", {}) == [
             "Dependencies failed"
         ]
 
@@ -136,17 +136,23 @@ def test_create_project_with_setup_resolves_through_the_catalog(
     )
 
     interface = ProjectCreateInterface()
+    answers = {
+        "project_name": "generated",
+        "framework": "react",
+        "typescript": "true",
+    }
     result = interface.create_project(
-        "python",
+        "official/javascript",
         tmp_path / "generated",
-        answers={"project_name": "generated"},
+        answers=answers,
         defaults=True,
         setup=True,
     )
 
     assert result.success
-    assert captured["project_type"] == "python"
-    assert setup_profile_resolver.resolve_setup_profile("python") is not None
+    assert captured["project_type"] == "javascript"
+    assert captured["template_answers"] == answers
+    assert setup_profile_resolver.resolve_setup_profile("javascript") is not None
 
 
 def test_pretend_reports_success_without_writing(tmp_path: Path):

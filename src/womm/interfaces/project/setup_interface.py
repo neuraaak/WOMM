@@ -22,6 +22,7 @@ from __future__ import annotations
 # Standard library imports
 import logging
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 
 # Local imports
@@ -86,6 +87,7 @@ class ProjectSetupInterface:
         install_deps: bool = False,
         setup_dev_tools: bool = False,
         setup_git_hooks: bool = False,
+        template_answers: Mapping[str, object] | None = None,
         **kwargs,  # noqa: ARG002
     ) -> ProjectSetupResult:
         """Set up an existing project with development tools and configuration.
@@ -97,6 +99,8 @@ class ProjectSetupInterface:
             install_deps: Whether to install dependencies
             setup_dev_tools: Whether to set up development tools
             setup_git_hooks: Whether to set up Git hooks
+            template_answers: Answers from a preceding Copier render, used only
+                to preserve its variant in generated editor configuration.
             **kwargs: Additional project-specific options
 
         Returns:
@@ -162,7 +166,11 @@ class ProjectSetupInterface:
 
             # Copy VSCode configuration
             try:
-                self._copy_vscode_config(project_path, profile)
+                self._copy_vscode_config(
+                    project_path,
+                    profile,
+                    template_answers=template_answers,
+                )
                 tools_configured.append("vscode")
             except Exception as e:
                 logger.warning(f"Failed to copy VSCode config: {e}")
@@ -449,12 +457,18 @@ class ProjectSetupInterface:
             "warnings": warnings,
         }
 
-    def _copy_vscode_config(self, project_path: Path, profile: SetupProfile) -> None:
+    def _copy_vscode_config(
+        self,
+        project_path: Path,
+        profile: SetupProfile,
+        template_answers: Mapping[str, object] | None = None,
+    ) -> None:
         """Render VS Code configuration from the project's Copier template.
 
         Args:
             project_path: Path to the project
             profile: Resolved setup profile with its Copier template and answers.
+            template_answers: Optional answers from the project's initial render.
         """
         with tempfile.TemporaryDirectory() as temp_dir:
             rendered_project = Path(temp_dir) / "project"
@@ -462,7 +476,11 @@ class ProjectSetupInterface:
                 ProjectCreationRequest(
                     template_source=profile.template_source,
                     destination=rendered_project,
-                    answers={**profile.answers, "project_name": project_path.name},
+                    answers={
+                        **profile.answers,
+                        **(template_answers or {}),
+                        "project_name": project_path.name,
+                    },
                     defaults=True,
                 )
             )

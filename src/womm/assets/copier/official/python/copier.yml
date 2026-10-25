@@ -82,6 +82,14 @@ license:
 # one matching use_src_layout ever exists at render time, so listing both is
 # harmless when the other one wasn't rendered in the first place.
 _exclude:
+  - "copier.yaml"
+  - "copier.yml"
+  - "~*"
+  - "*.py[co]"
+  - "__pycache__"
+  - ".git"
+  - ".DS_Store"
+  - ".svn"
   - "{% if framework != 'django' %}manage.py{% endif %}"
   - "{% if framework != 'django' %}src/{{ package_name }}/settings.py{% endif %}"
   - "{% if framework != 'django' %}src/{{ package_name }}/urls.py{% endif %}"

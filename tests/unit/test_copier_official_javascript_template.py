@@ -1,9 +1,11 @@
 """Generation matrix for the official JavaScript template."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 
 from womm.services.project.copier_project_creation_service import (
     CopierProjectCreationService,
@@ -21,6 +23,11 @@ BASE_ANSWERS = {
 def render(destination: Path, **overrides: object) -> Path:
     """Render the official JavaScript template with merged answers."""
     source = TemplateStoreService().resolve("official/javascript").source
+    return render_from_source(destination, source, **overrides)
+
+
+def render_from_source(destination: Path, source: Path, **overrides: object) -> Path:
+    """Render a JavaScript template source with merged answers."""
     CopierProjectCreationService().create(
         ProjectCreationRequest(
             template_source=source,
@@ -30,6 +37,26 @@ def render(destination: Path, **overrides: object) -> Path:
         )
     )
     return destination
+
+
+def test_standard_copier_exclusions_are_preserved(tmp_path: Path):
+    source = TemplateStoreService().resolve("official/javascript").source
+    copied_source = tmp_path / "template-source"
+    shutil.copytree(source, copied_source)
+    template = copied_source / "template"
+    (template / ".DS_Store").write_text("metadata", encoding="utf-8")
+    (template / "scratch.pyc").write_bytes(b"bytecode")
+    (template / "~backup").write_text("backup", encoding="utf-8")
+    cache = template / "__pycache__"
+    cache.mkdir()
+    (cache / "cached.pyc").write_bytes(b"bytecode")
+
+    out = render_from_source(tmp_path / "rendered", copied_source)
+
+    assert not (out / ".DS_Store").exists()
+    assert not (out / "scratch.pyc").exists()
+    assert not (out / "~backup").exists()
+    assert not (out / "__pycache__").exists()
 
 
 def test_defaults_produce_a_coherent_project(tmp_path: Path):
@@ -101,6 +128,115 @@ def test_vscode_files_can_be_disabled(tmp_path: Path):
 
     assert not (out / ".vscode").exists()
     assert ".vscode/" in (out / ".gitignore").read_text(encoding="utf-8")
+
+
+def test_ci_is_generated_by_default_and_is_valid_yaml(tmp_path: Path):
+    out = render(tmp_path / "p")
+
+    workflow = out / ".github" / "workflows" / "ci.yml"
+    assert workflow.is_file()
+    assert yaml.compose(workflow.read_text(encoding="utf-8")) is not None
+
+
+def test_ci_can_be_disabled(tmp_path: Path):
+    out = render(tmp_path / "p", with_ci=False)
+
+    assert not (out / ".github").exists()
+
+
+@pytest.mark.parametrize(
+    ("manager", "setup_action", "lockfile", "strict_install", "first_install"),
+    [
+        ("npm", "actions/setup-node@v7", "package-lock.json", "npm ci", "npm install"),
+        (
+            "pnpm",
+            "actions/setup-node@v7",
+            "pnpm-lock.yaml",
+            "pnpm install --frozen-lockfile",
+            "pnpm install",
+        ),
+        (
+            "yarn",
+            "actions/setup-node@v7",
+            "yarn.lock",
+            "yarn install --immutable",
+            "yarn install",
+        ),
+        (
+            "bun",
+            "oven-sh/setup-bun@v2",
+            "bun.lock",
+            "bun install --frozen-lockfile",
+            "bun install",
+        ),
+    ],
+)
+def test_ci_installs_with_the_selected_package_manager(
+    tmp_path: Path,
+    manager: str,
+    setup_action: str,
+    lockfile: str,
+    strict_install: str,
+    first_install: str,
+):
+    out = render(tmp_path / manager, package_manager=manager)
+    workflow = yaml.safe_load(
+        (out / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    )
+    steps = workflow["jobs"]["quality"]["steps"]
+
+    assert any(step.get("uses") == setup_action for step in steps)
+    install = next(
+        step["run"] for step in steps if step.get("name") == "Install dependencies"
+    )
+    assert lockfile in install
+    assert strict_install in install
+    assert first_install in install
+    if manager in {"pnpm", "yarn"}:
+        assert any(step.get("run") == "corepack enable" for step in steps)
+
+
+@pytest.mark.parametrize(
+    ("manager", "run_prefix"),
+    [
+        ("npm", "npm run"),
+        ("pnpm", "pnpm"),
+        ("yarn", "yarn"),
+        ("bun", "bun run"),
+    ],
+)
+@pytest.mark.parametrize("typescript", [False, True])
+@pytest.mark.parametrize("with_tests", [False, True])
+def test_ci_runs_only_generated_quality_scripts(
+    tmp_path: Path,
+    manager: str,
+    run_prefix: str,
+    typescript: bool,
+    with_tests: bool,
+):
+    out = render(
+        tmp_path / f"{manager}-{typescript}-{with_tests}",
+        package_manager=manager,
+        typescript=typescript,
+        with_tests=with_tests,
+    )
+    workflow = yaml.safe_load(
+        (out / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    )
+    steps = workflow["jobs"]["quality"]["steps"]
+    commands = {
+        step["name"]: step["run"] for step in steps if "name" in step and "run" in step
+    }
+
+    assert commands["Format check"] == f"{run_prefix} format:check"
+    assert commands["Lint"] == f"{run_prefix} lint"
+    assert commands["Build"] == f"{run_prefix} build"
+    assert ("Type check" in commands) is typescript
+    assert ("Test" in commands) is with_tests
+    if typescript:
+        assert commands["Type check"] == f"{run_prefix} type-check"
+    if with_tests:
+        assert commands["Test"] == f"{run_prefix} test"
 
 
 def test_rendered_package_json_is_valid_json(tmp_path: Path):

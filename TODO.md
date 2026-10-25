@@ -8,18 +8,6 @@
 
 ---
 
-## Priorité 3 — reliquats non bloquants des templates
-
-- [ ] Préserver la variante choisie dans les réponses Copier
-  (framework/TypeScript) lorsque `create` enchaîne sur `--setup` ;
-  actuellement la configuration VS Code JS appliquée reste plate.
-- [ ] Vérifier si `_exclude` du template JavaScript masque les exclusions
-  par défaut de Copier, puis corriger si nécessaire.
-- [ ] Décider séparément du pre-commit et de la CI JavaScript
-  (`husky`/`lint-staged`, `with_ci`) ; cette décision avait été reportée.
-
----
-
 ## Priorité 4 — distribution, release et documentation
 
 > Lot différé jusqu'à stabilisation du comportement métier. Les workflows
@@ -74,8 +62,7 @@ sont vérifiés avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Nettoyer le flux legacy, corriger l'installation des dépendances et traiter
-   la perte de variante de `--setup`.
+1. Nettoyer le flux legacy et corriger l'installation des dépendances.
 2. Reconstruire la documentation produit.
 3. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
    standalone, puis valider la chaîne CI/release complète.

@@ -49,6 +49,11 @@ with_tests:
   help: "Include a Vitest setup"
   default: true
 
+with_ci:
+  type: bool
+  help: "Include a GitHub Actions CI workflow"
+  default: true
+
 with_vscode:
   type: bool
   help: "Include shared VS Code settings"
@@ -72,6 +77,14 @@ license:
 # matching), so a pattern that renders to an empty string simply matches no
 # file — this is the supported way to conditionally drop a rendered file.
 _exclude:
+  - "copier.yaml"
+  - "copier.yml"
+  - "~*"
+  - "*.py[co]"
+  - "__pycache__"
+  - ".git"
+  - ".DS_Store"
+  - ".svn"
   - "{% if not typescript %}tsconfig.json{% endif %}"
   - "{% if framework == 'none' %}index.html{% endif %}"
   - "{% if framework == 'none' %}vite.config.mjs{% endif %}"
