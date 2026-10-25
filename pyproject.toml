@@ -48,7 +48,7 @@ classifiers = [
 dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
-    "ezplog>=1.5.0",
+    "ezplog>=2.0.0,<3.0.0",
     "InquirerPy>=0.3.4",
     "copier>=9.17,<10",
 ]
@@ -63,48 +63,56 @@ dependencies = [
 # /////////////////////////////////////////////////////////////////////
 
 [dependency-groups]
-dev = [
-    # Development tools
-    "poethepoet>=0.48.0",
-    "ruff>=0.1.0",
-    "ty>=0.0.13",
-    "pyright>=1.1.0",
-    "pre-commit>=3.0.0",
-    "import-linter>=2.0.0",
-
-    # Security: bandit scans this package's own code, pip-audit the
-    # locked dependencies. `poe security` chains both.
-    "bandit>=1.7.0",
-    "pip-audit>=2.7.0",
-
-    # Tests
-    {include-group = "test"},
-
-    # Documentation
-    {include-group = "docs"},
-
-    # Build and distribution
-    "build>=1.0.0",
-    "twine>=4.0.0",
-]
 test = [
+    # Task runner: declared here rather than in `dev` so the CI test job,
+    # which syncs this group alone, can call `poe test-ci` — the single
+    # definition of the coverage gate.
+    "poethepoet>=0.32",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
     "pytest-xdist>=3.0.0",
     "import-linter>=2.0.0",
+    "grimp>=2.3.0",
 ]
 docs = [
     "mkdocs>=1.6.0,<2.0.0",
     "mkdocs-material>=9.5.0",
+    "mkdocstrings[python]>=0.27.0",
     "mkdocs-section-index>=0.3.0",
+    "mkdocs-coverage>=1.1.0",
     "mike>=2.0.0",
     "pymdown-extensions>=10.7",
     "git-cliff>=2.7.0",
+    "grimp>=2.3.0",
 
-    # Task runner: 04-docs syncs only this group and runs `poe docs-build`,
-    # so poethepoet must be reachable from here too.
-    "poethepoet>=0.48.0",
+    # Task runner: 04-docs runs `poe docs-coverage|imports|graph` and syncs
+    # only `docs` + `test`, so poethepoet must be reachable from this group.
+    "poethepoet>=0.32",
+]
+dev = [
+    # Tests (single source of truth, no duplication)
+    { include-group = "test" },
+
+    # Documentation (single source of truth, no duplication)
+    { include-group = "docs" },
+
+    # Development tools
+    "ruff>=0.1.0",
+    "ty>=0.0.13",
+    "pyright>=1.1.0",
+    "pre-commit>=3.0.0",
+
+    # Task runner
+    "poethepoet>=0.32",
+
+    # Security
+    "bandit>=1.7.0",
+    "pip-audit>=2.7.0",
+
+    # Build and distribution
+    "build>=1.0.0",
+    "twine>=4.0.0",
 ]
 
 # ///////////////////////////////////////////////////////////////
