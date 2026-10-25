@@ -26,11 +26,11 @@ import sys
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 
 # Local imports
 from ...interfaces import DepsInterface
-from ...ui.common import ezpl_bridge, ezprinter
+from ...ui.common import ezpl, ezprinter
 from ...ui.system import (
     render_deps_check_result,
     render_deps_inventory_result,
@@ -88,7 +88,7 @@ def deps_check(verbose: bool) -> None:
         womm deps check -v
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Dependencies Check")
 
@@ -120,7 +120,7 @@ def deps_status(verbose: bool) -> None:
         womm deps status -v
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Dependency Status")
 
@@ -149,7 +149,7 @@ def deps_list(verbose: bool) -> None:
         womm deps list
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Dependency Inventory")
 

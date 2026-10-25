@@ -24,7 +24,7 @@ from rich.panel import Panel
 # Local imports
 from ....shared.models.template_source import TemplateEntry
 from ....shared.results.template_results import TemplateListResult, TemplateStoreResult
-from ...common.ezpl_bridge import ezconsole, ezpl_bridge, ezprinter
+from ...common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # HELPERS
@@ -78,7 +78,7 @@ def render_template_list(result: TemplateListResult, *, verbose: bool = False) -
     ezprinter.success(result.message or f"{len(entries)} template(s) available")
 
     if not entries:
-        ezpl_bridge.console.print("")
+        ezprinter.console.print("")
         ezprinter.system("No template registered")
         return
 
@@ -97,8 +97,8 @@ def render_template_list(result: TemplateListResult, *, verbose: bool = False) -
             row.append(str(entry.source))
         table.add_row(*row)
 
-    ezpl_bridge.console.print("")
-    ezpl_bridge.console.print(table)
+    ezprinter.console.print("")
+    ezprinter.console.print(table)
 
 
 def render_template_result(

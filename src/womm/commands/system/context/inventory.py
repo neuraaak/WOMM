@@ -22,12 +22,12 @@ from typing import cast
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 from rich.progress import TaskID
 
 # Local imports
 from ....interfaces import ContextMenuInterface
-from ....ui.common import ezpl_bridge, ezprinter
+from ....ui.common import ezpl, ezprinter
 from ....ui.context.display import (
     render_context_entries_result,
     render_context_setup_result,
@@ -50,7 +50,7 @@ from . import _check_windows, context_group
 def context_list(verbose: bool) -> None:
     """📋 List registered context menu entries."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu List")
 
@@ -86,7 +86,7 @@ def context_list(verbose: bool) -> None:
 def context_quick_setup(verbose: bool) -> None:
     """⚡ Quick setup common WOMM tools in context menu."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Quick Setup")
 

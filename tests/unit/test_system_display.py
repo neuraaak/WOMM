@@ -8,7 +8,7 @@
 Tests for the system-vertical UI display functions.
 
 No interactive input here, so branches are cheap to verify by asserting on
-the ``ezprinter``/``ezconsole``/``ezpl_bridge`` calls each path makes. The
+the ``ezprinter``/``ezconsole`` calls each path makes. The
 one real validation (``display_system_detection_results`` raises on a
 non-dict payload) is asserted directly.
 """
@@ -47,12 +47,10 @@ from womm.ui.system import display as display_module
 def _patch_ui(monkeypatch):
     ezprinter = MagicMock()
     ezconsole = MagicMock()
-    ezpl_bridge = MagicMock()
     ezprinter.create_panel.return_value = "panel"
     monkeypatch.setattr(display_module, "ezprinter", ezprinter)
     monkeypatch.setattr(display_module, "ezconsole", ezconsole)
-    monkeypatch.setattr(display_module, "ezpl_bridge", ezpl_bridge)
-    return ezprinter, ezconsole, ezpl_bridge
+    return ezprinter, ezconsole, ezprinter
 
 
 # ///////////////////////////////////////////////////////////////
@@ -167,7 +165,7 @@ def test_display_system_detection_results_rejects_non_dict():
 
 
 def test_display_system_detection_results_builds_panel(monkeypatch):
-    ezprinter, _, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, _, _ = _patch_ui(monkeypatch)
     data = {
         "system_info": {"platform": "Windows", "python_version": "3.13"},
         "package_managers": {"winget": {"available": True, "version": "1.0"}},
@@ -178,16 +176,16 @@ def test_display_system_detection_results_builds_panel(monkeypatch):
     display_module.display_system_detection_results(data)
 
     ezprinter.create_panel.assert_called_once()
-    ezpl_bridge.console.print.assert_called_once_with("panel")
+    ezprinter.console.print.assert_called_once_with("panel")
 
 
 def test_render_system_detection_result_success(monkeypatch):
-    _, _, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, _, _ = _patch_ui(monkeypatch)
     result = SystemDetectionResult(success=True, system_data={})
 
     display_module.render_system_detection_result(result)
 
-    ezpl_bridge.console.print.assert_called_once()
+    ezprinter.console.print.assert_called_once()
 
 
 def test_render_system_detection_result_failure(monkeypatch):

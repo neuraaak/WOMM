@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # ///////////////////////////////////////////////////////////////
-# EZPL BRIDGE - Ezpl Bridge for UI Compatibility
+# LOGGING - ezplog integration and WOMM Rich helpers
 # Project: works-on-my-machine
 # ///////////////////////////////////////////////////////////////
 
 """
-Ezpl Bridge for Works On My Machine.
+ezplog integration for Works On My Machine.
 
-This module provides a bridge class that extends Ezpl with an ExtendedPrinter
-that adds utility methods for WOMM-specific functionality.
+This module configures ezplog and extends its printer with WOMM-specific
+Rich builders.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from contextlib import contextmanager, suppress
 from typing import Any, cast
 
 # Third-party imports
-from ezpl import EzLogger, Ezpl, EzPrinter, LogLevel, RichWizard
+from ezplog import EzLogger, Ezpl, EzPrinter, RichWizard
 from rich.align import Align
 from rich.console import Console
 from rich.panel import Panel
@@ -38,7 +38,7 @@ from ...shared.configs.logging_config import LoggingConfig
 # ///////////////////////////////////////////////////////////////
 
 
-class ExtendedPrinter(EzPrinter):
+class WommPrinter(EzPrinter):
     """
     Extended printer with additional utility methods for WOMM.
 
@@ -81,6 +81,11 @@ class ExtendedPrinter(EzPrinter):
     def wizard(self) -> RichWizard:
         """Get the Rich Wizard instance (property for convenience)."""
         return self._wizard
+
+    @property
+    def console(self) -> Console:
+        """Expose the Rich console until ezplog provides a public accessor."""
+        return self._console
 
     # ///////////////////////////////////////////////////////////////
     # UTILITY METHODS
@@ -938,106 +943,27 @@ class DynamicLayeredProgress:
 
 
 # ///////////////////////////////////////////////////////////////
-# EZPL BRIDGE (WRAPPER FOR COMPATIBILITY)
-# ///////////////////////////////////////////////////////////////
-
-
-class EzplBridge:
-    """
-    Wrapper around Ezpl for backward compatibility.
-
-    Provides access to Ezpl instance with additional convenience properties
-    like console, wizard, etc.
-    """
-
-    def __init__(self, ezpl_instance: Ezpl) -> None:
-        """Initialize the bridge with an Ezpl instance."""
-        self._ezpl = ezpl_instance
-
-    def __getattr__(self, name: str) -> Any:
-        """Delegate all attribute access to the underlying Ezpl instance."""
-        return getattr(self._ezpl, name)
-
-    @property
-    def console(self) -> Console:
-        """Get the Rich Console for direct access."""
-        return self._ezpl._printer._console
-
-    @property
-    def wizard(self) -> RichWizard:
-        """Get the wizard."""
-        return self._ezpl._printer._wizard
-
-    @property
-    def printer(self) -> ExtendedPrinter:
-        """Get the extended printer."""
-        return cast(ExtendedPrinter, self._ezpl._printer)
-
-
-# ///////////////////////////////////////////////////////////////
 # GLOBAL INSTANCE
 # ///////////////////////////////////////////////////////////////
 
-# Create global singleton instance with default logging configuration
-# Check if Ezpl is already initialized by trying to access _instance
 log_folder = LoggingConfig.get_log_dir()
 log_folder.mkdir(parents=True, exist_ok=True)
-first_init = Ezpl._instance is None
-_ezpl_instance = Ezpl(log_file=LoggingConfig.get_log_file())
+first_init = not Ezpl.is_initialized()
+ezpl = Ezpl(
+    log_file=LoggingConfig.get_log_file(),
+    log_level=LoggingConfig.DEFAULT_LEVEL,
+    log_rotation=LoggingConfig.ROTATION,
+    log_retention=LoggingConfig.RETENTION,
+    log_compression=LoggingConfig.COMPRESSION,
+)
 if first_init:
-    # Configure logging settings
-    _ezpl_instance.configure(
-        log_file=str(LoggingConfig.get_log_file()),
-        log_rotation=LoggingConfig.ROTATION,
-        log_retention=LoggingConfig.RETENTION,
-        log_compression=LoggingConfig.COMPRESSION,
-        level=(
-            LoggingConfig.DEFAULT_LEVEL.label
-            if isinstance(LoggingConfig.DEFAULT_LEVEL, LogLevel)
-            else str(LoggingConfig.DEFAULT_LEVEL)
-        ),
-        force=False,
-    )
-    # Override printer with ExtendedPrinter
-    # Use set_printer_class if available, otherwise replace _printer directly
-    if hasattr(_ezpl_instance, "set_printer_class"):
-        _ezpl_instance.set_printer_class(ExtendedPrinter)
-    else:
-        # Fallback: replace _printer directly with ExtendedPrinter instance
-        # Preserve current configuration
-        current_level = _ezpl_instance._printer._level
-        current_indent_step = _ezpl_instance._printer._indent_step
-        current_indent_symbol = _ezpl_instance._printer._indent_symbol
-        current_base_indent_symbol = _ezpl_instance._printer._base_indent_symbol
-        _ezpl_instance._printer = ExtendedPrinter(
-            level=current_level,
-            indent_step=current_indent_step,
-            indent_symbol=current_indent_symbol,
-            base_indent_symbol=current_base_indent_symbol,
-        )
-        # Update the wrapper to use the new printer
-        # The wrapper is created in EzPrinter.__init__, so we need to recreate it
-        from ezpl import EzPrinter
+    ezpl.set_printer_class(WommPrinter)
+    ezpl.lock_config()
 
-        _ezpl_instance._printer._wrapper = EzPrinter(_ezpl_instance._printer)
-    # Lock configuration if method exists
-    if hasattr(_ezpl_instance, "lock_config"):
-        _ezpl_instance.lock_config()
-    elif hasattr(Ezpl, "lock_config"):
-        Ezpl.lock_config()
-
-# Create bridge wrapper for backward compatibility
-ezpl_bridge = EzplBridge(_ezpl_instance)
-
-# Get printer and logger instances
-# After set_printer_class(), _printer is our ExtendedPrinter instance
-ezprinter: ExtendedPrinter = cast(ExtendedPrinter, _ezpl_instance._printer)
-ezlogger: EzLogger = _ezpl_instance.get_logger()
-ezconsole: Console = ezprinter._console
+ezprinter = cast(WommPrinter, ezpl.get_printer())
+ezlogger: EzLogger = ezpl.get_logger()
+ezconsole: Console = ezprinter.console
 ezwizard: RichWizard = ezprinter.wizard
-
-# Export ezpl instance as 'ezpl' for backward compatibility
-ezpl = _ezpl_instance
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
@@ -1045,12 +971,10 @@ ezpl = _ezpl_instance
 
 __all__ = [
     "DynamicLayeredProgress",
-    "ExtendedPrinter",
-    "EzplBridge",
+    "WommPrinter",
     "ezconsole",
     "ezlogger",
     "ezpl",
-    "ezpl_bridge",
     "ezprinter",
     "ezwizard",
 ]

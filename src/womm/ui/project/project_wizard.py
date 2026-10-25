@@ -32,7 +32,7 @@ except ImportError:
     INQUIRERPY_AVAILABLE = False
 
 # Local imports
-from ..common.ezpl_bridge import ezprinter
+from ..common.logging import ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # CLASSES

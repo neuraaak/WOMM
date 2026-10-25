@@ -24,7 +24,7 @@ from rich.panel import Panel
 
 # Local imports
 from ....shared.results import ProjectSetupResult
-from ...common.ezpl_bridge import ezconsole, ezprinter
+from ...common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # FUNCTIONS

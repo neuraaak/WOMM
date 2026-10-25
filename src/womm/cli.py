@@ -24,7 +24,7 @@ from .commands.core import doctor_cmd, path_group
 from .commands.project import create_command, setup_group, template_group
 from .commands.system import context_group, deps_group, system_group
 from .shared import startup as _startup  # noqa: F401
-from .ui.common import ezpl_bridge, ezprinter
+from .ui.common import ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # CONSOLE CONFIGURATION
@@ -87,7 +87,7 @@ def womm(
         )
 
     if ctx.invoked_subcommand is None:
-        ezpl_bridge.console.print(r"""
+        ezprinter.console.print(r"""
 ================================================================================
                     __      _____  __  __ __  __
                     \ \    / / _ \|  \/  |  \/  |
@@ -111,7 +111,7 @@ def womm(
                 ]
             ),
         )
-        ezpl_bridge.console.print(panel)
+        ezprinter.console.print(panel)
 
 
 # ///////////////////////////////////////////////////////////////

@@ -8,6 +8,26 @@
 
 ---
 
+## Priorité 3 — finaliser la migration ezplog 2.x
+
+La première passe a supprimé `EzplBridge`, adopté les API publiques
+d'ezplog 2.x et isolé l'accès temporaire à la console Rich dans
+`WommPrinter.console`.
+
+- [ ] Remplacer les helpers `WommPrinter` déjà fournis par `RichWizard` et
+  supprimer leurs tests redondants.
+- [ ] Remplacer l'implémentation locale de `DynamicLayeredProgress` par
+  `RichWizard.dynamic_layered_progress`.
+- [ ] Réduire `WommPrinter` aux seuls builders Rich propres à WOMM.
+- [ ] Supprimer `WommPrinter.console` lorsque ezplog exposera un accesseur
+  public équivalent.
+
+**Critère de sortie du lot :** l'intégration ne duplique aucune capacité
+publique d'ezplog 2.x et n'accède à ses attributs privés qu'au travers du
+seul adaptateur temporaire documenté.
+
+---
+
 ## Priorité 4 — distribution, release et documentation
 
 > Lot différé jusqu'à stabilisation du comportement métier. Les workflows
@@ -62,7 +82,7 @@ sont vérifiés avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Nettoyer le flux legacy et corriger l'installation des dépendances.
+1. Finaliser la migration ezplog 2.x.
 2. Reconstruire la documentation produit.
 3. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
    standalone, puis valider la chaîne CI/release complète.

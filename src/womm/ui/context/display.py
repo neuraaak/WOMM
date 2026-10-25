@@ -34,7 +34,7 @@ from ...shared.results import (
     ScriptRegistrationResult,
     ScriptUnregistrationResult,
 )
-from ..common.ezpl_bridge import ezconsole, ezprinter
+from ..common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # SCRIPT REGISTRATION DISPLAY FUNCTIONS

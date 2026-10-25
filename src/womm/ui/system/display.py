@@ -33,7 +33,7 @@ from ...shared.results import (
     EnvironmentRefreshResult,
     SystemDetectionResult,
 )
-from ..common import ezconsole, ezpl_bridge, ezprinter
+from ..common import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # PANEL HELPERS
@@ -231,7 +231,7 @@ def display_system_detection_results(data: dict) -> None:
         title="System Detection Results",
         border_style="dim white",
     )
-    ezpl_bridge.console.print(panel)
+    ezprinter.console.print(panel)
 
 
 def render_system_detection_result(result: SystemDetectionResult) -> None:

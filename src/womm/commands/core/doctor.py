@@ -18,11 +18,11 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 
 # Local imports
 from ...interfaces import DoctorInterface
-from ...ui.common import ezpl_bridge, ezprinter
+from ...ui.common import ezpl, ezprinter
 from ...ui.system import render_doctor_result
 
 # ///////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ from ...ui.system import render_doctor_result
 def doctor_cmd(verbose: bool) -> None:
     """🩺 Report the installed runtime without changing user configuration."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Runtime Diagnostic")
 

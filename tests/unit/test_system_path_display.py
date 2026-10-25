@@ -8,7 +8,7 @@
 Tests for the PATH-vertical UI display functions.
 
 No interactive input here, so branches are cheap to verify by asserting on
-the ``ezprinter``/``ezconsole``/``ezpl_bridge`` calls each path makes, and
+the ``ezprinter``/``ezconsole`` calls each path makes, and
 on the rich ``Panel`` objects pushed to the console.
 """
 
@@ -41,13 +41,11 @@ from womm.ui.system import path_display as display_module
 def _patch_ui(monkeypatch):
     ezprinter = MagicMock()
     ezconsole = MagicMock()
-    ezpl_bridge = MagicMock()
     ezprinter.create_backup_table.return_value = "backup-table"
     monkeypatch.setattr(display_module, "ezprinter", ezprinter)
     # raising=False: the module only imports ezconsole once panels land.
     monkeypatch.setattr(display_module, "ezconsole", ezconsole, raising=False)
-    monkeypatch.setattr(display_module, "ezpl_bridge", ezpl_bridge)
-    return ezprinter, ezconsole, ezpl_bridge
+    return ezprinter, ezconsole, ezprinter
 
 
 def _panels(ezconsole) -> list[Panel]:
@@ -229,7 +227,7 @@ def test_render_path_backup_list_result_empty(monkeypatch):
 
 
 def test_render_path_backup_list_result_with_backups(monkeypatch):
-    ezprinter, _, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, _, _ = _patch_ui(monkeypatch)
     result = PathBackupListResult(
         success=True,
         backups=[
@@ -246,7 +244,7 @@ def test_render_path_backup_list_result_with_backups(monkeypatch):
     display_module.render_path_backup_list_result(result)
 
     ezprinter.create_backup_table.assert_called_once()
-    ezpl_bridge.console.print.assert_any_call("backup-table")
+    ezprinter.console.print.assert_any_call("backup-table")
 
 
 def test_render_path_backup_list_result_with_backups_shows_commands_panel(monkeypatch):
@@ -308,7 +306,7 @@ def test_render_path_backup_list_result_failure_shows_troubleshooting_panel(
 
 
 def test_render_path_entries_result_shows_table_and_commands_panel(monkeypatch):
-    ezprinter, ezconsole, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, ezconsole, _ = _patch_ui(monkeypatch)
     # Must stay a MagicMock: the renderer calls .add_row() on it.
     table = MagicMock()
     ezprinter.create_table.return_value = table
@@ -320,7 +318,7 @@ def test_render_path_entries_result_shows_table_and_commands_panel(monkeypatch):
 
     ezprinter.create_table.assert_called_once()
     assert table.add_row.call_count == 2
-    ezpl_bridge.console.print.assert_any_call(table)
+    ezprinter.console.print.assert_any_call(table)
     panels = _panels(ezconsole)
     assert len(panels) == 1
     assert panels[0].title == "PATH Commands"
@@ -328,7 +326,7 @@ def test_render_path_entries_result_shows_table_and_commands_panel(monkeypatch):
 
 
 def test_render_path_entries_result_exists_check_survives_oserror(monkeypatch):
-    ezprinter, _, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, _, _ = _patch_ui(monkeypatch)
     table = MagicMock()
     ezprinter.create_table.return_value = table
 
@@ -342,7 +340,7 @@ def test_render_path_entries_result_exists_check_survives_oserror(monkeypatch):
 
     assert table.add_row.call_count == 1
     assert table.add_row.call_args.args == ("1", "C:/a", "?")
-    ezpl_bridge.console.print.assert_any_call(table)
+    ezprinter.console.print.assert_any_call(table)
 
 
 def test_render_path_entries_result_empty_path(monkeypatch):
@@ -375,7 +373,7 @@ def test_render_path_entries_result_failure(monkeypatch):
 
 
 def test_render_path_backup_content_result_success(monkeypatch):
-    ezprinter, ezconsole, ezpl_bridge = _patch_ui(monkeypatch)
+    ezprinter, ezconsole, _ = _patch_ui(monkeypatch)
     # Must stay a MagicMock: the renderer calls .add_row() on it.
     table = MagicMock()
     ezprinter.create_table.return_value = table
@@ -394,7 +392,7 @@ def test_render_path_backup_content_result_success(monkeypatch):
 
     ezprinter.create_table.assert_called_once()
     assert table.add_row.call_count == 2
-    ezpl_bridge.console.print.assert_any_call(table)
+    ezprinter.console.print.assert_any_call(table)
     panels = _panels(ezconsole)
     assert len(panels) == 1
     assert panels[0].title == "Backup Content"

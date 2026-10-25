@@ -29,7 +29,7 @@ from ...shared.results import (
     PathBackupResult,
     PathOperationResult,
 )
-from ..common import ezconsole, ezpl_bridge, ezprinter
+from ..common import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # PANEL HELPERS
@@ -225,7 +225,7 @@ def render_path_backup_list_result(result: PathBackupListResult) -> None:
     ezprinter.success("PATH backup information retrieved successfully!")
 
     if not result.backups:
-        ezpl_bridge.console.print("")
+        ezprinter.console.print("")
         ezprinter.system("No backup files found")
 
         _show_panel(
@@ -239,7 +239,7 @@ def render_path_backup_list_result(result: PathBackupListResult) -> None:
         )
         return
 
-    ezpl_bridge.console.print("")
+    ezprinter.console.print("")
     backup_table = ezprinter.create_backup_table(
         [
             {
@@ -251,7 +251,7 @@ def render_path_backup_list_result(result: PathBackupListResult) -> None:
             for backup in result.backups
         ]
     )
-    ezpl_bridge.console.print(backup_table)
+    ezprinter.console.print(backup_table)
 
     _show_panel(
         """PATH management commands:
@@ -294,7 +294,7 @@ def render_path_entries_result(result: PathOperationResult) -> None:
     ezprinter.success(f"{len(entries)} entries in PATH")
 
     if not entries:
-        ezpl_bridge.console.print("")
+        ezprinter.console.print("")
         ezprinter.system("PATH is empty")
     else:
         table = ezprinter.create_table(
@@ -307,8 +307,8 @@ def render_path_entries_result(result: PathOperationResult) -> None:
         )
         for index, entry in enumerate(entries, 1):
             table.add_row(str(index), entry, _entry_exists_label(entry))
-        ezpl_bridge.console.print("")
-        ezpl_bridge.console.print(table)
+        ezprinter.console.print("")
+        ezprinter.console.print(table)
 
     _show_panel(
         """PATH management commands:
@@ -360,8 +360,8 @@ def render_path_backup_content_result(result: PathBackupContentResult) -> None:
         )
         for index, entry in enumerate(entries, 1):
             table.add_row(str(index), entry)
-        ezpl_bridge.console.print("")
-        ezpl_bridge.console.print(table)
+        ezprinter.console.print("")
+        ezprinter.console.print(table)
 
     _show_panel(
         """Backup inspection commands:

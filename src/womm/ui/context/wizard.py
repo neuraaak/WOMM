@@ -30,8 +30,8 @@ except ImportError:
 
 # Local imports
 from ...services.context import ContextParameters, ContextType
-from ..common.ezpl_bridge import ezconsole, ezprinter
 from ..common.interactive_menu import InteractiveMenu
+from ..common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # CLASSES

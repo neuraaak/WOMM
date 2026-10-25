@@ -17,13 +17,13 @@ from pathlib import Path
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 
 # Local imports
 from ...interfaces import SystemPathInterface
 from ...ui.common import (
     InteractiveMenu,
-    ezpl_bridge,
+    ezpl,
     ezprinter,
     format_backup_item,
 )
@@ -77,7 +77,7 @@ def path_backup_group() -> None:
 def path_list(verbose: bool) -> None:
     """📋 List the entries of your current PATH."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Current PATH")
     result = SystemPathInterface().list_path_entries()
@@ -107,7 +107,7 @@ def path_add(directory: Path, verbose: bool) -> None:
     is backed up before the change, so 'backup restore' undoes it.
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Entry Addition")
     result = SystemPathInterface().add_to_path(directory)
@@ -133,7 +133,7 @@ def path_remove(directory: Path, verbose: bool) -> None:
     before the change.
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Entry Removal")
     result = SystemPathInterface().remove_from_path(directory)
@@ -158,7 +158,7 @@ def path_remove(directory: Path, verbose: bool) -> None:
 def path_backup_create(verbose: bool) -> None:
     """💾 Create a backup of your current PATH."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Backup Creation")
     result = SystemPathInterface().create_backup()
@@ -178,7 +178,7 @@ def path_backup_create(verbose: bool) -> None:
 def path_backup_list(verbose: bool) -> None:
     """📋 List available PATH backups."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Backup List")
     result = SystemPathInterface().list_backups()
@@ -199,7 +199,7 @@ def path_backup_list(verbose: bool) -> None:
 def path_backup_show(name: str, verbose: bool) -> None:
     """🔍 Show the content of a PATH backup (file name, not a path)."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Backup Content")
     result = SystemPathInterface().read_backup(name)
@@ -224,7 +224,7 @@ def path_backup_restore(name: str | None, verbose: bool) -> None:
     NAME, a backup is chosen interactively.
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("PATH Restoration")
     manager = SystemPathInterface()
@@ -301,8 +301,8 @@ def _run_path_restore(manager: SystemPathInterface) -> None:
             f"{backup.size} bytes",
             str(backup.path_entries),
         )
-    ezpl_bridge.console.print(table)
-    ezpl_bridge.console.print("")
+    ezprinter.console.print(table)
+    ezprinter.console.print("")
 
     # The menu carries the bare name, not the path: restore_backup() confines
     # the name inside the backup directory itself.

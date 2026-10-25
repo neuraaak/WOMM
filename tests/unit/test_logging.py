@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # ///////////////////////////////////////////////////////////////
-# TEST EZPL BRIDGE - Panel/table builders and progress calculations
+# TEST LOGGING - Panel/table builders and progress calculations
 # Project: Works On My Machine
 # ///////////////////////////////////////////////////////////////
 
 """
-Tests for ``ExtendedPrinter`` and ``DynamicLayeredProgress``.
+Tests for ``WommPrinter`` and ``DynamicLayeredProgress``.
 
 The panel/table ``create_*`` methods are pure builders (data in, Rich object
 out) and are asserted on directly. ``print_*`` methods delegate to the
@@ -31,7 +31,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 # Local imports
-from womm.ui.common.ezpl_bridge import DynamicLayeredProgress, ExtendedPrinter
+from womm.ui.common.logging import DynamicLayeredProgress, WommPrinter
 
 # ///////////////////////////////////////////////////////////////
 # FIXTURES
@@ -40,9 +40,13 @@ from womm.ui.common.ezpl_bridge import DynamicLayeredProgress, ExtendedPrinter
 
 @pytest.fixture
 def printer():
-    p = ExtendedPrinter()
+    p = WommPrinter()
     p._console = MagicMock()
     return p
+
+
+def test_console_exposes_rich_console(printer):
+    assert printer.console is printer._console
 
 
 # ///////////////////////////////////////////////////////////////

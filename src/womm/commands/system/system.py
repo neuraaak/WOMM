@@ -22,12 +22,12 @@ import sys
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 from rich.progress import TaskID
 
 # Local imports
 from ...interfaces import SystemDetectorInterface, SystemEnvironmentInterface
-from ...ui.common import ezpl_bridge, ezprinter
+from ...ui.common import ezpl, ezprinter
 from ...ui.system import (
     render_environment_refresh_result,
     render_system_detection_result,
@@ -62,7 +62,7 @@ def system_group(ctx: click.Context) -> None:
 def system_detect(verbose: bool) -> None:
     """🔍 Detect system information and available tools."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("System Detection")
 
@@ -100,7 +100,7 @@ def system_detect(verbose: bool) -> None:
 def system_refresh_env(verbose: bool) -> None:
     """🔄 Refresh environment variables (Windows only)."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Environment Refresh")
 

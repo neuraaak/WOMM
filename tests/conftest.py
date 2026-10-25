@@ -31,7 +31,7 @@ import pytest
 
 # Redirect the WOMM data directory onto a throwaway location for the whole
 # session. This runs at *import* time, not in a fixture, on purpose: modules
-# such as ``ui.common.ezpl_bridge`` resolve the log directory at import, which
+# such as ``ui.common.logging`` resolve the log directory at import, which
 # happens while pytest collects test modules — before any fixture could run.
 # Without this, running the suite would write into the developer's real
 # ``~/.womm``. ``setdefault`` leaves an explicit override in place.

@@ -19,7 +19,7 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Local imports
 from ....shared.results import ProjectCreationResult
-from ...common.ezpl_bridge import ezprinter
+from ...common.logging import ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # FUNCTIONS

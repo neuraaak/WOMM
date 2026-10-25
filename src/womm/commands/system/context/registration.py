@@ -22,13 +22,13 @@ from typing import cast
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 from rich.progress import TaskID
 
 # Local imports
 from ....interfaces import ContextMenuInterface
 from ....services.context import ContextParameters
-from ....ui.common import ezpl_bridge, ezprinter
+from ....ui.common import ezpl, ezprinter
 from ....ui.context import ContextMenuWizard
 from ....ui.context.display import (
     render_script_registration_result,
@@ -175,7 +175,7 @@ def context_register(
 ) -> None:
     """📝 Register scripts in Windows context menu."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Registration")
 
@@ -260,7 +260,7 @@ def context_register(
 def context_unregister(remove_key: str, verbose: bool) -> None:
     """🗑️ Unregister scripts from Windows context menu."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Unregistration")
 

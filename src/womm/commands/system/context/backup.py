@@ -25,7 +25,7 @@ from typing import cast
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 from rich.progress import TaskID
 
 # Local imports
@@ -35,7 +35,7 @@ from ....shared.results.context_results import (
     BackupFileInfo,
     ContextCherryPickResult,
 )
-from ....ui.common import ezpl_bridge, ezprinter
+from ....ui.common import ezpl, ezprinter
 from ....ui.context import ContextMenuUI
 from ....ui.context.display import (
     render_context_backup_content_result,
@@ -67,7 +67,7 @@ from . import _check_windows, context_backup_group
 def context_backup_create(output: str | None, verbose: bool) -> None:
     """💾 Create backup of current context menu entries."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Backup")
 
@@ -111,7 +111,7 @@ def context_backup_create(output: str | None, verbose: bool) -> None:
 def context_backup_list(verbose: bool) -> None:
     """📋 List available context menu backup files."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Backups")
 
@@ -141,7 +141,7 @@ def context_backup_show(name: str, verbose: bool) -> None:
     NAME is a bare backup file name, as listed by 'backup list'.
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Backup Content")
 
@@ -210,7 +210,7 @@ def context_backup_restore(name: str | None, verbose: bool) -> None:
     NAME, a backup is chosen interactively.
     """
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Restore")
 
@@ -276,7 +276,7 @@ def context_backup_restore(name: str | None, verbose: bool) -> None:
 def context_cherry_pick(verbose: bool) -> None:
     """🍒 Cherry-pick specific context menu entries from backups."""
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     ezprinter.print_header("Context Menu Cherry-Pick")
 

@@ -23,12 +23,12 @@ from typing import Any, cast
 
 # Third-party imports
 import click
-from ezpl import LogLevel
+from ezplog import LogLevel
 
 # Local imports
 from ...interfaces import ProjectManagerInterface
 from ...services.project.setup_profile_resolver import list_setup_identifiers
-from ...ui.common import ezpl_bridge, ezprinter
+from ...ui.common import ezpl, ezprinter
 from ...ui.project import ProjectWizard, print_project_setup_result
 
 # ///////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ def setup_group(ctx: click.Context, verbose: bool) -> None:
     """🔧 Configure existing projects with development tools."""
     # Configure verbose mode if requested
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
@@ -90,7 +90,7 @@ def setup_detect(
     """🔍 Auto-detect project type and configure development environment."""
     # Configure verbose mode if requested
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     # Initialize project manager (lazy loading)
     project_manager = ProjectManagerInterface()
@@ -202,7 +202,7 @@ def setup_python(
     """🐍 Configure existing Python project with development environment."""
     # Configure verbose mode if requested
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     # Initialize project manager
     project_manager = ProjectManagerInterface()
@@ -293,7 +293,7 @@ def setup_javascript(
     """🟨 Configure existing JavaScript project with development environment."""
     # Configure verbose mode if requested
     if verbose:
-        ezpl_bridge.set_level(LogLevel.DEBUG.label)
+        ezpl.set_level(LogLevel.DEBUG.label)
 
     # Initialize project manager
     project_manager = ProjectManagerInterface()

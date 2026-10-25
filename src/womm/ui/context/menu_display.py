@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 from rich.panel import Panel
 
 # Local imports
-from ..common.ezpl_bridge import ezconsole, ezprinter
+from ..common.logging import ezconsole, ezprinter
 from ..common.prompts import confirm, prompt_choice
 
 if TYPE_CHECKING:
