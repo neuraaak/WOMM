@@ -68,6 +68,14 @@ def test_create_virtual_environment_reports_existing_venv(tmp_path: Path) -> Non
     }
 
 
+def test_new_environment_uses_copier_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(env_utils.venv, "create", _fake_venv_create)
+    result = env_utils.create_virtual_environment(tmp_path)
+    assert result["venv_path"] == str(tmp_path / ".venv")
+
+
 def test_create_virtual_environment_creates_new_venv(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

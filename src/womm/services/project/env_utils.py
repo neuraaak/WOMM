@@ -41,6 +41,13 @@ logger = logging.getLogger(__name__)
 # ///////////////////////////////////////////////////////////////
 
 
+def get_virtual_environment_path(project_path: Path) -> Path:
+    """Use the default environment, reusing a legacy environment when present."""
+    default = project_path / PythonProjectConfig.VENV_DIR
+    legacy = project_path / PythonProjectConfig.ALT_VENV_DIR
+    return legacy if not default.exists() and legacy.is_dir() else default
+
+
 def create_virtual_environment(
     project_path: Path, venv_name: str | None = None
 ) -> dict[str, str | bool]:
@@ -48,7 +55,7 @@ def create_virtual_environment(
 
     Args:
         project_path: Path to the project
-        venv_name: Name of the venv directory (default: "venv")
+        venv_name: Venv directory name; defaults to .venv, reusing legacy venv.
 
     Returns:
         dict: Metadata with 'success', 'venv_path', and 'existing' keys
@@ -59,8 +66,11 @@ def create_virtual_environment(
     """
     validate_project_path(project_path, must_exist=True, require_empty=False)
 
-    venv_name = venv_name or PythonProjectConfig.VENV_DIR
-    venv_path = project_path / venv_name
+    venv_path = (
+        project_path / venv_name
+        if venv_name
+        else get_virtual_environment_path(project_path)
+    )
 
     if venv_path.exists():
         logger.info(f"Virtual environment already exists at {venv_path}")
@@ -183,11 +193,9 @@ def install_python_dependencies(
     """
     validate_project_path(project_path, must_exist=True, require_empty=False)
 
-    venv_path = project_path / PythonProjectConfig.VENV_DIR
+    venv_path = get_virtual_environment_path(project_path)
     if not venv_path.exists():
-        venv_path = project_path / PythonProjectConfig.ALT_VENV_DIR
-        if not venv_path.exists():
-            raise FileNotFoundError("Virtual environment not found")
+        raise FileNotFoundError("Virtual environment not found")
 
     # Find pip executable
     pip_exe = find_pip_executable(venv_path)
@@ -318,6 +326,7 @@ __all__ = [
     "check_npm_available",
     "create_virtual_environment",
     "find_pip_executable",
+    "get_virtual_environment_path",
     "install_npm_dependencies",
     "install_npm_dev_dependencies",
     "install_python_dependencies",

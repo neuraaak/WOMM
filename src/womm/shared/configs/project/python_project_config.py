@@ -117,10 +117,10 @@ sphinx-rtd-theme>=1.2.0
     DEFAULT_PYTHON_VERSION: ClassVar[str] = "3.10"
 
     # Virtual environment directory name
-    VENV_DIR: ClassVar[str] = "venv"
+    VENV_DIR: ClassVar[str] = ".venv"
 
     # Alternative virtual environment directory name
-    ALT_VENV_DIR: ClassVar[str] = ".venv"
+    ALT_VENV_DIR: ClassVar[str] = "venv"
 
     # ///////////////////////////////////////////////////////////
     # STATIC METHODS

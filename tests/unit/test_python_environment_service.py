@@ -65,7 +65,7 @@ def test_setup_virtual_environment_accepts_success_result(
 
     assert result.success
     assert result.project_type == "python"
-    assert (tmp_path / "venv").is_dir()
+    assert (tmp_path / ".venv").is_dir()
 
 
 @pytest.mark.parametrize("result", [{"success": False}, None])

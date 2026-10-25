@@ -6,6 +6,19 @@ from unittest.mock import patch
 import pytest
 
 from womm.interfaces.project.create_interface import ProjectCreateInterface
+from womm.shared.results import ProjectSetupResult
+
+
+def test_create_preserves_partial_setup_warnings(tmp_path: Path):
+    with patch(
+        "womm.interfaces.project.setup_interface.ProjectSetupInterface.setup_project",
+        return_value=ProjectSetupResult(
+            success=True, project_path=tmp_path, warnings=["Dependencies failed"]
+        ),
+    ):
+        assert ProjectCreateInterface()._run_setup(tmp_path, "python") == [
+            "Dependencies failed"
+        ]
 
 
 def test_create_project_returns_a_successful_result(tmp_path: Path):

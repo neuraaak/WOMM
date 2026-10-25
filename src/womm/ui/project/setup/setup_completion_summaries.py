@@ -50,23 +50,39 @@ def print_setup_completion_summary(
         setup_dev_tools: Whether development tools were configured
         setup_git_hooks: Whether Git hooks were set up
     """
-    if project_type == "python":
-        _print_python_setup_summary(
-            project_path, virtual_env, install_deps, setup_dev_tools, setup_git_hooks
+    completed = [
+        label
+        for enabled, label in (
+            (virtual_env, "Virtual environment setup"),
+            (install_deps, "Dependencies installed"),
+            (setup_dev_tools, "Development tools configured"),
+            (setup_git_hooks, "Git hooks configured"),
         )
-    elif project_type in ["javascript", "node", "react", "vue"]:
-        _print_javascript_setup_summary(
-            project_path, project_type, install_deps, setup_dev_tools, setup_git_hooks
+        if enabled
+    ]
+    content = f"📁 Project location: {project_path}\n📋 Project type: {project_type}"
+    if completed:
+        content += "\n\n🔧 Configuration completed:\n"
+        content += "\n".join(f"  • {label}" for label in completed)
+
+    content += "\n\n🚀 Next steps:\n"
+    if (project_path / "README.md").is_file():
+        content += "Read the project's README.md for setup and usage instructions.\n"
+    content += "Check the project configuration for available development commands."
+
+    title = {
+        "python": "🔧 Python Project Setup Completed!",
+        "javascript": "🔧 JavaScript Project Setup Completed!",
+        "node": "🔧 JavaScript Project Setup Completed!",
+        "react": "🔧 JavaScript Project Setup Completed!",
+        "vue": "🔧 JavaScript Project Setup Completed!",
+    }.get(project_type, "🔧 Project Setup Completed!")
+    ezconsole.print("")
+    ezconsole.print(
+        Panel(
+            content, title=title, border_style="bright_blue", width=80, padding=(1, 1)
         )
-    else:
-        _print_generic_setup_summary(
-            project_path,
-            project_type,
-            virtual_env,
-            install_deps,
-            setup_dev_tools,
-            setup_git_hooks,
-        )
+    )
 
 
 def print_project_setup_result(result: ProjectSetupResult) -> None:
@@ -86,226 +102,6 @@ def print_project_setup_result(result: ProjectSetupResult) -> None:
     )
     for warning in result.warnings or []:
         ezprinter.warning(warning)
-
-
-def _print_python_setup_summary(
-    project_path: Path,
-    virtual_env: bool,
-    install_deps: bool,
-    setup_dev_tools: bool,
-    setup_git_hooks: bool,
-) -> None:
-    """Print Python project setup summary."""
-    # Build content based on what was configured
-    content = f"""📁 Project location: {project_path}
-
-==================================================
-
-🔧 Configuration completed:"""
-
-    if virtual_env:
-        content += """
-  • Virtual environment setup"""
-
-    if install_deps:
-        content += """
-  • Dependencies installed"""
-
-    if setup_dev_tools:
-        content += """
-  • Development tools configured"""
-
-    if setup_git_hooks:
-        content += """
-  • Git hooks configured"""
-
-    content += """
-
-🚀 Next steps:"""
-
-    if virtual_env:
-        content += f"""
-1. Activate virtual environment:
-   {project_path}\\venv\\Scripts\\activate"""
-
-    if install_deps:
-        content += """
-2. Verify installation:
-   pip list"""
-
-    if setup_dev_tools:
-        content += """
-3. Format code:
-   black .
-   isort .
-
-4. Lint code:
-   flake8 .
-
-5. Run tests:
-   pytest"""
-
-    content += f"""
-
-6. Run the project:
-   python src/{project_path.name.replace("-", "_")}/main.py"""
-
-    if setup_dev_tools:
-        content += """
-
-💡 Available tools:
-  • Code formatting (black, isort)
-  • Linting (flake8, mypy)
-  • Testing (pytest)
-  • Pre-commit hooks"""
-
-    # Create and display the panel
-    completion_panel = Panel(
-        content,
-        title="🔧 Python Project Setup Completed!",
-        border_style="bright_blue",
-        width=80,
-        padding=(1, 1),
-    )
-
-    ezconsole.print("")
-    ezconsole.print(completion_panel)
-
-
-def _print_javascript_setup_summary(
-    project_path: Path,
-    project_type: str,
-    install_deps: bool,
-    setup_dev_tools: bool,
-    setup_git_hooks: bool,
-) -> None:
-    """Print JavaScript project setup summary."""
-    # Build content based on what was configured
-    content = f"""📁 Project location: {project_path}
-🟨 Project type: {project_type}
-
-==================================================
-
-🔧 Configuration completed:"""
-
-    if install_deps:
-        content += """
-  • Dependencies installed"""
-
-    if setup_dev_tools:
-        content += """
-  • Development tools configured"""
-
-    if setup_git_hooks:
-        content += """
-  • Git hooks configured"""
-
-    content += """
-
-🚀 Next steps:"""
-
-    if install_deps:
-        content += """
-1. Verify installation:
-   npm list"""
-
-    if setup_dev_tools:
-        content += """
-2. Lint code:
-   npm run lint
-
-3. Format code:
-   npm run format
-
-4. Run tests:
-   npm test"""
-
-    content += """
-
-5. Start development server:
-   npm start
-
-6. Build project:
-   npm run build"""
-
-    if setup_dev_tools:
-        content += """
-
-💡 Available tools:
-  • Code formatting (Prettier)
-  • Linting (ESLint)
-  • Testing (Jest)
-  • Git hooks (Husky)"""
-
-    # Create and display the panel
-    completion_panel = Panel(
-        content,
-        title="🔧 JavaScript Project Setup Completed!",
-        border_style="bright_blue",
-        width=80,
-        padding=(1, 1),
-    )
-
-    ezconsole.print("")
-    ezconsole.print(completion_panel)
-
-
-def _print_generic_setup_summary(
-    project_path: Path,
-    project_type: str,
-    virtual_env: bool,
-    install_deps: bool,
-    setup_dev_tools: bool,
-    setup_git_hooks: bool,
-) -> None:
-    """Print generic project setup summary."""
-    # Build content based on what was configured
-    content = f"""📁 Project location: {project_path}
-📋 Project type: {project_type}
-
-==================================================
-
-🔧 Configuration completed:"""
-
-    if virtual_env:
-        content += """
-  • Virtual environment setup"""
-
-    if install_deps:
-        content += """
-  • Dependencies installed"""
-
-    if setup_dev_tools:
-        content += """
-  • Development tools configured"""
-
-    if setup_git_hooks:
-        content += """
-  • Git hooks configured"""
-
-    content += """
-
-🚀 Next steps:
-1. Navigate to project directory:
-   cd {project_path}
-
-2. Explore the project structure
-
-3. Read the README.md file
-
-4. Start developing!"""
-
-    # Create and display the panel
-    completion_panel = Panel(
-        content,
-        title="🔧 Project Setup Completed!",
-        border_style="bright_blue",
-        width=80,
-        padding=(1, 1),
-    )
-
-    ezconsole.print("")
-    ezconsole.print(completion_panel)
 
 
 # ///////////////////////////////////////////////////////////////

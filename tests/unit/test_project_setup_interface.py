@@ -360,6 +360,36 @@ def test_copy_vscode_config_renders_from_copier_template(
     assert (tmp_path / ".vscode" / "settings.json").read_text() == "{}"
 
 
+@pytest.mark.parametrize("venv_name", [".venv", "venv"])
+def test_vscode_uses_real_project_name_and_environment(
+    tmp_path: Path, venv_name: str
+) -> None:
+    import json
+
+    template = tmp_path / "template"
+    settings = template / "content" / ".vscode"
+    settings.mkdir(parents=True)
+    (template / "copier.yml").write_text(
+        "_subdirectory: content\nproject_name:\n  type: str\n", encoding="utf-8"
+    )
+    (settings / "settings.json.jinja").write_text(
+        '{"python.analysis.extraPaths": ["src/{{ project_name }}"], '
+        '"python.defaultInterpreterPath": "${workspaceFolder}/.venv"}',
+        encoding="utf-8",
+    )
+    project = tmp_path / "real-project"
+    (project / venv_name).mkdir(parents=True)
+    profile = SetupProfile(language="python", template_source=template, answers={})
+
+    ProjectSetupInterface()._copy_vscode_config(project, profile)
+
+    config = json.loads((project / ".vscode/settings.json").read_text())
+    assert config["python.analysis.extraPaths"] == ["src/real-project"]
+    assert (
+        config["python.defaultInterpreterPath"] == f"${{workspaceFolder}}/{venv_name}"
+    )
+
+
 @pytest.mark.parametrize(
     ("language", "runtime"),
     [

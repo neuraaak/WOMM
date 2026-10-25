@@ -22,9 +22,12 @@
   `shared/configs/project/` et `utils/project/`, puis supprimer le code
   devenu mort en cascade. Le contrôle `--force` de `destination_guard.py`
   reste inchangé.
-- [ ] Vérifier les suggestions affichées à la fin de `create` et `setup` :
+- [x] Vérifier les suggestions affichées à la fin de `create` et `setup` :
   elles doivent correspondre aux commandes et à l'outillage réellement
   générés.
+- [x] Corriger les écarts relevés à l'audit : test des assets Copier,
+  transmission des avertissements du setup, cohérence du venv avec VS Code
+  et rendu des templates personnalisés avec le vrai nom du projet.
 
 ---
 

@@ -141,8 +141,11 @@ class ProjectCreateInterface:
             setup_git_hooks=True,
         )
         if result and result.success:
-            return []
-        return [f"Setup step failed: {result.error or 'unknown error'}"]
+            return list(result.warnings or [])
+        return [
+            *(result.warnings or []),
+            f"Setup step failed: {result.error or 'unknown error'}",
+        ]
 
 
 # ///////////////////////////////////////////////////////////////

@@ -37,6 +37,7 @@ from ...services.project.copier_project_creation_service import (
     CopierProjectCreationService,
     ProjectCreationRequest,
 )
+from ...services.project.env_utils import get_virtual_environment_path
 from ...services.project.setup_profile_resolver import (
     SetupProfile,
     resolve_setup_profile,
@@ -461,7 +462,7 @@ class ProjectSetupInterface:
                 ProjectCreationRequest(
                     template_source=profile.template_source,
                     destination=rendered_project,
-                    answers=profile.answers,
+                    answers={**profile.answers, "project_name": project_path.name},
                     defaults=True,
                 )
             )
@@ -469,6 +470,19 @@ class ProjectSetupInterface:
             source_dir = rendered_project / ".vscode"
             if not source_dir.is_dir():
                 return
+
+            settings_file = source_dir / "settings.json"
+            if profile.language == "python" and settings_file.is_file():
+                venv_name = get_virtual_environment_path(project_path).name
+                if venv_name != ".venv":
+                    settings = settings_file.read_text(encoding="utf-8")
+                    settings_file.write_text(
+                        settings.replace(
+                            '"${workspaceFolder}/.venv"',
+                            f'"${{workspaceFolder}}/{venv_name}"',
+                        ),
+                        encoding="utf-8",
+                    )
 
             vscode_dir = project_path / ".vscode"
             for source_file in source_dir.rglob("*"):

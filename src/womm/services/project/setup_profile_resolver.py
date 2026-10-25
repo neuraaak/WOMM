@@ -105,7 +105,6 @@ def resolve_setup_profile(
 def _setup_answers() -> dict[str, object]:
     """Supply non-interactive answers needed to render setup configuration."""
     return {
-        "project_name": "womm-setup",
         "description": "Project configured by WOMM",
         "with_vscode": True,
     }

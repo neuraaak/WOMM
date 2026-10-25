@@ -42,7 +42,6 @@ def test_resolve_setup_profile_hits_catalog_entry():
         language="python",
         template_source=Path("/dev/null"),
         answers={
-            "project_name": "womm-setup",
             "description": "Project configured by WOMM",
             "with_vscode": True,
         },

@@ -174,7 +174,7 @@ def test_packaged_assets_points_at_the_shipped_assets_tree():
     assets = packaged_assets()
 
     assert assets.is_dir()
-    assert {entry.name for entry in assets.iterdir()} >= {"languages"}
+    assert {entry.name for entry in assets.iterdir()} >= {"copier"}
 
 
 def test_packaged_assets_is_independent_of_womm_home(womm_home):
