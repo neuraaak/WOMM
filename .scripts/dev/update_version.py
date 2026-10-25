@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ///////////////////////////////////////////////////////////////
-# UPDATE_VERSION - Sync _version.py and README badge from pyproject.toml
+# UPDATE_VERSION - Sync _version.py from pyproject.toml
 # ///////////////////////////////////////////////////////////////
 
 """Update _version.py from the version defined in pyproject.toml.
@@ -70,11 +70,13 @@ def update_version_py(version: str) -> None:
     )
     content = version_path.read_text(encoding="utf-8")
 
-    new_content = re.sub(
+    new_content, replacements = re.subn(
         r'(__version__\s*=\s*)["\'][^"\']+["\']',
         rf'\g<1>"{version}"',
         content,
     )
+    if replacements != 1:
+        raise ValueError(f"Expected one __version__ assignment in {version_path}")
     if new_content == content:
         console.print(f"[dim]✓ _version.py already at {version} — no change[/dim]")
         return
@@ -103,7 +105,7 @@ def main() -> None:
                 border_style="green",
             )
         )
-    except (FileNotFoundError, KeyError) as e:
+    except (FileNotFoundError, KeyError, ValueError) as e:
         console.print()
         console.print(
             Panel.fit(

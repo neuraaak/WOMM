@@ -1,7 +1,7 @@
 # ///////////////////////////////////////////////////////////////
 # PRE-COMMIT CONFIGURATION
 # ///////////////////////////////////////////////////////////////
-# Quality checks run in this order:
+# Mirrors the quality checks in `uv run poe check` (in order):
 #   1. ruff format     — auto-format code
 #   2. ruff check      — lint with auto-fix
 #   3. ty check        — type checking
@@ -9,65 +9,70 @@
 #   5. update_version  — sync _version.py ← pyproject.toml
 #
 # Setup (run once per clone):
-#   git config --unset core.hooksPath   # disable legacy .hooks/ mechanism
-#   uv add --dev pre-commit             # or: pip install pre-commit
-#   pre-commit install
+#   uv sync --group dev
+#   uv run pre-commit install
 #
 # Run manually on all files:
-#   pre-commit run --all-files
+#   uv run pre-commit run --all-files
 #
 # Notes:
-#   - Steps 3–5 use language: system and delegate to uv so they always
-#     run inside the project venv (requires: uv sync).
+#   - All hooks use language: system and run inside the project venv
+#     via uv run --no-sync. No network access required after uv sync.
 #   - ruff config is read from pyproject.toml [tool.ruff].
 #   - When ruff or sync-version modifies files, pre-commit aborts the
 #     commit; stage the changes (git add -u) and recommit.
 
-default_language_version:
-  python: python
-
 repos:
-  # ///////////////////////////////////////////////////////////////
-  # FILE HYGIENE
-  # ///////////////////////////////////////////////////////////////
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+  - repo: local
     hooks:
-      - id: trailing-whitespace
-        exclude: '\.md$'
-      - id: end-of-file-fixer
-      - id: check-yaml
-        args: ['--unsafe']
-      - id: check-toml
+      # ///////////////////////////////////////////////////////////////
+      # FILE HYGIENE
+      # Local scripts rather than an external repo: nothing to resolve
+      # over the network once `uv sync` has run. Same three checks as the
+      # reference repositories, deliberately not more.
+      # ///////////////////////////////////////////////////////////////
       - id: check-merge-conflict
-      - id: check-added-large-files
-        args: ["--maxkb=1000"]
-      - id: debug-statements
+        name: "Check — merge conflict markers"
+        language: system
+        entry: uv run --no-sync python .scripts/dev/check_merge_conflict.py
+        types: [text]
 
-  # ///////////////////////////////////////////////////////////////
-  # RUFF — format then lint  (steps 1 & 2 of lint.py)
-  # Config is read from pyproject.toml [tool.ruff]
-  # ///////////////////////////////////////////////////////////////
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
-    hooks:
+      - id: check-yaml
+        name: "Check — YAML syntax"
+        language: system
+        entry: uv run --no-sync python .scripts/dev/check_yaml.py
+        types: [yaml]
+
+      - id: check-toml
+        name: "Check — TOML syntax"
+        language: system
+        entry: uv run --no-sync python .scripts/dev/check_toml.py
+        types: [toml]
+
+      # ///////////////////////////////////////////////////////////////
+      # RUFF — format then lint  (steps 1 & 2)
+      # Config is read from pyproject.toml [tool.ruff]
+      # ///////////////////////////////////////////////////////////////
+
       # Step 1 — format
       - id: ruff-format
         name: "Ruff Format"
+        language: system
+        entry: uv run --no-sync ruff format
+        types: [python]
 
       # Step 2 — lint with auto-fix
       # --exit-non-zero-on-fix: abort commit so dev can review & re-stage
-      - id: ruff
+      - id: ruff-check
         name: "Ruff Check"
-        args: [--fix, --exit-non-zero-on-fix]
+        language: system
+        entry: uv run --no-sync ruff check --fix --exit-non-zero-on-fix
+        types: [python]
 
-  # ///////////////////////////////////////////////////////////////
-  # LOCAL HOOKS — ty, import-linter, version sync  (steps 3–5)
-  # language: system  →  executed via the project venv through uv
-  # Prerequisite: uv sync (editable install required for import-linter)
-  # ///////////////////////////////////////////////////////////////
-  - repo: local
-    hooks:
+      # ///////////////////////////////////////////////////////////////
+      # LOCAL HOOKS — ty, import-linter, version sync  (steps 3–5)
+      # ///////////////////////////////////////////////////////////////
+
       # Step 3 — type check
       - id: ty
         name: "Ty — type check"
@@ -77,14 +82,13 @@ repos:
         pass_filenames: false
 
       # Step 4 — layer dependency contracts
-      # Relies on editable install so that {{ project_slug }} is importable
-      # without an explicit PYTHONPATH override.
+      # Goes through the poe task rather than calling lint-imports directly:
+      # the task carries PYTHONPATH=src, without which import-linter cannot
+      # find the root package (it resolves it from the current directory).
       - id: import-linter
         name: "Import Linter — layer contracts"
         language: system
-        # lint-imports localise le package par le cwd, pas par le .pth de
-        # l'install editable : il doit tourner depuis src/.
-        entry: uv run --directory src --no-sync lint-imports --config ../pyproject.toml
+        entry: uv run --no-sync poe imports
         pass_filenames: false
         always_run: true
 
