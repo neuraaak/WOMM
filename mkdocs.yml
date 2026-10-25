@@ -3,11 +3,11 @@
 # ///////////////////////////////////////////////////////////////
 
 site_name: WOMM Documentation
-site_description: Comprehensive documentation for the WOMM project, covering user guides, API reference, CLI usage, and examples.
+site_description: Documentation for WOMM, a CLI that scaffolds and manages development environments for Python and JavaScript projects.
 site_author: Neuraaak
-site_url: https://neuraaak.github.io/works-on-my-machine/
-repo_url: https://github.com/neuraaak/works-on-my-machine
-repo_name: neuraaak/works-on-my-machine
+site_url: https://neuraaak.github.io/WOMM/
+repo_url: https://github.com/neuraaak/WOMM
+repo_name: neuraaak/WOMM
 edit_uri: edit/main/docs/
 
 # ///////////////////////////////////////////////////////////////
@@ -58,43 +58,6 @@ theme:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - User Guides:
-      - guides/index.md
-      - Configuration: guides/configuration.md
-      - Development: guides/development.md
-      - Environment: guides/environment.md
-      - Prerequisites: guides/prerequisites.md
-  - API Reference:
-      - api/index.md
-      - Architecture: api/architecture.md
-      - CLI Architecture: api/cli-architecture.md
-      - Exceptions: api/exceptions.md
-      - Logging: api/logging.md
-  - CLI Reference:
-      - cli/index.md
-      - Commands: cli/commands.md
-      - Install: cli/install.md
-      - Create: cli/create.md
-      - Setup: cli/setup.md
-      - Lint: cli/lint.md
-      - Spell: cli/spell.md
-      - Templates: cli/templates.md
-      - Context Menu: cli/context.md
-      - Git Hooks: cli/git-hooks.md
-      - System: cli/system.md
-  - Examples:
-      - examples/index.md
-  - Diagrams:
-      - Architecture: diagrams/architecture.md
-      - Workflows: diagrams/flows.md
-      - Install Flow: diagrams/install.md
-      - New Project Flow: diagrams/new.md
-      - Lint Flow: diagrams/lint.md
-      - System Flow: diagrams/system.md
-  - Tests:
-      - tests/index.md
-  - Coverage: coverage.md
   - Changelog: changelog.md
 
 # ///////////////////////////////////////////////////////////////
@@ -104,28 +67,6 @@ nav:
 plugins:
   - search
   - section-index
-  - coverage:
-      html_report_dir: htmlcov
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          options:
-            docstring_style: google
-            docstring_section_style: spacy
-            show_source: true
-            show_root_heading: true
-            show_root_full_path: false
-            show_symbol_type_heading: true
-            show_symbol_type_toc: true
-            show_signature_annotations: true
-            separate_signature: true
-            signature_crossrefs: true
-            members_order: source
-            merge_init_into_class: true
-            filters:
-              - "!^_"
-              - "^__init__$"
 
 # ///////////////////////////////////////////////////////////////
 # MARKDOWN EXTENSIONS
@@ -172,7 +113,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/neuraaak/works-on-my-machine
+      link: https://github.com/neuraaak/WOMM
       name: GitHub Repository
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/works-on-my-machine/
@@ -182,4 +123,4 @@ extra_css:
 
 copyright: >
   Copyright &copy; 2026 Neuraaak -
-  <a href="https://github.com/neuraaak/works-on-my-machine/blob/main/LICENSE">MIT License</a>
+  <a href="https://github.com/neuraaak/WOMM/blob/main/LICENSE">MIT License</a>
