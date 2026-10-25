@@ -1,32 +1,103 @@
 # Backlog consolidé — WOMM
 
 > Rapport rafraîchi le **2026-10-25**, branche `optimisations-and-refactoring`,
-> commit `f4c3789` (la branche la plus avancée — `main` n'a que les bumps
-> Dependabot). Repère vérifié par mesure : **982 tests passés + 1 skip**.
+> commit `0798a6b` (la branche la plus avancée — `main` n'a que les bumps
+> Dependabot et la dépréciation du nom PyPI). Repère mesuré sur `f4c3789` :
+> **982 tests passés + 1 skip**.
 > **Source de vérité :** `~/.agents/memory/projects/e-dev-python-works-on-my-machine/current-backlog.md`.
 > La numérotation est figée — elle est référencée ailleurs, notamment le
 > « lot 4.4 ».
 
 ---
 
-## ⚠️ Priorité 0 — travail perdu à reprendre
+## ⚠️ Priorité 0a — porte `ty` rouge : bloque tout commit Python
 
-Une session antérieure a noté les **Tasks 5 à 8 du chantier
-`generic-project-setup`** comme livrées et approuvées (commits `45e14ba`,
-`2d51de7`, « 995 tests »). Vérifié le 2026-10-25 : ces commits n'existent dans
-**aucune branche** de ce dépôt, `resolve_setup_profile` / `SetupProfileResolver`
-sont absents de `src/` et de `tests/`, et toutes les cases de
-`.superpowers/plans/2026-08-07-generic-project-setup.md` sont décochées.
+`ty check` sort en échec sur **10 diagnostics pré-existants**, dans 3 fichiers
+sans rapport avec les chantiers en cours. Le hook pre-commit `ty` est en
+`pass_filenames: false` : il analyse **tout le projet** dès qu'un `.py` est
+staged. Conséquence : aucun commit touchant du Python ne passe.
 
-Ce travail a été fait sur une copie du dépôt sur un volume `G:` aujourd'hui
-démonté. **Le considérer comme perdu et repartir de la Task 1.** Si le volume
-ressort un jour, arbitrer les deux versions — ne pas supposer laquelle gagne.
+C'est resté invisible parce que les derniers commits de la branche ne
+touchaient que des `.md`, du YAML et du TOML — le hook affichait
+`Skipped (no files to check)`. Même schéma que le bug `import-linter` corrigé
+dans `1ea9757`.
 
-**Housekeeping immédiat :** `uv.lock` est modifié et non commité (relock par un
-`uv` plus récent, `revision = 3 → 5`, plus des bumps `backrefs 8.0→8.1`,
-`pastel` → `inversion`/`tzdata`). Aucune dépendance déclarée n'a changé.
-Committer en `chore(deps)` ou jeter, mais ne pas le laisser polluer le prochain
-diff.
+**5 `error[invalid-context-manager]`** dans `ui/common/ezpl_bridge.py`
+(l.651, 674, 746, 770, 794) : `with self.wizard.<méthode>(...)` sur des
+méthodes de la dépendance `ezplog`. Elles **sont** décorées `@contextmanager`,
+mais ty résout leur type annoncé (`Generator[...]`) sans voir le décorateur.
+Faux positifs de typage d'une lib externe, pas des bugs runtime.
+
+**5 `warning[redundant-condition]`** : `services/context/parameters.py`
+(l.115, 222, 302 — `context_type` toujours vrai, typé `ContextType`) et
+`ui/context/wizard.py` (l.105, 391 — `None` toujours faux). Code défensif
+mort, réels mais inoffensifs.
+
+**À faire :** un commit `fix(typing)` préliminaire. Décision non prise sur la
+méthode (suppressions ciblées vs retrait du code mort vs assouplissement de la
+config `ty`) — à trancher avec le user. **Ne pas contourner avec
+`--no-verify`.**
+
+---
+
+## ⚠️ Priorité 0b — finir le rapatriement du worktree détaché
+
+> **Rectification du 2026-10-25.** Une version antérieure de cette section
+> déclarait ce travail « perdu, repartir de la Task 1 ». C'était faux.
+
+Les **tâches 1 à 8 sur 11** du chantier `generic-project-setup` sont livrées et
+revues. Elles n'étaient pas dans la branche : elles vivaient dans le worktree
+`.claude/worktrees/generic-project-setup/`, dont le `gitdir` pointe sur
+`G:/.root/dev/.python/works_on_my_machine/.git` — **volume démonté**. Toute
+commande git y répond `fatal: not a git repository`, d'où l'illusion de perte.
+
+### État au 2026-10-25 : rapatrié, testé, **mis au stash**
+
+```
+stash@{0}  rapatriement generic-project-setup tasks 1-8
+```
+
+16 fichiers : 13 modifiés + 3 nouveaux. Les 3 nouveaux
+(`setup_profile_resolver.py` 128 l., `test_setup_profile_resolver.py` 81 l.,
+`test_project_validation_utils.py` 24 l.) sont dans le commit `stash@{0}^3`,
+que `git stash show` **n'affiche pas**. Dépiler avec `git stash pop`, jamais
+un `pop` partiel : sans le resolver, rien n'importe.
+
+**Validation mesurée après rapatriement :** `pytest` **995 passés + 1 skip**
+(+13 sur les 982 de la branche — exactement le chiffre annoncé par la session
+d'origine), `ruff format --check`, `ruff check` et `import-linter` verts. Seule
+`ty` échoue, sur les 10 diagnostics de la **Priorité 0a**, tous hors des
+16 fichiers rapatriés.
+
+### Ce qu'il faut rapatrier, et ce qu'il ne faut surtout pas
+
+Mesure décisive : `git diff f43c24f HEAD -- src tests` est **vide**. La branche
+n'a pas touché `src/` ni `tests/` depuis la base du worktree, donc le worktree
+y est **strictement en avance** : 3 fichiers en plus, zéro en moins, aucun
+conflit possible.
+
+**Hors de `src/` et `tests/`, le worktree est en retard, pas en avance.** Son
+`pyproject.toml` ne contient aucun `[tool.poe.tasks]` : il précède la migration
+Poe (`ffccb2b`). Diffé contre la branche, il apparaît comme supprimant Poe, le
+`Makefile` et `.scripts/dev/*` — ce n'est pas du travail, c'est l'absence de ce
+commit. Idem `.pre-commit-config.yaml`, `requirements*.in`,
+`.hooks/hooks-usage.md` et `uv.lock`.
+
+→ **Ne reprendre que `src/` et `tests/`.** Prendre le reste annulerait la
+migration Poe, la correction du hook `import-linter` et le reset de la doc.
+
+### Reste à faire
+
+1. Régler la Priorité 0a pour que la porte `ty` laisse passer un commit Python.
+2. `git stash pop`, puis commit de récupération (un seul commit ; la
+   granularité des 8 tâches reste tracée dans
+   `.superpowers/sdd/2026-08-07-generic-project-setup/`, qui contient aussi les
+   9 diffs `review-<base>..<tip>.diff` de la chaîne `b1eb7bb` → `b751b68` →
+   `a377d7f` → `6fc0206` → `3bb64b2` → `62046b5` → `45e14ba` → `2d51de7`).
+3. Enchaîner les **tâches 9 à 11**, non commencées.
+
+⚠️ **Ne pas nettoyer `.claude/worktrees/`** avant que le commit de récupération
+soit en place : c'est le seul filet si le stash est perdu.
 
 ---
 
@@ -36,7 +107,7 @@ diff.
 généré peut légitimement proposer un outillage que WOMM n'utilise pas pour
 lui-même. Ne rien corriger au coup par coup d'ici là.
 
-### 2.1 Setup générique — décision **prise**, implémentation à refaire
+### 2.1 Setup générique — décision prise, implémentation **au stash**
 
 L'arbitrage qui bloquait la tâche 6 est **tranché en faveur de l'option 1** :
 `setup_project` devient générique, piloté par des métadonnées `_womm.setup`
@@ -46,7 +117,9 @@ déclarées dans les `copier.yml`, au lieu d'un enum fixe. Spec et plan existent
 - `.superpowers/specs/2026-08-07-generic-project-setup-design.md`
 - `.superpowers/plans/2026-08-07-generic-project-setup.md`
 
-État du blocage dans le code au 2026-10-25, **inchangé** :
+L'implémentation existe déjà à 8 tâches sur 11, rapatriée et mise au
+`stash@{0}` — voir la **Priorité 0b**. Ce qui suit décrit l'état de la *branche
+de dev*, que le commit de récupération doit corriger :
 
 - `SUPPORTED_PROJECT_TYPES = ["python", "javascript", "react", "vue"]` dans
   `shared/configs/project/project_config.py:104`, répliqué dans
@@ -163,26 +236,14 @@ a une suite réelle de 982 tests.
 
 **À faire**, une fois les canaux d'installation stabilisés :
 
-- **`womm new <language>` (commande inexistante)** encore référencée dans
-  6 fichiers : `docs/index.md`, `docs/getting-started.md`,
-  `docs/examples/index.md`, `docs/guides/environment.md`,
-  `docs/diagrams/new.md` et `README.md` ;
-- **nav morte dans `mkdocs.yml`** pour des verticales supprimées :
-  `Install: cli/install.md` (l.77), `Lint: cli/lint.md` (l.80),
-  `Spell: cli/spell.md` (l.81), `Git Hooks: cli/git-hooks.md` (l.84),
-  `Install Flow: diagrams/install.md` (l.91), `Lint Flow: diagrams/lint.md`
-  (l.93) — supprimer les entrées **et** les pages ;
-- **retirer toute la documentation `lint`** (décision du 2026-08-02 : ce
-  nettoyage rentre ici, pas dans un chantier autonome) — supprimer
-  `docs/cli/lint.md` et `docs/diagrams/lint.md`, puis les mentions dans
-  `docs/cli/commands.md`, `docs/index.md`, `docs/getting-started.md`,
-  `docs/guides/configuration.md`, `docs/guides/index.md`,
-  `docs/examples/index.md` et `README.md` ;
-- **mettre à jour la doc `deps`** : le modèle est passé de 3 à 2 strates
-  (`5f0492e`), toute la doc décrit encore les 3 ;
-- **`docs/api/index.md` décrit une architecture périmée** : il pointe encore
-  `womm/core/managers/…`, `womm/core/utils/…` (l.65, l.102, l.196), chemins
-  disparus depuis le passage au src-layout `commands`/`interfaces`/`services` ;
+> **Réglé le 2026-10-25 par le reset de la doc (`0798a6b`)** : la nav morte
+> (`lint`, `spell`, `install`, `git-hooks` et leurs diagrammes), les pages
+> `womm new`, la doc `lint`, la doc `deps` à 3 strates et le
+> `docs/api/index.md` périmé ont tous disparu avec les 31 pages supprimées.
+> Il ne reste de ce lot que ce qui est **hors** de `docs/` ou **à écrire**.
+
+- **`README.md` cite encore `womm new`** et conserve les badges
+  « Python 3.10+ » et « Tests TODO » — le reset n'a touché que `docs/` ;
 - documenter `womm doctor` et les sous-groupes `path` / `context backup`, dont
   `path add <dir>` / `path remove <dir>` et `path backup restore [name]` ;
 - présenter le canal réellement retenu et `uv tool` comme voie principale ;
@@ -201,10 +262,16 @@ utilisateur et sont vérifiés par la CI avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Committer ou jeter `uv.lock` (5 min, débloque la lisibilité des diffs).
-2. Reprendre `generic-project-setup` depuis la Task 1 — c'est le goulot : il
+1. **Débloquer la porte `ty`** (Priorité 0a) : rien de Python ne peut être
+   commité tant qu'elle est rouge.
+2. **Commiter le rapatriement** (Priorité 0b), aujourd'hui au stash — du
+   travail fait, revu et mesuré à 995 tests, que rien ne protège tant qu'il
+   n'est pas dans la branche.
+3. Finir `generic-project-setup` (tâches 9 à 11) — c'est le goulot : il
    débloque `--setup`, `assets/languages/`, le code mort de
    `shared/configs/project/` et la perte de variante de la priorité 3.
-3. Terminer en un lot release : CI (4.2) d'abord — elle est indépendante du
-   reste et protège tout ce qui suit —, puis `install.ps1`, standalone/Inno et
-   la documentation.
+4. Reconstruire la documentation sur le profil Product (`docs/` est vide
+   depuis `0798a6b`).
+5. Terminer en un lot release : CI (4.2) d'abord — elle est indépendante du
+   reste et protège tout ce qui suit —, puis le renommage PyPI en `womm-cli`,
+   `install.ps1` et standalone/Inno.
