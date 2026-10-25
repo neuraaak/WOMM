@@ -12,6 +12,7 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
+import os
 from pathlib import Path
 
 # Third-party imports
@@ -31,11 +32,13 @@ def _fake_venv_create(venv_path: Path, **_kwargs: object) -> None:
     venv_path.mkdir(parents=True)
 
 
-def _make_windows_venv(venv_path: Path) -> None:
-    scripts = venv_path / "Scripts"
+def _make_venv(venv_path: Path) -> Path:
+    scripts = venv_path / ("Scripts" if os.name == "nt" else "bin")
     scripts.mkdir(parents=True)
-    (scripts / "python.exe").touch()
-    (scripts / "pip.exe").touch()
+    (scripts / ("python.exe" if os.name == "nt" else "python")).touch()
+    pip_exe = scripts / ("pip.exe" if os.name == "nt" else "pip")
+    pip_exe.touch()
+    return pip_exe
 
 
 def _patch_command_runner(monkeypatch: pytest.MonkeyPatch, handler) -> None:
@@ -84,7 +87,7 @@ def test_create_virtual_environment_upgrades_pip_when_executables_found(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def create_with_executables(venv_path: Path, **_kwargs: object) -> None:
-        _make_windows_venv(venv_path)
+        _make_venv(venv_path)
 
     monkeypatch.setattr(env_utils.venv, "create", create_with_executables)
     captured: dict[str, object] = {}
@@ -107,11 +110,11 @@ def test_create_virtual_environment_upgrades_pip_when_executables_found(
 
 
 def test_find_pip_executable_returns_path_when_present(tmp_path: Path) -> None:
-    _make_windows_venv(tmp_path)
+    expected = _make_venv(tmp_path)
 
     pip_exe = env_utils.find_pip_executable(tmp_path)
 
-    assert pip_exe == tmp_path / "Scripts" / "pip.exe"
+    assert pip_exe == expected
 
 
 def test_find_pip_executable_raises_when_missing(tmp_path: Path) -> None:
@@ -134,7 +137,7 @@ def test_install_python_dependencies_raises_when_venv_missing(
 def test_install_python_dependencies_skips_when_requirements_file_missing(
     tmp_path: Path,
 ) -> None:
-    _make_windows_venv(tmp_path / "venv")
+    _make_venv(tmp_path / "venv")
 
     result = env_utils.install_python_dependencies(tmp_path)
 
@@ -144,7 +147,7 @@ def test_install_python_dependencies_skips_when_requirements_file_missing(
 def test_install_python_dependencies_installs_from_requirements_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _make_windows_venv(tmp_path / "venv")
+    _make_venv(tmp_path / "venv")
     (tmp_path / "requirements-dev.txt").write_text("pytest\n")
     captured: dict[str, object] = {}
 
@@ -163,7 +166,7 @@ def test_install_python_dependencies_installs_from_requirements_file(
 def test_install_python_dependencies_raises_on_command_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    _make_windows_venv(tmp_path / "venv")
+    _make_venv(tmp_path / "venv")
     (tmp_path / "requirements-dev.txt").write_text("pytest\n")
     _patch_command_runner(
         monkeypatch, lambda *_a, **_k: CommandResult(returncode=1, stderr="boom")
@@ -174,7 +177,7 @@ def test_install_python_dependencies_raises_on_command_failure(
 
 
 def test_install_python_dependencies_uses_alt_venv_dir(tmp_path: Path) -> None:
-    _make_windows_venv(tmp_path / ".venv")
+    _make_venv(tmp_path / ".venv")
 
     result = env_utils.install_python_dependencies(tmp_path)
 

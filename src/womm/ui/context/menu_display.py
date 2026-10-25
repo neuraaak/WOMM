@@ -19,8 +19,8 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
+import ntpath
 import re
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 # Third-party imports
@@ -77,7 +77,7 @@ def format_entry_display(entry: dict) -> str:
     if command:
         exe_match = re.search(r'"([^"]*\.exe)"', command)
         if exe_match:
-            exe_name = Path(exe_match.group(1)).name
+            exe_name = ntpath.basename(exe_match.group(1))
             display_text = f"{display_text} ({exe_name})"
 
     return f"{display_text} [key: {key_name}]"
