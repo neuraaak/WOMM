@@ -112,9 +112,6 @@ class ContextParameters:
         """
         try:
             # Input validation
-            if not context_type:
-                raise ContextServiceError("context_type", "Context type cannot be None")
-
             if not isinstance(context_type, ContextType):
                 raise ContextServiceError(
                     "context_type",
@@ -219,11 +216,6 @@ class ContextParameters:
         """
         try:
             # Input validation
-            if not context_type:
-                raise ContextServiceError(
-                    "command_parameter", "Context type cannot be None"
-                )
-
             if not isinstance(context_type, ContextType):
                 raise ContextServiceError(
                     "command_parameter",
@@ -297,11 +289,6 @@ class ContextParameters:
                 raise ContextServiceError(
                     "command_building",
                     f"Base command must be a string, got {type(base_command).__name__}",
-                )
-
-            if not context_type:
-                raise ContextServiceError(
-                    "command_building", "Context type cannot be None"
                 )
 
             if not isinstance(context_type, ContextType):

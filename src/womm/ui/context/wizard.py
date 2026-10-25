@@ -102,7 +102,10 @@ class ContextMenuWizard:
 
                 def validate(self, document):
                     result = super().validate(document)
-                    if result:
+                    # FIXME: dead branch. PathValidator.validate() returns None and
+                    # raises on failure, so this never runs: the extension check below
+                    # is never applied. Fixing it changes validation behaviour.
+                    if result:  # ty: ignore[redundant-condition]
                         path = Path(document.text)
                         if (
                             path.is_file()
@@ -388,7 +391,10 @@ class ContextMenuWizard:
 
                     def validate(self, document):
                         result = super().validate(document)
-                        if result:
+                        # FIXME: dead branch. PathValidator.validate() returns None and
+                        # raises on failure, so this never runs: the extension check below
+                        # is never applied. Fixing it changes validation behaviour.
+                        if result:  # ty: ignore[redundant-condition]
                             path = Path(document.text)
                             if (
                                 path.is_file()

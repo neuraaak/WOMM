@@ -648,7 +648,7 @@ class ExtendedPrinter(EzPrinter):
         Yields:
             tuple of (Progress, task_id, dependency_name) for each dependency
         """
-        with self.wizard.dependency_progress(dependencies, description) as (
+        with self.wizard.dependency_progress(dependencies, description) as (  # ty: ignore[invalid-context-manager]  # ezplog's @contextmanager is not visible through its annotations
             progress,
             task,
             dep,
@@ -671,7 +671,7 @@ class ExtendedPrinter(EzPrinter):
         Yields:
             tuple of (Progress, task_id, package_name, version) for each package
         """
-        with self.wizard.package_install_progress(packages, description) as (
+        with self.wizard.package_install_progress(packages, description) as (  # ty: ignore[invalid-context-manager]  # ezplog's @contextmanager is not visible through its annotations
             progress,
             task,
             pkg,
@@ -743,7 +743,7 @@ class ExtendedPrinter(EzPrinter):
         Yields:
             tuple of (Progress, task_id, step_name, step_description) for each step
         """
-        with self.wizard.installation_progress(steps, description) as (
+        with self.wizard.installation_progress(steps, description) as (  # ty: ignore[invalid-context-manager]  # ezplog's @contextmanager is not visible through its annotations
             progress,
             task,
             step_name,
@@ -767,7 +767,7 @@ class ExtendedPrinter(EzPrinter):
         Yields:
             tuple of (Progress, task_id, phase_name, weight) for each phase
         """
-        with self.wizard.build_progress(phases, description) as (
+        with self.wizard.build_progress(phases, description) as (  # ty: ignore[invalid-context-manager]  # ezplog's @contextmanager is not visible through its annotations
             progress,
             task,
             phase,
@@ -791,7 +791,7 @@ class ExtendedPrinter(EzPrinter):
         Yields:
             tuple of (Progress, task_id, stage) for each stage
         """
-        with self.wizard.deployment_progress(stages, description) as (
+        with self.wizard.deployment_progress(stages, description) as (  # ty: ignore[invalid-context-manager]  # ezplog's @contextmanager is not visible through its annotations
             progress,
             task,
             stage,
