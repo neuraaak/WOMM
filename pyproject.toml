@@ -13,7 +13,7 @@ build-backend = "hatchling.build"
 # /////////////////////////////////////////////////////////////////////
 
 [project]
-name = "works-on-my-machine"
+name = "WOMM"
 version = "4.0.0"
 description = "Universal development tools for Python and JavaScript - Automatic installation, cross-platform configuration, global commands"
 readme = "README.md"
@@ -54,11 +54,15 @@ dependencies = [
 ]
 
 # /////////////////////////////////////////////////////////////////////
-# 🛠️ OPTIONAL DEPENDENCIES
-# Development tools, testing, and build dependencies
+# 🛠️ DEPENDENCY GROUPS
+# Development, test and docs tooling (PEP 735).
+#
+# Groups, not extras: this tooling is never part of what a user installs,
+# so it has no business in the published metadata. `uv sync --group dev`
+# in CI, `--all-groups` for the cache primer.
 # /////////////////////////////////////////////////////////////////////
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     # Development tools
     "poethepoet>=0.48.0",
@@ -68,14 +72,16 @@ dev = [
     "pre-commit>=3.0.0",
     "import-linter>=2.0.0",
 
-    # Security
+    # Security: bandit scans this package's own code, pip-audit the
+    # locked dependencies. `poe security` chains both.
     "bandit>=1.7.0",
+    "pip-audit>=2.7.0",
 
     # Tests
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.10.0",
-    "pytest-xdist>=3.0.0",
+    {include-group = "test"},
+
+    # Documentation
+    {include-group = "docs"},
 
     # Build and distribution
     "build>=1.0.0",
@@ -95,6 +101,10 @@ docs = [
     "mike>=2.0.0",
     "pymdown-extensions>=10.7",
     "git-cliff>=2.7.0",
+
+    # Task runner: 04-docs syncs only this group and runs `poe docs-build`,
+    # so poethepoet must be reachable from here too.
+    "poethepoet>=0.48.0",
 ]
 
 # ///////////////////////////////////////////////////////////////
@@ -132,14 +142,42 @@ format = { cmd = "ruff format src tests .scripts", help = "Format code with Ruff
 format-check = { cmd = "ruff format --check src tests .scripts", help = "Check formatting without modifying files" }
 lint = { cmd = "ruff check src tests .scripts", help = "Check code with Ruff" }
 lint-fix = { cmd = "ruff check --fix src tests .scripts", help = "Fix Ruff issues automatically" }
-types = { cmd = "ty check --output-format=concise", help = "Check types with Ty" }
-imports = { cmd = "lint-imports --config ../pyproject.toml", cwd = "src", help = "Check architecture contracts" }
-security = { cmd = "bandit -c pyproject.toml -r src/womm", help = "Scan source code with Bandit" }
+typecheck = { cmd = "ty check --output-format=concise", help = "Check types with Ty" }
+security = { help = "Run Bandit and audit locked dependencies", sequence = [
+    "bandit -c pyproject.toml -r src/womm",
+    "pip-audit",
+], default_item_type = "cmd" }
 test = { cmd = "pytest", help = "Run the test suite" }
+test-ci = { cmd = "pytest --cov-fail-under=60", help = "Run the test suite with the coverage gate" }
 test-fast = { cmd = "pytest -m 'not slow'", help = "Run tests excluding slow tests" }
 test-parallel = { cmd = "pytest -n auto", help = "Run tests in parallel" }
 pre-commit = { cmd = "pre-commit run --all-files", help = "Run every pre-commit hook" }
 sync-version = { cmd = "python .scripts/dev/update_version.py", help = "Synchronize _version.py with pyproject.toml" }
+docs-build = { cmd = "mkdocs build --strict", help = "Build the documentation site" }
+docs = { cmd = "mkdocs serve", help = "Serve the documentation locally" }
+build = { cmd = "uv build", help = "Build the wheel and the sdist" }
+# Machine-readable version for CI: the single source the workflows read,
+# instead of each one re-implementing a grep/sed on pyproject.toml.
+read-version = '''python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"'''
+
+# import-linter resolves the root package from the current directory, not
+# from the path the editable install adds to sys.path. PYTHONPATH=src is
+# what makes `womm` discoverable; `source_paths` does not exist in 2.x.
+# Reads the live import graph of src/womm and rewrites docs/architecture.md.
+# Needs PYTHONPATH=src for the same reason as `imports`.
+[tool.poe.tasks.graph]
+help = "Generate the architecture graph"
+cmd = "python .scripts/dev/generate_architecture_graph.py"
+env = { PYTHONPATH = "src" }
+
+# PYTHONIOENCODING: import-linter renders through rich, which falls back to
+# the legacy Windows console writer (cp1252) as soon as stdout is not a tty.
+# Its spinner glyphs are then unencodable and the run dies on a
+# UnicodeEncodeError — in CI, in a pipe, in any redirected output.
+[tool.poe.tasks.imports]
+help = "Check architecture contracts"
+cmd = "lint-imports"
+env = { PYTHONPATH = "src", PYTHONIOENCODING = "utf-8" }
 
 [tool.poe.tasks.fix]
 help = "Fix lint issues, then format the code"
@@ -150,9 +188,9 @@ help = "Run all local quality checks"
 sequence = [
     "format-check",
     "lint",
-    "types",
+    "typecheck",
     "imports",
-    "test",
+    "test-ci",
 ]
 
 # ///////////////////////////////////////////////////////////////
@@ -363,8 +401,6 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
-    # Temporary baseline: ratchet upward as coverage grows.
-    "--cov-fail-under=60",
     "--tb=short",
     "--color=yes",
     "--durations=10",
@@ -434,7 +470,6 @@ exclude_lines = [
 ]
 show_missing = true
 precision = 2
-fail_under = 60
 
 [tool.coverage.html]
 directory = "htmlcov"
