@@ -21,12 +21,10 @@ from __future__ import annotations
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 
 # Third-party imports
 import click
 from ezplog import LogLevel
-from rich.progress import TaskID
 
 # Local imports
 from ....interfaces import ContextMenuInterface
@@ -35,7 +33,7 @@ from ....shared.results.context_results import (
     BackupFileInfo,
     ContextCherryPickResult,
 )
-from ....ui.common import ezpl, ezprinter
+from ....ui.common import ezpl, ezprinter, ezwizard
 from ....ui.context import ContextMenuUI
 from ....ui.context.display import (
     render_context_backup_content_result,
@@ -84,11 +82,11 @@ def context_backup_create(output: str | None, verbose: bool) -> None:
         target_backup = str(backup_dir / f"context_menu_backup_{timestamp}.json")
     ezprinter.info(f"Backup location: {target_backup}")
 
-    with ezprinter.create_spinner_with_status("Creating context menu backup...") as (
+    with ezwizard.spinner_with_status("Creating context menu backup...") as (
         progress,
         task,
     ):
-        progress.update(cast(TaskID, task), status="Reading registry entries...")
+        progress.update(task, status="Reading registry entries...")
         result = manager.backup_entries(target_backup)
 
     render_context_backup_result(result)
@@ -250,10 +248,11 @@ def context_backup_restore(name: str | None, verbose: bool) -> None:
         ezprinter.info("Restore cancelled")
         return
 
-    with ezprinter.create_spinner_with_status(
-        "Restoring context menu from backup..."
-    ) as (progress, task):
-        progress.update(cast(TaskID, task), status="Restoring from backup...")
+    with ezwizard.spinner_with_status("Restoring context menu from backup...") as (
+        progress,
+        task,
+    ):
+        progress.update(task, status="Restoring from backup...")
         result = manager.restore_entries(target)
 
     render_context_restore_result(result)
@@ -291,11 +290,11 @@ def context_cherry_pick(verbose: bool) -> None:
         ezprinter.info("Create a backup first using 'womm context backup create'")
         sys.exit(1)
 
-    with ezprinter.create_spinner_with_status("Scanning backup files...") as (
+    with ezwizard.spinner_with_status("Scanning backup files...") as (
         progress,
         task,
     ):
-        progress.update(cast(TaskID, task), status="Collecting context menu entries...")
+        progress.update(task, status="Collecting context menu entries...")
         all_entries = manager.collect_entries_from_backups()
 
     if not all_entries:
@@ -316,7 +315,7 @@ def context_cherry_pick(verbose: bool) -> None:
         ezprinter.info("Cherry-pick cancelled")
         return
 
-    with ezprinter.create_spinner_with_status(
+    with ezwizard.spinner_with_status(
         f"Applying {len(selected_entries)} selected entries..."
     ) as (progress, task):
         results = manager.apply_cherry_picked_entries(selected_entries)

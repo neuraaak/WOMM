@@ -17,15 +17,7 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Local imports
 from .interactive_menu import InteractiveMenu, format_backup_item
-from .logging import (
-    DynamicLayeredProgress,
-    WommPrinter,
-    ezconsole,
-    ezlogger,
-    ezpl,
-    ezprinter,
-    ezwizard,
-)
+from .logging import WommPrinter, ezconsole, ezlogger, ezpl, ezprinter, ezwizard
 from .prompts import confirm, prompt_choice, prompt_path
 
 # ///////////////////////////////////////////////////////////////
@@ -33,7 +25,6 @@ from .prompts import confirm, prompt_choice, prompt_path
 # ///////////////////////////////////////////////////////////////
 
 __all__ = [
-    "DynamicLayeredProgress",
     "WommPrinter",
     "InteractiveMenu",
     "confirm",

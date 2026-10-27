@@ -18,17 +18,15 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import sys
-from typing import cast
 
 # Third-party imports
 import click
 from ezplog import LogLevel
-from rich.progress import TaskID
 
 # Local imports
 from ....interfaces import ContextMenuInterface
 from ....services.context import ContextParameters
-from ....ui.common import ezpl, ezprinter
+from ....ui.common import ezpl, ezprinter, ezwizard
 from ....ui.context import ContextMenuWizard
 from ....ui.context.display import (
     render_script_registration_result,
@@ -213,10 +211,11 @@ def context_register(
 
     backup_dir = manager.get_backup_directory()
     backup_file = str(backup_dir / "context_menu_backup_before_register.json")
-    with ezprinter.create_spinner_with_status(
-        "Creating backup before registration..."
-    ) as (progress, task):
-        progress.update(cast(TaskID, task), status="Creating backup...")
+    with ezwizard.spinner_with_status("Creating backup before registration...") as (
+        progress,
+        task,
+    ):
+        progress.update(task, status="Creating backup...")
         backup_result = manager.backup_entries(backup_file)
 
     if not backup_result.success:
@@ -226,10 +225,11 @@ def context_register(
     if verbose:
         ezprinter.info(f"Backup created: {backup_file}")
 
-    with ezprinter.create_spinner_with_status(
-        "Registering script in context menu..."
-    ) as (progress, task):
-        progress.update(cast(TaskID, task), status="Adding registry entries...")
+    with ezwizard.spinner_with_status("Registering script in context menu...") as (
+        progress,
+        task,
+    ):
+        progress.update(task, status="Adding registry entries...")
         result = manager.register_script(
             resolved_target, resolved_label, resolved_icon, False, context_params
         )
@@ -272,10 +272,11 @@ def context_unregister(remove_key: str, verbose: bool) -> None:
     if verbose:
         ezprinter.info(f"Removing key: {remove_key}")
 
-    with ezprinter.create_spinner_with_status(
-        "Unregistering script from context menu..."
-    ) as (progress, task):
-        progress.update(cast(TaskID, task), status="Removing registry entries...")
+    with ezwizard.spinner_with_status("Unregistering script from context menu...") as (
+        progress,
+        task,
+    ):
+        progress.update(task, status="Removing registry entries...")
         result = manager.unregister_script(remove_key)
 
     render_script_unregistration_result(result)

@@ -27,7 +27,7 @@ from rich.progress import TaskID
 
 # Local imports
 from ...interfaces import SystemDetectorInterface, SystemEnvironmentInterface
-from ...ui.common import ezpl, ezprinter
+from ...ui.common import ezpl, ezprinter, ezwizard
 from ...ui.system import (
     render_environment_refresh_result,
     render_system_detection_result,
@@ -67,7 +67,7 @@ def system_detect(verbose: bool) -> None:
     ezprinter.print_header("System Detection")
 
     interface = SystemDetectorInterface()
-    with ezprinter.create_spinner_with_status("Detecting system information...") as (
+    with ezwizard.spinner_with_status("Detecting system information...") as (
         progress,
         task,
     ):
@@ -105,9 +105,10 @@ def system_refresh_env(verbose: bool) -> None:
     ezprinter.print_header("Environment Refresh")
 
     interface = SystemEnvironmentInterface()
-    with ezprinter.create_spinner_with_status(
-        "Refreshing environment variables..."
-    ) as (progress, task):
+    with ezwizard.spinner_with_status("Refreshing environment variables...") as (
+        progress,
+        task,
+    ):
         task_id = TaskID(task)
         progress.update(
             task_id,

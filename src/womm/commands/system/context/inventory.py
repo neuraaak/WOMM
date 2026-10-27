@@ -18,16 +18,14 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import sys
-from typing import cast
 
 # Third-party imports
 import click
 from ezplog import LogLevel
-from rich.progress import TaskID
 
 # Local imports
 from ....interfaces import ContextMenuInterface
-from ....ui.common import ezpl, ezprinter
+from ....ui.common import ezpl, ezprinter, ezwizard
 from ....ui.context.display import (
     render_context_entries_result,
     render_context_setup_result,
@@ -59,11 +57,11 @@ def context_list(verbose: bool) -> None:
     if not _check_windows(manager):
         return
 
-    with ezprinter.create_spinner_with_status("Retrieving context menu entries...") as (
+    with ezwizard.spinner_with_status("Retrieving context menu entries...") as (
         progress,
         task,
     ):
-        progress.update(cast(TaskID, task), status="Reading registry entries...")
+        progress.update(task, status="Reading registry entries...")
         result = manager.list_entries()
 
     render_context_entries_result(result)
@@ -95,11 +93,11 @@ def context_quick_setup(verbose: bool) -> None:
     if not _check_windows(manager):
         return
 
-    with ezprinter.create_spinner_with_status("Setting up common WOMM tools...") as (
+    with ezwizard.spinner_with_status("Setting up common WOMM tools...") as (
         progress,
         task,
     ):
-        progress.update(cast(TaskID, task), status="Registering WOMM tools...")
+        progress.update(task, status="Registering WOMM tools...")
         result = manager.quick_setup_tools(verbose)
 
     render_context_setup_result(result)
