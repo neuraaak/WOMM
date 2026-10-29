@@ -53,39 +53,10 @@ _configure_windows_console()
 
 @click.group(invoke_without_command=True)
 @click.help_option("-h", "--help")
-@click.option(
-    "--log-level",
-    type=click.Choice(
-        ["debug", "info", "warn", "error", "critical"], case_sensitive=False
-    ),
-    default=None,
-    help="Configure console log level",
-)
-@click.option(
-    "--log-file",
-    type=click.Path(dir_okay=False, path_type=str),
-    default=None,
-    help="Enable file logging to the given path",
-)
-@click.option(
-    "--log-json/--no-log-json",
-    default=False,
-    help="Use JSON lines format for file logs",
-)
 @click.version_option(version=__version__)
 @click.pass_context
-def womm(
-    ctx: click.Context,
-    log_level: str | None,
-    log_file: str | None,
-    log_json: bool,
-) -> None:
+def womm(ctx: click.Context) -> None:
     """🛠️ Works On My Machine - Universal development tools."""
-    if log_level or log_file or log_json:
-        ezprinter.warning(
-            "Log configuration options are not yet fully supported via ezpl"
-        )
-
     if ctx.invoked_subcommand is None:
         ezprinter.console.print(r"""
 ================================================================================

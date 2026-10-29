@@ -56,6 +56,14 @@ def test_help_registers_all_operational_command_groups() -> None:
         assert command in result.output
 
 
+def test_removed_log_options_are_rejected() -> None:
+    runner = CliRunner()
+    for option in ("--log-level=debug", "--log-file=out.log", "--log-json"):
+        result = runner.invoke(womm, [option, "--help"])
+        assert result.exit_code != 0
+        assert "No such option" in result.output
+
+
 def test_help_loads_without_windows_registry(tmp_path) -> None:
     environment = os.environ.copy()
     environment["WOMM_HOME"] = str(tmp_path / "womm-home")

@@ -36,14 +36,17 @@ par `setup_project`. Vérification : 914 tests + 1 skip, couverture 70,97 %
 
 ### 3.2 Décisions de compatibilité et exclusions
 
-- [ ] Décider explicitement du sort de `--log-level`, `--log-file` et
-  `--log-json` : les implémenter, les déprécier avant retrait, ou annoncer
-  leur suppression comme rupture CLI. Ne pas les traiter comme un simple
-  nettoyage interne.
-- [ ] Conserver `ContextConfig` : la façade est utilisée par quatre modules de
-  production et réduit actuellement leur couplage aux configurations
-  spécialisées. Toute suppression future exige une migration des
-  consommateurs et une décision sur la compatibilité de l'export public.
+- [x] Supprimer `--log-level`, `--log-file` et `--log-json` comme rupture CLI
+  explicite : ces options étaient acceptées sans appliquer le réglage demandé.
+  Elles sont désormais rejetées par Click ; annoncer leur retrait dans les
+  notes de la prochaine version.
+- [x] Conserver `ContextConfig` : la façade est utilisée par quatre modules de
+  production (`services/context/parameters.py`, `registry_service.py`,
+  `validation_service.py` et `utils/context/core_utils.py`) et réduit leur
+  couplage aux configurations spécialisées. Ses exports publics et les valeurs
+  partagées avec ces configurations sont couverts par un test. Toute suppression
+  future exige une migration des consommateurs et une décision sur la
+  compatibilité de l'export public.
 
 **Critère de sortie du sous-lot :** chaque suppression est justifiée par un
 inventaire des appelants, les contrats publics conservés disposent d'un test,
