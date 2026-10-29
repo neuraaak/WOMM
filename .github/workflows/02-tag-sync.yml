@@ -70,6 +70,12 @@ jobs:
   publish:
     name: Publish (PyPI)
     needs: tag-sync
+    # A called workflow cannot request more than the caller grants: without
+    # this block the nested publish job inherits `id-token: none` and the
+    # whole workflow fails validation before any job starts.
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing — no secrets passed
     uses: ./.github/workflows/03-publish.yml
     # Both inputs are passed explicitly: 03 re-reads pyproject.toml and
     # refuses to publish if the two disagree, and it gates the irreversible
