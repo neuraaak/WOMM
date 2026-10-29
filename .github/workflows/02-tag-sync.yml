@@ -1,0 +1,85 @@
+name: 02 · Tag Sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tag-sync-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI gate
+    uses: ./.github/workflows/01-ci.yml
+
+  tag-sync:
+    name: Tag sync
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_action: ${{ steps.gate.outputs.tag_action }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION=$(python -c "import pathlib, tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Determine tag action
+        id: gate
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "tag_action=preview" >> "$GITHUB_OUTPUT"
+          elif git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "tag_action=skip" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_action=create" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Configure git
+        if: steps.gate.outputs.tag_action == 'create'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Create tag & move alias
+        if: steps.gate.outputs.tag_action == 'create'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          ALIAS="v${VERSION%%.*}-latest"
+          git tag -f "$ALIAS"
+          git push origin --force "$ALIAS"
+
+  publish:
+    name: Publish (PyPI)
+    needs: tag-sync
+    uses: ./.github/workflows/03-publish.yml
+    # Both inputs are passed explicitly: 03 re-reads pyproject.toml and
+    # refuses to publish if the two disagree, and it gates the irreversible
+    # upload on tag_action — which is `create` only when this job has just
+    # pushed a new tag.
+    with:
+      version: ${{ needs.tag-sync.outputs.version }}
+      tag_action: ${{ needs.tag-sync.outputs.tag_action }}
+
+  docs:
+    name: Docs
+    needs: publish
+    uses: ./.github/workflows/04-docs.yml

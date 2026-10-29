@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+# ///////////////////////////////////////////////////////////////
+# SECURITY VALIDATION UTILS - Pure Security Validation Functions
+# Project: works-on-my-machine
+# ///////////////////////////////////////////////////////////////
+
+"""
+Pure security validation functions for Works On My Machine.
+
+This module contains stateless utility functions for security validation
+that can be used independently without class instantiation.
+"""
+
+from __future__ import annotations
+
+# ///////////////////////////////////////////////////////////////
+# IMPORTS
+# ///////////////////////////////////////////////////////////////
+# Standard library imports
+import re
+from pathlib import Path
+
+# Local imports
+from ...shared.configs.security import SecurityPatternsConfig
+
+# ///////////////////////////////////////////////////////////////
+# BACKUP NAME CONTAINMENT
+# ///////////////////////////////////////////////////////////////
+
+
+def resolve_backup_name(backup_dir: Path, name: str) -> Path | None:
+    """Resolve a backup name inside a backup directory.
+
+    Args:
+        backup_dir: Directory the name must stay inside.
+        name: Bare file name, as listed by a backup listing.
+
+    Returns:
+        The resolved path, or None when the name is unsafe, absent, or
+        not a regular file. Callers must not disclose the resolved path.
+    """
+    # These checks intentionally overlap (e.g. an absolute POSIX path is
+    # also caught by the "/" check; a Windows drive-relative name is
+    # also caught by ":"): a containment filter must not depend on the
+    # ordering of its own sub-clauses to stay correct, so each is kept
+    # even where another already covers the same input.
+    if (
+        not name
+        or "\x00" in name
+        or ".." in name
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+    ):
+        return None
+    if Path(name).is_absolute() or Path(name).drive:
+        return None
+
+    try:
+        candidate = (backup_dir / name).resolve()
+        root = backup_dir.resolve()
+    except OSError:
+        return None
+
+    if not candidate.is_relative_to(root):
+        return None
+    if not candidate.is_file():
+        return None
+    # resolve() followed the symlink; is_relative_to already rejected any
+    # target outside root, so reaching here means the file is contained.
+    return candidate
+
+
+# ///////////////////////////////////////////////////////////////
+# COMMAND VALIDATION FUNCTIONS
+# ///////////////////////////////////////////////////////////////
+
+
+def has_dangerous_command_patterns(command: str) -> bool:
+    """Check if a command contains dangerous patterns.
+
+    Args:
+        command: Command to check
+
+    Returns:
+        bool: True if dangerous patterns found
+    """
+    for pattern in SecurityPatternsConfig.DANGEROUS_COMMAND_PATTERNS:
+        if re.search(pattern, command, re.IGNORECASE):
+            return True
+    return False
+
+
+def is_dangerous_argument(command: str, argument: str) -> bool:
+    """Check if an argument is dangerous for a specific command.
+
+    Args:
+        command: Base command (lowercase)
+        argument: Argument to check
+
+    Returns:
+        bool: True if argument is dangerous
+    """
+    command_lower = command.lower()
+    argument_lower = argument.lower()
+
+    # Check against dangerous command patterns
+    if command_lower in SecurityPatternsConfig.DANGEROUS_COMMANDS:
+        dangerous_args = SecurityPatternsConfig.DANGEROUS_COMMANDS[command_lower]
+        for dangerous_arg in dangerous_args:
+            if dangerous_arg in argument_lower:
+                return True
+
+    # Check for shell injection patterns
+    return any(
+        re.search(pattern, argument_lower)
+        for pattern in SecurityPatternsConfig.SHELL_INJECTION_PATTERNS
+    )
+
+
+def validate_chmod_permissions(permissions: str) -> bool:
+    """Validate chmod permission string.
+
+    Args:
+        permissions: Permission string to validate
+
+    Returns:
+        bool: True if permissions are valid
+    """
+    return any(
+        re.match(pattern, permissions)
+        for pattern in SecurityPatternsConfig.CHMOD_ALLOWED_PATTERNS
+    )
+
+
+def validate_chown_owner(owner: str) -> bool:
+    """Validate chown owner string.
+
+    Args:
+        owner: Owner string to validate
+
+    Returns:
+        bool: True if owner is valid
+    """
+    return any(
+        re.match(pattern, owner)
+        for pattern in SecurityPatternsConfig.CHOWN_ALLOWED_PATTERNS
+    )
+
+
+def validate_permission_command(command: list[str]) -> bool:
+    """Validate permission-related commands (chmod, chown).
+
+    Args:
+        command: Command to validate
+
+    Returns:
+        bool: True if command is valid
+    """
+    if len(command) < 2:
+        return False
+
+    base_command = command[0].lower()
+
+    if base_command == "chmod":
+        permissions = command[1]
+        return validate_chmod_permissions(permissions)
+
+    if base_command == "chown":
+        owner = command[1]
+        return validate_chown_owner(owner)
+
+    return False
+
+
+# ///////////////////////////////////////////////////////////////
+# PATH VALIDATION FUNCTIONS
+# ///////////////////////////////////////////////////////////////
+
+
+def has_dangerous_file_patterns(file_path: str) -> bool:
+    """Check if a file path contains dangerous patterns.
+
+    Args:
+        file_path: File path to check
+
+    Returns:
+        bool: True if dangerous patterns found
+    """
+    return any(
+        re.search(pattern, file_path, re.IGNORECASE)
+        for pattern in SecurityPatternsConfig.DANGEROUS_FILE_PATTERNS
+    )
+
+
+def has_excessive_traversal(file_path: str, max_traversal: int = 2) -> bool:
+    """Check if a file path has excessive directory traversal.
+
+    Args:
+        file_path: File path to check
+        max_traversal: Maximum allowed traversal levels
+
+    Returns:
+        bool: True if traversal is excessive
+    """
+    if ".." not in file_path:
+        return False
+    traversal_count = file_path.count("..")
+    return traversal_count > max_traversal
+
+
+def is_system_directory(path: Path) -> bool:
+    """Check if a path is a system directory.
+
+    Args:
+        path: Path to check
+
+    Returns:
+        bool: True if it's a system directory
+    """
+    try:
+        path_str = str(path.resolve())
+        path_normalized = path_str.replace("\\", "/")
+
+        for system_dir in SecurityPatternsConfig.SYSTEM_DIRECTORIES:
+            system_dir_normalized = system_dir.replace("\\", "/")
+
+            # For root directories like "C:\\" or "/", check that the path
+            # is actually in a system subdirectory, not just on the same drive
+            if system_dir_normalized in ("C:/", "/"):
+                # Only match if path is exactly the root or in a known system subdirectory
+                if path_normalized == system_dir_normalized.rstrip("/"):
+                    return True
+                # Check for known system subdirectories
+                system_subdirs = [
+                    "Windows",
+                    "System32",
+                    "Program Files",
+                    "Program Files (x86)",
+                ]
+                if any(
+                    path_normalized.startswith(
+                        (
+                            f"{system_dir_normalized.rstrip('/')}/{subdir}/",
+                            f"{system_dir_normalized.rstrip('/')}\\{subdir}\\",
+                        )
+                    )
+                    for subdir in system_subdirs
+                ):
+                    return True
+            # For specific system directories, use startswith
+            elif path_normalized.startswith(system_dir_normalized):
+                return True
+
+        return False
+    except Exception:
+        # If path resolution fails, be conservative
+        return True

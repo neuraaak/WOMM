@@ -1,0 +1,241 @@
+name: 03 · Publish
+
+# Build + package on every mode; upload to PyPI only when `tag_action` is
+# `create` (a real release). Gating is keyed on the `tag_action` INPUT, never on
+# github.event_name: in a reusable workflow the event is inherited from the
+# caller (`push`), so an `event_name == 'workflow_call'` check never matches —
+# and an `event_name == 'workflow_dispatch'` escape hatch would let a manual run
+# from an arbitrary ref fire the irreversible PyPI upload. A manual dispatch
+# therefore defaults to `preview` and must opt in explicitly.
+#
+# A dispatch has no upstream CI gate (02-tag-sync runs 01-ci before calling us),
+# so the gate-equivalent step runs under `event_name == 'workflow_dispatch'` —
+# the one place that signal is the right one, since a workflow_call inherits the
+# caller's event and never matches.
+#
+# The FILENAME is what PyPI's Trusted Publisher matches: renaming this file
+# breaks OIDC until the publisher is re-registered.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_action:
+        description: "create = publish to PyPI (irreversible) | preview = build only"
+        required: true
+        type: choice
+        default: preview
+        options:
+          - preview
+          - create
+  workflow_call:
+    inputs:
+      version:
+        required: false
+        type: string
+      tag_action:
+        required: false
+        type: string
+        default: create # create | preview
+
+permissions: {}
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+env:
+  # Distribution name — what PyPI shows and what `pip install` takes.
+  #
+  # It is NOT a renaming mechanism: PyPI reads the name from the wheel's
+  # METADATA, which comes from [project].name in pyproject.toml. This variable
+  # is the expected value, checked against the built artifact below, so a
+  # mismatch fails the build instead of publishing under the wrong name.
+  #
+  # pyproject.toml declares this same name, so the check below passes; it
+  # stays as the guard against an accidental rename.
+  DIST_NAME: womm-cli
+
+  # Import package name — the directory inside the wheel, and the CLI command.
+  # It differs from the distribution name because `womm` was already taken on
+  # PyPI by an unrelated project.
+  IMPORT_NAME: womm
+
+jobs:
+  validate:
+    name: Validate & build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - run: uv sync --frozen --no-build --group dev
+
+      # The caller's input must agree with pyproject.toml, or the artifact would
+      # be published under a number that is not the one the tag points at.
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version || '' }}
+        run: |
+          FILE_VERSION=$(uv run --no-sync poe -q read-version)
+          VERSION="${INPUT_VERSION:-$FILE_VERSION}"
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version found in pyproject.toml"
+            exit 1
+          fi
+          if [ "$VERSION" != "$FILE_VERSION" ]; then
+            echo "::error::Version mismatch: input $VERSION vs pyproject.toml $FILE_VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      # Gate-equivalent for a manual dispatch only: on the cascade path 01-ci
+      # already proved this exact commit, so re-running it would be waste.
+      - name: Verify the dispatch gate passes
+        if: github.event_name == 'workflow_dispatch'
+        run: uv run --no-sync poe check
+
+      - name: Build package
+        run: uv run --no-sync poe build
+
+      - name: Verify package metadata
+        run: uv run --no-sync twine check dist/*
+
+      # Two names, two checks: the distribution name is what PyPI registers,
+      # the import name is what the wheel must actually contain.
+      - name: Verify distribution and import names
+        run: |
+          python - <<'PY'
+          import glob
+          import os
+          import zipfile
+          from email.parser import BytesParser
+
+          dist_name = os.environ["DIST_NAME"]
+          import_name = os.environ["IMPORT_NAME"]
+
+          wheels = glob.glob("dist/*.whl")
+          if not wheels:
+              raise SystemExit("No wheel found in dist/")
+
+          with zipfile.ZipFile(wheels[0]) as zf:
+              if zf.testzip() is not None:
+                  raise SystemExit("Wheel archive is corrupt")
+              names = zf.namelist()
+              metadata_path = next(
+                  (n for n in names if n.endswith(".dist-info/METADATA")), None
+              )
+              if metadata_path is None:
+                  raise SystemExit("Wheel has no METADATA")
+              metadata = BytesParser().parsebytes(zf.read(metadata_path))
+
+          # Normalised per PEP 503: PyPI treats '-', '_' and '.' alike.
+          def normalise(value: str) -> str:
+              return value.lower().replace("_", "-").replace(".", "-")
+
+          built = metadata["Name"]
+          if normalise(built) != normalise(dist_name):
+              raise SystemExit(
+                  f"Distribution name mismatch: the wheel declares {built!r} but this "
+                  f"workflow publishes {dist_name!r}.\n"
+                  f"PyPI takes the name from the wheel METADATA, so this cannot be "
+                  f"fixed from the workflow: set [project].name to {dist_name!r} in "
+                  f"pyproject.toml."
+              )
+
+          if not any(n.startswith(f"{import_name}/") for n in names):
+              raise SystemExit(f"Wheel does not contain the {import_name} package")
+
+          print(f"Wheel declares {built}, contains {import_name}/ — checks passed")
+          PY
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # WOMM ships a command, not just an importable module: the smoke test
+  # installs the built wheel as a tool and runs the CLI, on both platforms it
+  # claims to support. `womm doctor` is the broadest single entry point.
+  smoke-test:
+    name: Smoke test (${{ matrix.os }})
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: "3.13"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - name: Install the wheel and run the CLI
+        shell: bash
+        run: |
+          uv tool install --python 3.13 --from dist/*.whl "$DIST_NAME"
+          "$(uv tool dir --bin)/$IMPORT_NAME" doctor
+
+  publish:
+    name: Publish (PyPI)
+    needs: [validate, smoke-test]
+    if: inputs.tag_action == 'create'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: pypi
+      url: https://pypi.org/project/${{ env.DIST_NAME }}/${{ needs.validate.outputs.version }}/
+
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+
+      # No token: publication goes through a PyPI Trusted Publisher (OIDC).
+      # It must be registered against `womm-cli` BEFORE the first upload —
+      # as a pending publisher, since the project does not exist yet.
+      - name: Publish (OIDC)
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          verbose: true
+          # Replay-safe: 02-tag-sync creates the tag before this job runs, so a
+          # release whose upload failed is recovered by dispatching 03 again.
+          # Without this, the replay would 409 on the already-present version.
+          skip-existing: true
+          # Attestations disabled: when called as a reusable workflow from
+          # 02-tag-sync.yml, the OIDC token's Build Config URI reflects the
+          # caller rather than this workflow, causing PyPI Trusted Publisher
+          # verification to fail.
+          # Exit condition: re-enable once PyPI matches the called workflow's
+          # job_workflow_ref rather than the caller's.
+          attestations: false
+
+      - name: Summary
+        run: |
+          echo "## 📦 Published to PyPI" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Package**: ${{ env.DIST_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Command**: ${{ env.IMPORT_NAME }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Version**: ${{ needs.validate.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **URL**: https://pypi.org/project/${{ env.DIST_NAME }}/${{ needs.validate.outputs.version }}/" >> "$GITHUB_STEP_SUMMARY"

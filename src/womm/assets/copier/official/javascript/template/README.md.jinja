@@ -1,0 +1,81 @@
+# {{ project_name }}
+
+{{ description }}
+{%- if author_name %}
+
+Author: {{ author_name }}
+{%- endif %}
+
+## Installation
+
+```bash
+{{ package_manager }} install
+```
+
+Commit the generated `{% if package_manager == "npm" %}package-lock.json{% elif package_manager == "pnpm" %}pnpm-lock.yaml{% elif package_manager == "yarn" %}yarn.lock{% else %}bun.lock{% endif %}` before pushing.
+CI installs only from that lockfile.
+{% if package_manager != "bun" %}This project supports Node.js 24 and 26; `.nvmrc` selects Node.js 24 for
+local development.
+{% endif %}
+{% if package_manager in ("pnpm", "yarn") %}
+Install Corepack before using {{ package_manager }} on Node.js 26, then run `corepack enable`.
+{% endif %}
+
+## Layout
+
+```text
+src/   {% if framework == "react" -%}
+React source (TypeScript){%- if not typescript %} (JavaScript){%- endif %}
+{%- elif framework == "vue" -%}
+Vue source (TypeScript){%- if not typescript %} (JavaScript){%- endif %}
+{%- else -%}
+Application source
+{%- endif %}
+{%- if with_tests %}
+tests/   Test suite
+{%- endif %}
+```
+{%- if with_tests %}
+
+## Tests
+
+```bash
+{% if package_manager == "bun" -%}
+bun run test
+{%- else -%}
+{{ package_manager }} test
+{%- endif %}
+```
+{%- endif %}
+
+## Development
+
+```bash
+{{ package_manager }} run dev
+{{ package_manager }} run build
+```
+
+## Quality
+
+```bash
+{{ package_manager }} run lint
+{{ package_manager }} run format:check
+{%- if typescript %}
+{{ package_manager }} run type-check
+{%- endif %}
+```
+{%- if framework == "react" %}
+
+## Framework
+
+This project uses React{% if typescript %} with TypeScript{% endif %}.
+{%- elif framework == "vue" %}
+
+## Framework
+
+This project uses Vue{% if typescript %} with TypeScript{% endif %}.
+{%- endif %}
+
+## License
+
+{{ license }}

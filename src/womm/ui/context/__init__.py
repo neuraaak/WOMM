@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+# ///////////////////////////////////////////////////////////////
+# UI CONTEXT - Context Menu UI Components
+# Project: works-on-my-machine
+# ///////////////////////////////////////////////////////////////
+
+"""
+Context Menu UI components for Works On My Machine.
+
+This module provides UI components for context menu operations,
+including wizards and menu displays.
+"""
+
+from __future__ import annotations
+
+# ///////////////////////////////////////////////////////////////
+# IMPORTS
+# ///////////////////////////////////////////////////////////////
+# Local imports
+from .menu_display import ContextMenuUI, format_entry_display
+from .wizard import ContextMenuWizard
+
+# ///////////////////////////////////////////////////////////////
+# PUBLIC API
+# ///////////////////////////////////////////////////////////////
+
+__all__ = [
+    "ContextMenuUI",
+    "ContextMenuWizard",
+    "format_entry_display",
+]
