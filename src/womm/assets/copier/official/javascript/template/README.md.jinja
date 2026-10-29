@@ -12,6 +12,15 @@ Author: {{ author_name }}
 {{ package_manager }} install
 ```
 
+Commit the generated `{% if package_manager == "npm" %}package-lock.json{% elif package_manager == "pnpm" %}pnpm-lock.yaml{% elif package_manager == "yarn" %}yarn.lock{% else %}bun.lock{% endif %}` before pushing.
+CI installs only from that lockfile.
+{% if package_manager != "bun" %}This project supports Node.js 24 and 26; `.nvmrc` selects Node.js 24 for
+local development.
+{% endif %}
+{% if package_manager in ("pnpm", "yarn") %}
+Install Corepack before using {{ package_manager }} on Node.js 26, then run `corepack enable`.
+{% endif %}
+
 ## Layout
 
 ```text

@@ -85,6 +85,7 @@ _exclude:
   - ".git"
   - ".DS_Store"
   - ".svn"
+  - "{% if package_manager == 'bun' %}.nvmrc{% endif %}"
   - "{% if not typescript %}tsconfig.json{% endif %}"
   - "{% if framework == 'none' %}index.html{% endif %}"
   - "{% if framework == 'none' %}vite.config.mjs{% endif %}"

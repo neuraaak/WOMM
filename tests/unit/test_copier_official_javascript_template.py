@@ -65,6 +65,7 @@ def test_defaults_produce_a_coherent_project(tmp_path: Path):
     manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
     assert manifest["name"] == "acme-app"
     assert manifest["type"] == "module"
+    assert (out / ".nvmrc").read_text(encoding="utf-8").strip() == "24"
     assert "vitest" in manifest["devDependencies"]
     assert "@biomejs/biome" in manifest["devDependencies"]
     assert (out / "biome.json").is_file()
@@ -109,6 +110,16 @@ def test_each_package_manager_renders(tmp_path: Path, manager: str):
     assert (out / "package.json").is_file()
 
 
+@pytest.mark.parametrize("license_id", ["MIT", "Apache-2.0", "proprietary"])
+def test_license_metadata_matches_selected_terms(tmp_path: Path, license_id: str):
+    out = render(tmp_path / license_id, license=license_id)
+
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    assert manifest["license"] == (
+        "UNLICENSED" if license_id == "proprietary" else license_id
+    )
+
+
 def test_bun_readme_uses_explicit_run_for_the_test_script(tmp_path: Path):
     out = render(tmp_path / "p", package_manager="bun")
 
@@ -145,29 +156,31 @@ def test_ci_can_be_disabled(tmp_path: Path):
 
 
 @pytest.mark.parametrize(
-    ("manager", "setup_action", "lockfile", "strict_install", "first_install"),
+    ("manager", "setup_action", "lockfile", "strict_install"),
     [
-        ("npm", "actions/setup-node@v7", "package-lock.json", "npm ci", "npm install"),
+        (
+            "npm",
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "package-lock.json",
+            "npm ci",
+        ),
         (
             "pnpm",
-            "actions/setup-node@v7",
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
             "pnpm-lock.yaml",
             "pnpm install --frozen-lockfile",
-            "pnpm install",
         ),
         (
             "yarn",
-            "actions/setup-node@v7",
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
             "yarn.lock",
             "yarn install --immutable",
-            "yarn install",
         ),
         (
             "bun",
-            "oven-sh/setup-bun@v2",
+            "oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6",
             "bun.lock",
             "bun install --frozen-lockfile",
-            "bun install",
         ),
     ],
 )
@@ -177,7 +190,6 @@ def test_ci_installs_with_the_selected_package_manager(
     setup_action: str,
     lockfile: str,
     strict_install: str,
-    first_install: str,
 ):
     out = render(tmp_path / manager, package_manager=manager)
     workflow = yaml.safe_load(
@@ -189,11 +201,29 @@ def test_ci_installs_with_the_selected_package_manager(
     install = next(
         step["run"] for step in steps if step.get("name") == "Install dependencies"
     )
-    assert lockfile in install
-    assert strict_install in install
-    assert first_install in install
+    assert install == strict_install
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert lockfile in readme
+    assert "CI installs only from that lockfile" in readme
+    assert workflow["permissions"] == {"contents": "read"}
+    assert any(
+        step.get("uses") == "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
+        for step in steps
+    )
     if manager in {"pnpm", "yarn"}:
-        assert any(step.get("run") == "corepack enable" for step in steps)
+        corepack = next(
+            step["run"] for step in steps if step.get("name") == "Enable Corepack"
+        )
+        assert "corepack@0.36.0" in corepack
+        assert "corepack enable" in corepack
+    if manager != "bun":
+        assert workflow["jobs"]["quality"]["strategy"]["matrix"]["node-version"] == [
+            24,
+            26,
+        ]
+    else:
+        assert "strategy" not in workflow["jobs"]["quality"]
+        assert not (out / ".nvmrc").exists()
 
 
 @pytest.mark.parametrize(

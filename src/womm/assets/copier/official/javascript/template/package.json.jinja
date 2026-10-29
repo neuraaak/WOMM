@@ -44,7 +44,7 @@
 {%- if author_name %}
   "author": "{{ author_name }}",
 {%- endif %}
-  "license": "{{ license }}",
+  "license": "{{ 'UNLICENSED' if license == 'proprietary' else license }}",
 {%- if package_manager == "pnpm" %}
   "packageManager": "pnpm@10.0.0",
 {%- elif package_manager == "yarn" %}
