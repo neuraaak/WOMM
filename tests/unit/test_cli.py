@@ -151,3 +151,12 @@ def test_create_help_lists_the_generic_arguments():
     assert result.exit_code == 0
     assert "TEMPLATE" in result.output
     assert "--setup" in result.output
+
+
+def test_version_option_reports_the_public_package_version() -> None:
+    import womm as womm_package
+
+    result = CliRunner().invoke(womm, ["--version"])
+
+    assert result.exit_code == 0
+    assert womm_package.__version__ in result.output

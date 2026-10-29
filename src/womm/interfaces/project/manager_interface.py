@@ -24,7 +24,6 @@ import logging
 from pathlib import Path
 
 # Local imports
-from ...services.project.setup_profile_resolver import list_setup_identifiers
 from ...shared.results import (
     ProjectDetectionResult,
     ProjectSetupResult,
@@ -63,32 +62,6 @@ class ProjectManagerInterface:
             ProjectDetectionResult: Detection result with project type and confidence
         """
         return self._detection_interface.detect_project_type(project_path)
-
-    def setup_development_environment(
-        self, project_path: Path, project_type: str
-    ) -> ProjectSetupResult:
-        """
-        Set up development environment for an existing project.
-
-        Args:
-            project_path: Path to the project
-            project_type: Type of project
-
-        Returns:
-            ProjectSetupResult: Result of the setup operation
-        """
-        return self._setup_interface.setup_development_environment(
-            project_path, project_type
-        )
-
-    def get_available_project_types(self) -> list[tuple[str, str]]:
-        """Get list of available project types with descriptions.
-
-        Returns:
-            List of tuples (project_type, description), catalog entries
-            first then legacy aliases.
-        """
-        return list_setup_identifiers()
 
     def setup_project(
         self,

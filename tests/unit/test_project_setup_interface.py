@@ -151,32 +151,6 @@ def test_setup_project_resolves_a_catalog_identifier_beyond_the_legacy_list(
     assert result.project_type == "django"
 
 
-def test_setup_development_environment_forwards_complete_defaults(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    interface = ProjectSetupInterface()
-    captured: dict[str, object] = {}
-
-    def capture_setup(project_path: Path, **kwargs: object) -> ProjectCreationResult:
-        captured["project_path"] = project_path
-        captured.update(kwargs)
-        return ProjectCreationResult(success=True, project_path=project_path)
-
-    monkeypatch.setattr(interface, "setup_project", capture_setup)
-
-    result = interface.setup_development_environment(tmp_path, "python")
-
-    assert result.success
-    assert captured == {
-        "project_path": tmp_path,
-        "project_type": "python",
-        "virtual_env": True,
-        "install_deps": True,
-        "setup_dev_tools": True,
-        "setup_git_hooks": False,
-    }
-
-
 # ///////////////////////////////////////////////////////////////
 # PYTHON ORCHESTRATION
 # ///////////////////////////////////////////////////////////////

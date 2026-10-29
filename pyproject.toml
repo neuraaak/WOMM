@@ -78,10 +78,7 @@ test = [
 docs = [
     "mkdocs>=1.6.0,<2.0.0",
     "mkdocs-material>=9.5.0",
-    "mkdocstrings[python]>=0.27.0",
     "mkdocs-section-index>=0.3.0",
-    "mkdocs-coverage>=1.1.0",
-    "mike>=2.0.0",
     "pymdown-extensions>=10.7",
     "git-cliff>=2.7.0",
     "grimp>=2.3.0",
@@ -110,8 +107,7 @@ dev = [
     "bandit>=1.7.0",
     "pip-audit>=2.7.0",
 
-    # Build and distribution
-    "build>=1.0.0",
+    # Distribution
     "twine>=4.0.0",
 ]
 

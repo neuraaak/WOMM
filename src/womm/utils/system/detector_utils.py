@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 # Local imports
-from ...shared.configs.system import SystemDetectorConfig
+from ...shared.configs.system import PackageManagerConfig, SystemDetectorConfig
 
 # ///////////////////////////////////////////////////////////////
 # VERSION PARSING FUNCTIONS
@@ -114,11 +114,11 @@ def get_package_manager_metadata(
         Optional[Dict[str, str | int]]: Metadata dict or None if not found
     """
     if platform == "Windows":
-        return SystemDetectorConfig.get_windows_package_managers().get(manager_name)
+        return PackageManagerConfig.get_windows_managers().get(manager_name)
     elif platform == "Darwin":
-        return SystemDetectorConfig.get_macos_package_managers().get(manager_name)
+        return PackageManagerConfig.get_macos_managers().get(manager_name)
     elif platform == "Linux":
-        return SystemDetectorConfig.get_linux_package_managers().get(manager_name)
+        return PackageManagerConfig.get_linux_managers().get(manager_name)
 
     return None
 

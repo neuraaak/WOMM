@@ -42,9 +42,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 1,
             "description": "Microsoft Windows Package Manager",
-            "install_command": "winget install",
-            "search_command": "winget search",
-            "list_command": "winget list",
         },
         "chocolatey": {
             "platform": "windows",
@@ -52,9 +49,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 2,
             "description": "Chocolatey Package Manager",
-            "install_command": "choco install",
-            "search_command": "choco search",
-            "list_command": "choco list",
         },
         "scoop": {
             "platform": "windows",
@@ -62,9 +56,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 3,
             "description": "Scoop Package Manager",
-            "install_command": "scoop install",
-            "search_command": "scoop search",
-            "list_command": "scoop list",
         },
         # macOS package managers
         "homebrew": {
@@ -73,9 +64,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 1,
             "description": "Homebrew Package Manager",
-            "install_command": "brew install",
-            "search_command": "brew search",
-            "list_command": "brew list",
         },
         "macports": {
             "platform": "darwin",
@@ -83,9 +71,6 @@ class PackageManagerConfig:
             "version_flag": "version",
             "priority": 2,
             "description": "MacPorts Package Manager",
-            "install_command": "sudo port install",
-            "search_command": "port search",
-            "list_command": "port installed",
         },
         # Linux package managers
         "apt": {
@@ -94,9 +79,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 1,
             "description": "Advanced Package Tool (Debian/Ubuntu)",
-            "install_command": "sudo apt install",
-            "search_command": "apt search",
-            "list_command": "apt list --installed",
         },
         "dnf": {
             "platform": "linux",
@@ -104,9 +86,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 2,
             "description": "Dandified YUM (Fedora/RHEL)",
-            "install_command": "sudo dnf install",
-            "search_command": "dnf search",
-            "list_command": "dnf list installed",
         },
         "yum": {
             "platform": "linux",
@@ -114,9 +93,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 3,
             "description": "Yellowdog Updater Modified (CentOS/RHEL)",
-            "install_command": "sudo yum install",
-            "search_command": "yum search",
-            "list_command": "yum list installed",
         },
         "pacman": {
             "platform": "linux",
@@ -124,9 +100,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 2,
             "description": "Pacman Package Manager (Arch Linux)",
-            "install_command": "sudo pacman -S",
-            "search_command": "pacman -Ss",
-            "list_command": "pacman -Q",
         },
         "zypper": {
             "platform": "linux",
@@ -134,9 +107,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 4,
             "description": "Zypper Package Manager (openSUSE)",
-            "install_command": "sudo zypper install",
-            "search_command": "zypper search",
-            "list_command": "zypper packages --installed",
         },
         "snap": {
             "platform": "linux",
@@ -144,9 +114,6 @@ class PackageManagerConfig:
             "version_flag": "--version",
             "priority": 5,
             "description": "Snap Package Manager (Universal)",
-            "install_command": "sudo snap install",
-            "search_command": "snap find",
-            "list_command": "snap list",
         },
     }
 
@@ -221,26 +188,6 @@ class SystemDetectorConfig:
         "powershell": "PowerShell",
         "pwsh": "PowerShell Core",
     }
-
-    # ///////////////////////////////////////////////////////////
-    # PLATFORM-SPECIFIC PACKAGE MANAGER VIEWS
-    # (Convenience accessors using PackageManagerConfig)
-    # ///////////////////////////////////////////////////////////
-
-    @classmethod
-    def get_windows_package_managers(cls) -> dict[str, dict[str, str | int]]:
-        """Get Windows package managers."""
-        return PackageManagerConfig.get_windows_managers()
-
-    @classmethod
-    def get_macos_package_managers(cls) -> dict[str, dict[str, str | int]]:
-        """Get macOS package managers."""
-        return PackageManagerConfig.get_macos_managers()
-
-    @classmethod
-    def get_linux_package_managers(cls) -> dict[str, dict[str, str | int]]:
-        """Get Linux package managers."""
-        return PackageManagerConfig.get_linux_managers()
 
     # ///////////////////////////////////////////////////////////
     # RECOMMENDATION TEMPLATES

@@ -27,7 +27,7 @@ from pathlib import Path
 # Local imports
 from ...exceptions.common import ValidationServiceError
 from ...exceptions.system import SystemServiceError
-from ...shared.configs.system import SystemDetectorConfig
+from ...shared.configs.system import PackageManagerConfig, SystemDetectorConfig
 from ...shared.results import SystemInfoResult
 from ...utils.system import (
     create_editor_entry,
@@ -209,7 +209,7 @@ class SystemDetectorService:
             for (
                 manager_name,
                 metadata,
-            ) in SystemDetectorConfig.get_windows_package_managers().items():
+            ) in PackageManagerConfig.get_windows_managers().items():
                 command = metadata.get("command")
                 if not isinstance(command, str):
                     logger.warning(
@@ -260,7 +260,7 @@ class SystemDetectorService:
             for (
                 manager_name,
                 metadata,
-            ) in SystemDetectorConfig.get_macos_package_managers().items():
+            ) in PackageManagerConfig.get_macos_managers().items():
                 command = metadata.get("command")
                 if not isinstance(command, str):
                     logger.warning(
@@ -330,7 +330,7 @@ class SystemDetectorService:
             for (
                 manager_name,
                 metadata,
-            ) in SystemDetectorConfig.get_linux_package_managers().items():
+            ) in PackageManagerConfig.get_linux_managers().items():
                 command = metadata.get("command")
                 if not isinstance(command, str):
                     logger.warning(

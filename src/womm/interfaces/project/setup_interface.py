@@ -229,66 +229,6 @@ class ProjectSetupInterface:
                 error=f"Unexpected error during project setup: {e}",
             )
 
-    def setup_development_environment(
-        self, project_path: Path, project_type: str | None = None
-    ) -> ProjectSetupResult:
-        """Set up development environment for an existing project.
-
-        Args:
-            project_path: Path to the project
-            project_type: Type of project (auto-detected if None)
-
-        Returns:
-            ProjectSetupResult: Result containing setup information
-        """
-        try:
-            # Auto-detect project type if not provided
-            if project_type is None:
-                detection_result = self._detection_service.detect_project_type(
-                    project_path
-                )
-                detected_type = detection_result.project_type
-                if detected_type and detected_type != "unknown":
-                    project_type = detected_type
-                else:
-                    return ProjectSetupResult(
-                        success=False,
-                        project_path=project_path,
-                        error=(
-                            "Could not detect project type. Project type "
-                            "detection failed. Please specify project type "
-                            "manually."
-                        ),
-                    )
-
-            if not project_type:
-                return ProjectSetupResult(
-                    success=False,
-                    project_path=project_path,
-                    error="Project type is required",
-                )
-
-            # Use setup_project with minimal options
-            return self.setup_project(
-                project_path,
-                project_type=project_type,
-                virtual_env=(project_type == "python"),
-                install_deps=True,
-                setup_dev_tools=True,
-                setup_git_hooks=False,
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Unexpected error during environment setup: {e}", exc_info=True
-            )
-            return ProjectSetupResult(
-                success=False,
-                project_path=project_path if project_path else None,
-                project_type=project_type or "",
-                error=f"Unexpected error during environment setup: {e}",
-            )
-
     # ///////////////////////////////////////////////////////////////
     # PRIVATE METHODS
     # ///////////////////////////////////////////////////////////////

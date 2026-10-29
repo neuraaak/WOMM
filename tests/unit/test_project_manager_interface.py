@@ -58,27 +58,6 @@ def test_detect_project_type_delegates_to_detection_interface(
     assert captured["project_path"] == tmp_path
 
 
-def test_setup_development_environment_delegates_to_setup_interface(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    manager = ProjectManagerInterface()
-    expected = ProjectSetupResult(success=True)
-    captured: dict[str, Any] = {}
-    monkeypatch.setattr(
-        manager._setup_interface,
-        "setup_development_environment",
-        lambda project_path, project_type: (
-            captured.update(project_path=project_path, project_type=project_type)
-            or expected
-        ),
-    )
-
-    result = manager.setup_development_environment(tmp_path, "python")
-
-    assert result is expected
-    assert captured == {"project_path": tmp_path, "project_type": "python"}
-
-
 def test_setup_project_delegates_to_setup_interface(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -103,20 +82,3 @@ def test_setup_project_delegates_to_setup_interface(
     assert captured["project_path"] == tmp_path
     assert captured["virtual_env"] is True
     assert captured["install_deps"] is True
-
-
-# ///////////////////////////////////////////////////////////////
-# PROJECT TYPES
-# ///////////////////////////////////////////////////////////////
-
-
-def test_get_available_project_types_returns_configured_types() -> None:
-    manager = ProjectManagerInterface()
-
-    types = manager.get_available_project_types()
-
-    ids = [project_type for project_type, _description in types]
-    assert "python" in ids
-    assert "javascript" in ids
-    assert "react" in ids
-    assert "vue" in ids

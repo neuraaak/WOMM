@@ -25,7 +25,6 @@ from womm.shared.configs.context.context_limits_config import ContextLimitsConfi
 from womm.shared.configs.context.context_paths_config import ContextPathsConfig
 from womm.shared.configs.system.system_detector_config import (
     PackageManagerConfig,
-    SystemDetectorConfig,
 )
 from womm.shared.configs.system.system_environment_config import (
     SystemEnvironmentConfig,
@@ -150,21 +149,6 @@ def test_package_manager_config_platform_shortcuts():
     assert "winget" in PackageManagerConfig.get_windows_managers()
     assert "homebrew" in PackageManagerConfig.get_macos_managers()
     assert "apt" in PackageManagerConfig.get_linux_managers()
-
-
-def test_system_detector_config_delegates_to_package_manager_config():
-    assert (
-        SystemDetectorConfig.get_windows_package_managers()
-        == PackageManagerConfig.get_windows_managers()
-    )
-    assert (
-        SystemDetectorConfig.get_macos_package_managers()
-        == PackageManagerConfig.get_macos_managers()
-    )
-    assert (
-        SystemDetectorConfig.get_linux_package_managers()
-        == PackageManagerConfig.get_linux_managers()
-    )
 
 
 # ///////////////////////////////////////////////////////////////

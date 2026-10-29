@@ -1,6 +1,6 @@
 # Backlog consolidé — WOMM
 
-> État vérifié le **2026-10-27** sur `optimisations-and-refactoring`.
+> État vérifié le **2026-10-29** sur `optimisations-and-refactoring`.
 > Vue actionnable de la mémoire du projet :
 > `~/.agents/memory/projects/e-dev-python-womm/current-backlog.md`.
 > La numérotation des lots est conservée pour les références existantes ;
@@ -12,44 +12,27 @@
 
 La première passe a supprimé `EzplBridge`, adopté les API publiques
 d'ezplog 2.x et isolé l'accès temporaire à la console Rich dans
-`WommPrinter.console`. L'audit Ponytail du 2026-10-27, contrôlé par une
-revue architecture, qualité et configuration, confirme le nettoyage de la
-surface morte mais invalide la suppression globale de `test_logging.py` :
-plusieurs helpers qui y sont testés restent appelés en production.
+`WommPrinter.console`. Le sous-lot 3.1 est clos le 2026-10-29
+(−1117 lignes) ; il ne reste que l'attente amont et les deux décisions
+de compatibilité ci-dessous.
 
 - [ ] Supprimer `WommPrinter.console` lorsque ezplog exposera un accesseur
-  public équivalent.
+  public équivalent. **Bloqué en amont** : vérifié sur ezplog 2.3.3, aucun
+  accesseur public de console n'existe encore, et l'adaptateur a 18
+  appelants de production.
 
 **Critère de sortie du lot :** l'intégration ne duplique aucune capacité
 publique d'ezplog 2.x et n'accède à ses attributs privés qu'au travers du
-seul adaptateur temporaire documenté. Le diff final doit établir le nombre
-réel de lignes supprimées ; l'estimation préliminaire de 1 500 lignes n'est
-pas retenue comme objectif.
+seul adaptateur temporaire documenté.
 
 ### 3.1 Nettoyages confirmés par l'audit
 
-- [ ] Supprimer `tests/run_tests.py`, redondant avec pytest et les tâches Poe
-  `test`, `test-ci`, `test-fast` et `test-parallel` ; vérifier auparavant
-  qu'aucun usage externe documenté ne subsiste.
-- [ ] Supprimer les assertions factices des suites `unit`, `integration` et
-  `robustness`, puis retirer les fixtures devenues orphelines.
-- [ ] Déplacer le contrôle de l'export public `womm.__version__` dans un test
-  d'API ou de CLI avant de supprimer `test_dummy_unit.py`.
-- [ ] Retirer `install_command`, `search_command` et `list_command` de la
-  configuration des gestionnaires de paquets système : aucun consommateur ne
-  les lit et WOMM ne porte plus la responsabilité de l'installation.
-- [ ] Remplacer les trois relais
-  `SystemDetectorConfig.get_*_package_managers()` par les accesseurs nommés
-  de `PackageManagerConfig`, sans répandre les littéraux de plateforme dans
-  les consommateurs.
-- [ ] Supprimer les dépendances inutilisées `build`, `mkdocstrings`,
-  `mkdocs-coverage` et `mike` de `pyproject.toml` et
-  `requirements-dev.in`, puis régénérer `uv.lock` et valider la CI et le
-  build documentaire.
-- [ ] Supprimer de `ProjectManagerInterface` les seules méthodes sans appelant
-  de production (`setup_development_environment` et
-  `get_available_project_types`) après vérification de l'API publique ;
-  conserver la façade utilisée par la commande `setup`.
+Les sept nettoyages sont clos le 2026-10-29 (détail dans la mémoire du
+projet), ainsi que leur seul effet de bord : `setup_development_environment`
+a été supprimée des deux interfaces, le flux de la commande `setup` passant
+par `setup_project`. Vérification : 914 tests + 1 skip, couverture 70,97 %
+(seuil `test-ci` à 60 %), Ruff, Ruff format, Ty, import-linter et
+`mkdocs build --strict` verts.
 
 ### 3.2 Décisions de compatibilité et exclusions
 
@@ -123,7 +106,9 @@ sont vérifiés avant publication.
 
 ## Ordre de reprise recommandé
 
-1. Finaliser la migration ezplog 2.x.
-2. Reconstruire la documentation produit.
-3. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
+1. Reconstruire la documentation produit — la migration ezplog 2.x est
+   bloquée en amont et ne tient plus la file.
+2. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
    standalone, puis valider la chaîne CI/release complète.
+3. Reprendre la suppression de `WommPrinter.console` dès qu'ezplog expose un
+   accesseur public.
