@@ -55,12 +55,15 @@ reconstruire après stabilisation des commandes.
 - [ ] Vérifier qu'aucune documentation utilisateur ne suggère une commande
   inexistante ou une sémantique incorrecte.
 
-### 4.5 Renommage PyPI et notes de version
+### 4.5 Publication PyPI et notes de version
 
-- [ ] Renommer le paquet en `womm-cli` : `[project] name`, l'URL `PyPI` et
-  les badges du README — celui-ci annonce déjà `womm-cli` alors que
-  `pyproject.toml` déclare `WOMM`. L'ordre d'opérations côté PyPI est
-  irréversible : consulter la mémoire projet avant d'agir.
+> **Nommage arrêté le 2026-10-29 :** le projet reste `womm` partout — dépôt,
+> paquet importable, commande, données `~/.womm`. Seul le nom de
+> distribution est `womm-cli`, parce que `womm` est pris sur PyPI ; il
+> n'apparaît qu'à l'installation et à la mise à jour via uv ou pip. L'écart
+> est assumé, non bloquant. `[project] name`, l'URL `PyPI`, le badge du
+> README et `uv.lock` sont alignés.
+
 - [ ] Enregistrer le Trusted Publisher PyPI pour le dépôt avant la première
   publication.
 - [ ] Annoncer dans les notes de version les deux ruptures déjà commitées :
@@ -71,14 +74,6 @@ reconstruire après stabilisation des commandes.
 **Critère de sortie du lot :** les canaux développement et `uv tool`
 appellent la même entrée, préservent les données utilisateur et sont
 vérifiés avant publication.
-
----
-
-## Priorité 5 — reliquat des templates officiels
-
-- [ ] Échapper la description dans les fichiers rendus côté React et Vue :
-  `| tojson` couvre `pyproject.toml` et `package.json`, mais une description
-  contenant `{` ou `<` casse encore `App.jsx`, `App.tsx` et `App.vue`.
 
 ---
 
