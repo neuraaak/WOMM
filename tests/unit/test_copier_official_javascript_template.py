@@ -15,13 +15,19 @@ from womm.services.project.template_store_service import TemplateStoreService
 
 # Quotes and backslashes are legal in a free-text answer and must survive
 # rendering into JSON.
-HOSTILE_DESCRIPTION = 'He said "hi" and a \\ backslash'
+HOSTILE_DESCRIPTION = 'He said "hi" {curly} <tag> and a \\ backslash'
 
 BASE_ANSWERS = {
     "project_name": "acme-app",
     "description": "A demo app",
     "author_name": "Tester",
 }
+
+
+def _between(text: str, prefix: str, suffix: str) -> str:
+    """Return the JSON literal the template rendered between two markers."""
+    start = text.index(prefix) + len(prefix)
+    return text[start : text.index(suffix, start)]
 
 
 def render(destination: Path, **overrides: object) -> Path:
@@ -281,6 +287,30 @@ def test_rendered_package_json_is_valid_json(tmp_path: Path, description: str):
 
     manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
     assert manifest["description"] == description
+
+
+@pytest.mark.parametrize("typescript", [False, True])
+def test_react_renders_the_description_as_a_string_literal(
+    tmp_path: Path, typescript: bool
+):
+    out = render(
+        tmp_path / "p",
+        framework="react",
+        typescript=typescript,
+        description=HOSTILE_DESCRIPTION,
+    )
+
+    app = out / "src" / ("App.tsx" if typescript else "App.jsx")
+    literal = _between(app.read_text(encoding="utf-8"), "<p>{ ", " }</p>")
+    assert json.loads(literal) == HOSTILE_DESCRIPTION
+
+
+def test_vue_renders_the_description_from_component_data(tmp_path: Path):
+    out = render(tmp_path / "p", framework="vue", description=HOSTILE_DESCRIPTION)
+
+    app = (out / "src" / "App.vue").read_text(encoding="utf-8")
+    assert json.loads(_between(app, "description: ", ",\n")) == HOSTILE_DESCRIPTION
+    assert "<p>{{ description }}</p>" in app
 
 
 def test_react_uses_vite_instead_of_react_scripts(tmp_path: Path):

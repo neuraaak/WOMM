@@ -1,5 +1,6 @@
 """Generation matrix for the official Python template."""
 
+import ast
 import shutil
 import tomllib
 from pathlib import Path
@@ -14,7 +15,7 @@ from womm.services.project.template_store_service import TemplateStoreService
 
 # Quotes and backslashes are legal in a free-text answer and must survive
 # rendering into TOML.
-HOSTILE_DESCRIPTION = 'He said "hi" and a \\ backslash'
+HOSTILE_DESCRIPTION = 'He said "hi" {curly} <tag> and a \\ backslash'
 
 BASE_ANSWERS = {
     "project_name": "acme-tool",
@@ -201,6 +202,10 @@ def test_rendered_pyproject_is_parseable(tmp_path: Path, description: str):
     assert data["project"]["description"] == description
     assert data["project"]["dynamic"] == ["version"]
     assert data["tool"]["hatch"]["version"]["path"] == "src/acme_tool/__init__.py"
+
+    package_init = out / "src" / "acme_tool" / "__init__.py"
+    module = ast.parse(package_init.read_text(encoding="utf-8"))
+    assert ast.get_docstring(module) == description
 
 
 def test_framework_none_renders_no_django_file(tmp_path: Path):
