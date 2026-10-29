@@ -3,7 +3,7 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
-## 4.0.0 — unreleased
+## 4.0.0 — 2026-10-29
 
 !!! warning "Read before upgrading"
 

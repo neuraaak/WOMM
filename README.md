@@ -8,7 +8,7 @@
 [![types](https://img.shields.io/badge/types-ty-261230?style=flat&logo=astral&logoColor=white)](https://github.com/astral-sh/ty)
 [![tests](https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 
-![Logo](docs/assets/logo-min.png)
+![Logo](https://raw.githubusercontent.com/neuraaak/WOMM/main/docs/assets/logo-min.png)
 
 **WOMM** is a command-line tool that creates Python and JavaScript projects from
 templates, configures existing ones, and keeps your PATH and Windows context
@@ -156,7 +156,7 @@ External programs WOMM reports on but never installs: Python 3.13+, Node.js
 
 ## 📝 License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](https://github.com/neuraaak/WOMM/blob/main/LICENSE).
 
 ---
 
