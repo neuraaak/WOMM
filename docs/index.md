@@ -1,5 +1,8 @@
 # WOMM
 
+[![PyPI version](https://img.shields.io/pypi/v/womm-cli?style=flat&logo=pypi&logoColor=white)](https://pypi.org/project/womm-cli/)
+[![Python versions](https://img.shields.io/pypi/pyversions/womm-cli?style=flat&logo=python&logoColor=white)](https://pypi.org/project/womm-cli/)
+[![PyPI status](https://img.shields.io/pypi/status/womm-cli?style=flat&logo=pypi&logoColor=white)](https://pypi.org/project/womm-cli/)
 [![CI](https://img.shields.io/github/actions/workflow/status/neuraaak/WOMM/01-ci.yml?style=flat&label=ci&logo=githubactions&logoColor=white)](https://github.com/neuraaak/WOMM/actions/workflows/01-ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue?style=flat&logo=materialformkdocs&logoColor=white)](https://neuraaak.github.io/WOMM/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat&logo=github&logoColor=white)](https://github.com/neuraaak/WOMM/blob/main/LICENSE)

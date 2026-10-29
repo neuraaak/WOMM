@@ -38,6 +38,17 @@ seul adaptateur temporaire documenté.
 > autres OS. La documentation présente les deux commandes — installer `uv`,
 > puis `uv tool install womm-cli`.
 
+### 4.3 Déploiement de la documentation
+
+Le site publié date du 2026-10-25 et décrit encore `works-on-my-machine` :
+`04-docs.yml` ne fait que **construire** la doc, et les Pages sont servies
+depuis la branche `gh-pages` que rien ne met à jour. Le README et la page PyPI
+pointent dessus.
+
+- [ ] Ajouter au workflow `04-docs` le job de déploiement du modèle de
+  référence (`ezcompiler` déploie avec `mike`, `contents: write`, selon le
+  `tag_action`), ou déployer une première fois à la main.
+
 ### 4.4 Documentation produit finale
 
 Le reset documentaire a supprimé les anciennes pages obsolètes ; `docs/`
@@ -64,12 +75,9 @@ reconstruire après stabilisation des commandes.
 > est assumé, non bloquant. `[project] name`, l'URL `PyPI`, le badge du
 > README et `uv.lock` sont alignés.
 
-- [ ] Enregistrer le Trusted Publisher PyPI pour le dépôt avant la première
-  publication.
-- [ ] Annoncer dans les notes de version les deux ruptures déjà commitées :
-  le retrait de `--log-level`, `--log-file` et `--log-json`, et l'abandon de
-  la migration des données de l'ancien auto-installeur (`~/.womm/.logs`,
-  `.templates`, `.backup` et `.proof` ne sont plus reprises).
+`womm-cli` 4.0.0 est publié depuis le 2026-10-29 par le Trusted Publisher,
+sans jeton. Piège rencontré : PyPI compare le nom de dépôt **à la casse près**,
+`womm` ne correspond pas à `WOMM`.
 
 **Critère de sortie du lot :** les canaux développement et `uv tool`
 appellent la même entrée, préservent les données utilisateur et sont
