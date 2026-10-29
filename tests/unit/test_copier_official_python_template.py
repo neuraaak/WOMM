@@ -1,6 +1,7 @@
 """Generation matrix for the official Python template."""
 
 import shutil
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,10 @@ from womm.services.project.copier_project_creation_service import (
     ProjectCreationRequest,
 )
 from womm.services.project.template_store_service import TemplateStoreService
+
+# Quotes and backslashes are legal in a free-text answer and must survive
+# rendering into TOML.
+HOSTILE_DESCRIPTION = 'He said "hi" and a \\ backslash'
 
 BASE_ANSWERS = {
     "project_name": "acme-tool",
@@ -75,6 +80,12 @@ def test_flat_layout_places_the_package_at_the_root(tmp_path: Path):
 
     assert (out / "acme_tool" / "__init__.py").is_file()
     assert not (out / "src").exists()
+
+    data = tomllib.loads((out / "pyproject.toml").read_text(encoding="utf-8"))
+    assert data["tool"]["hatch"]["version"]["path"] == "acme_tool/__init__.py"
+    assert data["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"] == [
+        "acme_tool"
+    ]
 
 
 def test_tests_can_be_disabled(tmp_path: Path):
@@ -181,13 +192,15 @@ def test_supported_python_versions_match_ci(tmp_path: Path, python_version: str)
     assert '"3.12"' not in workflow
 
 
-def test_rendered_pyproject_is_parseable(tmp_path: Path):
-    import tomllib
-
-    out = render(tmp_path / "p")
+@pytest.mark.parametrize("description", ["A demo project", HOSTILE_DESCRIPTION])
+def test_rendered_pyproject_is_parseable(tmp_path: Path, description: str):
+    out = render(tmp_path / "p", description=description)
     data = tomllib.loads((out / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert data["project"]["name"] == "acme-tool"
+    assert data["project"]["description"] == description
+    assert data["project"]["dynamic"] == ["version"]
+    assert data["tool"]["hatch"]["version"]["path"] == "src/acme_tool/__init__.py"
 
 
 def test_framework_none_renders_no_django_file(tmp_path: Path):
@@ -268,6 +281,7 @@ def test_uv_workflow_uses_uv_commands(tmp_path: Path):
     assert "uv run --no-sync ty check ." in workflow
     assert "uv run --no-sync pytest" in workflow
     assert "uv run --no-sync python manage.py check" in workflow
+    assert "uv build" in workflow
     assert "DJANGO_SECRET_KEY" in workflow
     assert "permissions:\n  contents: read" in workflow
     assert "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" in workflow
@@ -290,6 +304,7 @@ def test_pip_workflow_used_when_uv_disabled(tmp_path: Path):
     assert "astral-sh/setup-uv" not in workflow
     assert "pip install -e . --group dev" in workflow
     assert "pip>=25.1" in workflow
+    assert "python -m build" in workflow
     assert "ruff format --check ." in workflow
     assert "ruff check ." in workflow
     assert "python manage.py check" in workflow

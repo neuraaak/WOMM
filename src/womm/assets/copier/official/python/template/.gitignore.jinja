@@ -31,3 +31,10 @@ htmlcov/
 # Environment files
 .env
 .env.local
+{%- if framework == "django" %}
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+{%- endif %}

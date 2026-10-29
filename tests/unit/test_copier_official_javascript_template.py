@@ -13,6 +13,10 @@ from womm.services.project.copier_project_creation_service import (
 )
 from womm.services.project.template_store_service import TemplateStoreService
 
+# Quotes and backslashes are legal in a free-text answer and must survive
+# rendering into JSON.
+HOSTILE_DESCRIPTION = 'He said "hi" and a \\ backslash'
+
 BASE_ANSWERS = {
     "project_name": "acme-app",
     "description": "A demo app",
@@ -269,10 +273,14 @@ def test_ci_runs_only_generated_quality_scripts(
         assert commands["Test"] == f"{run_prefix} test"
 
 
-def test_rendered_package_json_is_valid_json(tmp_path: Path):
-    out = render(tmp_path / "p", framework="react", typescript=True)
+@pytest.mark.parametrize("description", ["A demo app", HOSTILE_DESCRIPTION])
+def test_rendered_package_json_is_valid_json(tmp_path: Path, description: str):
+    out = render(
+        tmp_path / "p", framework="react", typescript=True, description=description
+    )
 
-    json.loads((out / "package.json").read_text(encoding="utf-8"))
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    assert manifest["description"] == description
 
 
 def test_react_uses_vite_instead_of_react_scripts(tmp_path: Path):

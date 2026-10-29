@@ -17,8 +17,7 @@
 {%- set _ = dev_deps.extend([
   '"@vitejs/plugin-vue": "^6.0.0"',
   '"eslint-plugin-vue": "^10.0.0"',
-  '"vite": "^8.1.0"',
-  '"vue-eslint-parser": "^10.0.0"'
+  '"vite": "^8.1.0"'
 ]) -%}
 {%- endif -%}
 {%- if typescript -%}
@@ -38,7 +37,7 @@
 {
   "name": "{{ project_name }}",
   "version": "0.1.0",
-  "description": "{{ description }}",
+  "description": {{ description | tojson }},
   "private": true,
   "type": "module",
 {%- if author_name %}

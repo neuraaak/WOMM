@@ -27,6 +27,9 @@
     "noUnusedParameters": true,
     "skipLibCheck": true
   },
+{# shortcut: with framework "none" the tests are not type-checked, because this
+   tsconfig emits to dist/ with rootDir src/; add a tests/tsconfig.json if the
+   test suite grows beyond smoke tests. #}
   "include": ["src/**/*"{% if with_tests and framework != "none" %}, "tests/**/*"{% endif %}{% if framework == "vue" %}, "src/**/*.vue"{% endif %}],
   "exclude": ["coverage", "dist", "node_modules"]
 }

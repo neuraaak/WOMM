@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "{{ project_name }}"
-version = "0.1.0"
-description = "{{ description }}"
+dynamic = ["version"]
+description = {{ description | tojson }}
 readme = "README.md"
 license = "{{ 'LicenseRef-Proprietary' if license == 'proprietary' else license }}"
 {%- if author_name %}
@@ -43,14 +43,12 @@ dev = [
     "django-stubs>=5.0.0",
 {%- endif %}
 ]
-{%- if with_tests %}
-test = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-{%- if framework == "django" %}
-    "pytest-django>=4.8.0",
-{%- endif %}
-]
+
+[tool.hatch.version]
+{%- if use_src_layout %}
+path = "src/{{ package_name }}/__init__.py"
+{%- else %}
+path = "{{ package_name }}/__init__.py"
 {%- endif %}
 
 [tool.hatch.build.targets.wheel]
