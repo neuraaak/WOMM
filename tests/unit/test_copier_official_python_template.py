@@ -67,6 +67,7 @@ def test_defaults_produce_a_coherent_project(tmp_path: Path):
     assert (out / "tests").is_dir()
     assert (out / ".pre-commit-config.yaml").is_file()
     assert (out / ".vscode" / "settings.json").is_file()
+    assert (out / ".python-version").read_text(encoding="utf-8").strip() == "3.13"
 
 
 def test_flat_layout_places_the_package_at_the_root(tmp_path: Path):
@@ -156,7 +157,28 @@ def test_pre_commit_uses_the_project_quality_toolchain(tmp_path: Path):
 def test_each_license_renders(tmp_path: Path, license_id: str):
     out = render(tmp_path / license_id, license=license_id)
 
-    assert (out / "pyproject.toml").is_file()
+    import tomllib
+
+    from packaging.licenses import canonicalize_license_expression
+
+    data = tomllib.loads((out / "pyproject.toml").read_text(encoding="utf-8"))
+    assert data["project"]["license"] == (
+        "LicenseRef-Proprietary" if license_id == "proprietary" else license_id
+    )
+    assert canonicalize_license_expression(data["project"]["license"])
+
+
+@pytest.mark.parametrize("python_version", ["3.13", "3.14"])
+def test_supported_python_versions_match_ci(tmp_path: Path, python_version: str):
+    out = render(tmp_path / python_version, python_version=python_version)
+    workflow = (out / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+    assert (out / ".python-version").read_text(
+        encoding="utf-8"
+    ).strip() == python_version
+    assert '"3.14"' in workflow
+    assert ('"3.13"' in workflow) == (python_version == "3.13")
+    assert '"3.12"' not in workflow
 
 
 def test_rendered_pyproject_is_parseable(tmp_path: Path):
@@ -201,6 +223,9 @@ def test_django_framework_renders_a_working_project(
 
     settings = (package_dir / "settings.py").read_text(encoding="utf-8")
     assert 'ROOT_URLCONF = "acme_tool.urls"' in settings
+    assert 'os.environ["DJANGO_SECRET_KEY"]' in settings
+    assert 'os.environ.get("DJANGO_DEBUG") == "1"' in settings
+    assert "django-insecure-change-me" not in settings
 
     import tomllib
 
@@ -237,11 +262,15 @@ def test_uv_workflow_uses_uv_commands(tmp_path: Path):
 
     workflow = (out / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     assert "astral-sh/setup-uv" in workflow
-    assert "uv sync --group dev" in workflow
-    assert "uv run ruff check ." in workflow
-    assert "uv run ty check ." in workflow
-    assert "uv run pytest" in workflow
-    assert "uv run python manage.py check" in workflow
+    assert "uv sync --locked --group dev" in workflow
+    assert "uv run --no-sync ruff check ." in workflow
+    assert "uv run --no-sync ruff format --check ." in workflow
+    assert "uv run --no-sync ty check ." in workflow
+    assert "uv run --no-sync pytest" in workflow
+    assert "uv run --no-sync python manage.py check" in workflow
+    assert "DJANGO_SECRET_KEY" in workflow
+    assert "permissions:\n  contents: read" in workflow
+    assert "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" in workflow
     assert "pip install" not in workflow
 
     precommit = (out / ".pre-commit-config.yaml").read_text(encoding="utf-8")
@@ -260,6 +289,8 @@ def test_pip_workflow_used_when_uv_disabled(tmp_path: Path):
     workflow = (out / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     assert "astral-sh/setup-uv" not in workflow
     assert "pip install -e . --group dev" in workflow
+    assert "pip>=25.1" in workflow
+    assert "ruff format --check ." in workflow
     assert "ruff check ." in workflow
     assert "python manage.py check" in workflow
     assert "uv run" not in workflow

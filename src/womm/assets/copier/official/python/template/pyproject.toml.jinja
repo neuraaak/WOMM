@@ -7,7 +7,7 @@ name = "{{ project_name }}"
 version = "0.1.0"
 description = "{{ description }}"
 readme = "README.md"
-license = "{{ license }}"
+license = "{{ 'LicenseRef-Proprietary' if license == 'proprietary' else license }}"
 {%- if author_name %}
 authors = [{ name = "{{ author_name }}" }]
 maintainers = [{ name = "{{ author_name }}" }]
@@ -23,7 +23,7 @@ classifiers = [
 requires-python = ">={{ python_version }}"
 dependencies = [
 {%- if framework == "django" %}
-    "django>=5.0",
+    "django>=5.2.8",
 {%- endif %}
 ]
 

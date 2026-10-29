@@ -13,15 +13,29 @@ Author: {{ author_name }}
 ```bash
 uv sync --group dev
 ```
+
+Commit the generated `uv.lock` before pushing: CI checks that it matches
+`pyproject.toml` and installs the locked dependencies.
 {%- else %}
 
 ```bash
 python -m venv .venv
 .venv/Scripts/activate   # Windows
 source .venv/bin/activate  # Linux and macOS
-pip install -e . --group dev
+python -m pip install --upgrade "pip>=25.1"
+python -m pip install -e . --group dev
 ```
 {%- endif %}
+
+{% if framework == "django" %}
+## Django configuration
+
+Set `DJANGO_SECRET_KEY` to a unique secret in your environment before running
+management commands. Set `DJANGO_DEBUG=1` only for local development; production
+defaults to debug off. Set `DJANGO_ALLOWED_HOSTS` to a comma-separated list of
+hostnames before deployment, then run `python manage.py check --deploy`.
+
+{% endif %}
 
 ## Layout
 
