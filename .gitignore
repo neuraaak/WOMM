@@ -269,6 +269,7 @@ user_settings/
 
 # Superpowers plans and specs (development workflow, outside published docs)
 .superpowers/
+.docs-audit/
 .senior-review/
 
 # ///////////////////////////////////////////////////////////////

@@ -49,8 +49,8 @@ theme:
     repo: fontawesome/brands/github
     edit: material/pencil
     view: material/eye
-  # logo: assets/logo.png       # Uncomment when docs/assets/logo.png exists
-  # favicon: assets/favicon.ico  # Uncomment when docs/assets/favicon.ico exists
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
 
 # ///////////////////////////////////////////////////////////////
 # NAVIGATION
@@ -58,6 +58,26 @@ theme:
 
 nav:
   - Home: index.md
+  - Get started: get-started.md
+  - Guides:
+      - tasks/index.md
+      - Create a project: tasks/create-a-project.md
+      - Configure an existing project: tasks/configure-an-existing-project.md
+      - Manage templates: tasks/manage-templates.md
+      - Check what WOMM needs: tasks/check-dependencies.md
+      - Manage your PATH: tasks/manage-your-path.md
+      - Use the Windows context menu: tasks/use-the-windows-context-menu.md
+      - Diagnose your installation: tasks/diagnose-your-installation.md
+  - Concepts:
+      - The template catalog: concepts/template-catalog.md
+      - Dependencies: concepts/dependencies.md
+      - Your WOMM data: concepts/your-womm-data.md
+  - Reference:
+      - Commands: reference/commands.md
+      - Files and variables: reference/files-and-variables.md
+  - Troubleshooting: troubleshooting.md
+  - FAQ: faq.md
+  - Release notes: release-notes.md
   - Changelog: changelog.md
 
 # ///////////////////////////////////////////////////////////////
@@ -116,7 +136,7 @@ extra:
       link: https://github.com/neuraaak/WOMM
       name: GitHub Repository
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/works-on-my-machine/
+      link: https://pypi.org/project/womm-cli/
       name: PyPI Package
 extra_css:
   - stylesheets/extra.css
