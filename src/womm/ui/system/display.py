@@ -1,0 +1,531 @@
+#!/usr/bin/env python3
+# ///////////////////////////////////////////////////////////////
+# SYSTEM DISPLAY - System UI Display Functions
+# Project: works-on-my-machine
+# ///////////////////////////////////////////////////////////////
+
+"""
+System display functions for Works On My Machine.
+
+Provides display functions for system detection results and information.
+"""
+
+from __future__ import annotations
+
+# ///////////////////////////////////////////////////////////////
+# IMPORTS
+# ///////////////////////////////////////////////////////////////
+# Third-party imports
+from rich.panel import Panel
+from rich.table import Table
+
+# Local imports
+from ...shared.configs.dependencies import (
+    RuntimeConfig,
+    RuntimePackageManagerConfig,
+)
+from ...shared.results import (
+    DependencyCheckResult,
+    DependencyInventoryResult,
+    DependencyProbe,
+    DependencyStatusResult,
+    DoctorResult,
+    EnvironmentRefreshResult,
+    SystemDetectionResult,
+)
+from ..common import ezconsole, ezprinter
+
+# ///////////////////////////////////////////////////////////////
+# PANEL HELPERS
+# ///////////////////////////////////////////////////////////////
+
+
+def _show_panel(content: str, title: str, border_style: str) -> None:
+    """Print a bordered panel using the shared WOMM panel styling.
+
+    Args:
+        content: Body text of the panel.
+        title: Panel title.
+        border_style: Rich colour name; also drives the ``bright_`` body style.
+    """
+    panel = Panel(
+        content,
+        title=title,
+        border_style=border_style,
+        style=f"bright_{border_style}",
+        padding=(1, 1),
+        width=80,
+    )
+    ezconsole.print("")
+    ezconsole.print(panel)
+    ezconsole.print("")
+
+
+# ///////////////////////////////////////////////////////////////
+# DISPLAY FUNCTIONS
+# ///////////////////////////////////////////////////////////////
+
+
+def display_system_managers_list(status: dict, verbose: bool = False) -> None:
+    """
+    Display all system package managers and their status in a table.
+
+    Args:
+        status: Dictionary of manager status information from get_installation_status()
+        verbose: Whether to show additional details (priority column)
+    """
+    table = Table(title="System Package Managers", show_header=True)
+    table.add_column("Manager", style="cyan", no_wrap=True)
+    table.add_column("Available", style="green", justify="center")
+    table.add_column("Version", style="yellow")
+    table.add_column("Platform", style="blue")
+
+    if verbose:
+        table.add_column("Priority", style="magenta", justify="center")
+
+    for name, info in status.items():
+        if info["supported_on_current_platform"]:
+            row = [
+                name,
+                "✓" if info["available"] else "✗",
+                info["version"] or "N/A",
+                info["platform"],
+            ]
+
+            if verbose:
+                row.append(str(info.get("priority", "N/A")))
+
+            table.add_row(*row)
+
+    ezconsole.print(table)
+
+
+def display_available_managers(results: dict, verbose: bool = False) -> None:
+    """
+    Display available package managers from detection results.
+
+    Args:
+        results: Dictionary of package manager results from detect_available_managers()
+        verbose: Whether to show detailed information about each manager
+    """
+    available = [name for name, res in results.items() if res.success]
+
+    if available:
+        ezprinter.tip(f"Available managers: {', '.join(available)}")
+
+        if verbose:
+            ezprinter.info("\nDetails:")
+            for name in available:
+                res = results[name]
+                ezprinter.info(f"  • {name}: v{res.version} (priority: {res.priority})")
+    else:
+        ezprinter.warning("No system package managers detected")
+
+
+def display_best_manager(
+    manager_name: str | None,
+    version: str | None = None,
+    platform: str | None = None,
+    priority: int | None = None,
+    verbose: bool = False,
+) -> None:
+    """
+    Display the best available package manager.
+
+    Args:
+        manager_name: Name of the best manager or None if not available
+        version: Manager version if available
+        platform: Platform the manager runs on
+        priority: Priority ranking of the manager
+        verbose: Whether to show additional information about selection criteria
+    """
+    if manager_name:
+        msg = f"✨ Best manager: {manager_name}"
+        if version:
+            msg += f" (version {version})"
+        ezprinter.tip(msg)
+
+        if verbose:
+            if platform:
+                ezprinter.info(f"Platform: {platform}")
+            if priority is not None:
+                ezprinter.info(f"Priority: {priority}")
+            ezprinter.info(
+                "\nThis manager was selected based on:"
+                "\n  • Platform compatibility"
+                "\n  • Availability on system"
+                "\n  • Priority ranking"
+            )
+    else:
+        ezprinter.error("No system package manager available")
+
+        if verbose:
+            ezprinter.info(
+                "\nTip: Install a package manager for your platform:"
+                "\n  • Windows: winget, chocolatey, scoop"
+                "\n  • macOS: homebrew"
+                "\n  • Linux: apt, dnf, pacman (usually pre-installed)"
+            )
+
+
+def display_system_detection_results(data: dict) -> None:
+    """
+    Display system detection results in a Rich panel.
+
+    Args:
+        data: System data to display with the following structure:
+            - system_info: Dict with platform, architecture, python_version, shell
+            - package_managers: Dict of available package managers
+            - dev_environments: Dict of detected development environments
+            - recommendations: Dict of recommendations by category
+
+    Raises:
+        ValueError: If data format is invalid
+    """
+    # Validate data structure
+    if not isinstance(data, dict):
+        raise TypeError(
+            f"Invalid data format: expected dictionary, got {type(data).__name__}"
+        )
+
+    system_info = data.get("system_info", {})
+    package_managers = data.get("package_managers", {})
+    dev_environments = data.get("dev_environments", {})
+    recommendations = data.get("recommendations", {})
+
+    # Format the data nicely
+    content = []
+    content.append("[bold blue]System Information[/bold blue]")
+    content.append(
+        f"OS: {system_info.get('platform', 'unknown')} {system_info.get('platform_release', '')}"
+    )
+    content.append(f"Architecture: {system_info.get('architecture', 'unknown')}")
+    content.append(f"Python: {system_info.get('python_version', 'unknown')}")
+    content.append(f"Shell: {system_info.get('shell', 'unknown')}")
+
+    content.append(
+        f"\n[bold green]Package Managers[/bold green] ({len(package_managers)} available)"
+    )
+    for name, info in package_managers.items():
+        if info.get("available"):
+            content.append(
+                f"✓ {name}: {info.get('version', 'unknown')} - {info.get('description', '')}"
+            )
+
+    content.append(
+        f"\n[bold yellow]Development Environments[/bold yellow] ({len(dev_environments)} detected)"
+    )
+    for _, info in dev_environments.items():
+        if info.get("available"):
+            content.append(
+                f"✓ {info.get('name', 'unknown')}: {info.get('version', 'unknown')}"
+            )
+
+    content.append("\n[bold magenta]Recommendations[/bold magenta]")
+    for category, recommendation in recommendations.items():
+        content.append(f"- {category}: {recommendation}")
+
+    # Add a blank line before the panel for better spacing
+    panel = ezprinter.create_panel(
+        "\n".join(content),
+        title="System Detection Results",
+        border_style="dim white",
+    )
+    ezprinter.console.print(panel)
+
+
+def render_system_detection_result(result: SystemDetectionResult) -> None:
+    """
+    Render a system detection Result: the detail panel on success, an error
+    message on failure.
+
+    Args:
+        result: Outcome returned by ``SystemDetectorInterface.detect_system()``.
+    """
+    if result.success:
+        print()
+        display_system_detection_results(result.system_data or {})
+        return
+
+    ezprinter.error(result.message or "System detection failed")
+    if result.error:
+        ezprinter.info(result.error)
+
+
+def render_environment_refresh_result(
+    result: EnvironmentRefreshResult, accessible: bool
+) -> None:
+    """
+    Render an environment refresh Result together with the accessibility check.
+
+    Args:
+        result: Outcome returned by ``SystemEnvironmentInterface.refresh_environment()``.
+        accessible: Whether the target command is reachable after the refresh
+            (from ``verify_environment_refresh()``).
+    """
+    if result.success:
+        if accessible:
+            print()
+            ezprinter.tip(
+                "Recent PATH additions should now be accessible in this terminal session"
+            )
+        else:
+            ezprinter.warning(
+                "Environment refreshed but changes may not be accessible in current session"
+            )
+            ezprinter.tip(
+                "Solution: Restart your terminal or open a new command prompt"
+            )
+        return
+
+    ezprinter.error(result.message or "Environment refresh failed")
+    if result.error:
+        ezprinter.info(result.error)
+    ezprinter.info("This means WOMM may not be accessible in the current session")
+    ezprinter.info("Solution: Restart your terminal or run 'refreshenv' manually")
+
+
+def render_doctor_result(result: DoctorResult, verbose: bool = False) -> None:
+    """
+    Render the runtime diagnostic Result.
+
+    Args:
+        result: Outcome returned by ``DoctorInterface.diagnose()``.
+        verbose: Whether to show the raw executable and data directory paths.
+    """
+    if not result.success:
+        ezprinter.error(result.message or "Runtime diagnostic failed")
+        if result.error:
+            ezprinter.info(result.error)
+        return
+
+    ezprinter.system(f"Version: {result.version}")
+    ezprinter.system(f"PATH command: {result.path_command or 'not found'}")
+    ezprinter.system(f"Context menu: {result.context_menu_status}")
+
+    writable_label = "writable" if result.data_dir_writable else "not writable"
+    if result.data_dir_writable:
+        ezprinter.success(f"Data directory: {result.data_dir} ({writable_label})")
+    else:
+        ezprinter.warning(f"Data directory: {result.data_dir} ({writable_label})")
+
+    if verbose:
+        ezprinter.info(f"Executable: {result.executable}")
+
+    _show_panel(
+        """Runtime diagnostic commands:
+
+- womm doctor -v - Show the resolved executable path
+- womm path list - Inspect the current PATH
+- womm context list - Inspect registered context menu entries""",
+        "Doctor Commands",
+        "blue",
+    )
+
+
+def render_deps_check_result(
+    result: DependencyCheckResult,
+    verbose: bool = False,
+) -> None:
+    """
+    Render a dependency check Result (both strata).
+
+    Args:
+        result: Probe results collected by ``DepsInterface.check_all()``
+        verbose: Whether to also show the resolved path of each component
+    """
+
+    def _render(entries: list[DependencyProbe]) -> None:
+        for entry in entries:
+            status = "✓" if entry.available else "✗"
+            version = f"v{entry.version}" if entry.version else "N/A"
+            msg = f"{status} {entry.name}: {version}"
+            if entry.available:
+                ezprinter.success(msg)
+                if verbose and entry.path:
+                    ezprinter.info(f"    {entry.path}")
+            else:
+                ezprinter.warning(msg)
+
+    if not result.success:
+        ezprinter.error(result.message or "Dependency check failed")
+        if result.error:
+            ezprinter.info(result.error)
+
+        _show_panel(
+            """The dependency check could not complete.
+
+- Re-run with -v/--verbose for more detail
+- Use womm deps list to see the static inventory instead""",
+            "Troubleshooting",
+            "yellow",
+        )
+        return
+
+    ezprinter.info("Checking all dependencies...\n")
+
+    # Strata 1
+    ezprinter.info("\n=== Runtimes (Strata 1) ===")
+    _render(result.runtime)
+    ezconsole.print("")
+
+    # Strata 2
+    ezprinter.info("\n=== Runtime Package Managers (Strata 2) ===")
+    _render(result.package_managers)
+
+    missing = [entry.name for entry in result.runtime if not entry.available]
+    if missing:
+        _show_panel(
+            f"""Missing runtimes: {", ".join(missing)}
+
+WOMM does not install runtimes for you. Install the missing ones with your
+usual tooling, then re-run womm deps check.
+
+If a runtime is already installed but not detected, it is probably absent from
+your PATH — womm path list shows the current entries.""",
+            "Missing Runtimes",
+            "yellow",
+        )
+
+    _show_panel(
+        """Dependency commands:
+
+- womm deps status - Full status table with versions
+- womm deps list - Static inventory, no probing
+- womm deps check -v - Show version details for each component""",
+        "Deps Commands",
+        "blue",
+    )
+
+
+def render_deps_status_result(
+    result: DependencyStatusResult,
+    verbose: bool = False,
+) -> None:
+    """
+    Render a comprehensive dependency status table.
+
+    Args:
+        result: Status data collected by ``DepsInterface.show_status()``
+        verbose: Whether to show additional details column
+    """
+    if not result.success:
+        ezprinter.error(result.message or "Failed to generate dependency status")
+        if result.error:
+            ezprinter.info(result.error)
+
+        _show_panel(
+            """The dependency status report could not be generated.
+
+- Re-run with -v/--verbose for more detail
+- Use womm deps list to see the static inventory instead""",
+            "Troubleshooting",
+            "yellow",
+        )
+        return
+
+    table = Table(title="WOMM Dependency Status", show_header=True)
+    table.add_column("Strata", style="cyan", width=20)
+    table.add_column("Component", style="yellow", width=30)
+    table.add_column("Status", style="green", width=10, justify="center")
+    table.add_column("Version", style="white", width=15)
+
+    if verbose:
+        table.add_column("Details", style="blue", width=30)
+
+    # Strata 1
+    for entry in result.runtime:
+        row = [
+            "Runtime",
+            entry.name,
+            "✓" if entry.available else "✗",
+            entry.version or "N/A",
+        ]
+        if verbose:
+            row.append(f"Min: {RuntimeConfig.RUNTIMES.get(entry.name, 'Any')}")
+        table.add_row(*row)
+
+    # Strata 2
+    for entry in result.package_managers:
+        row = [
+            "Runtime PKG MGR",
+            entry.name,
+            "✓" if entry.available else "✗",
+            entry.version or "N/A",
+        ]
+        if verbose:
+            requires = RuntimePackageManagerConfig.RUNTIME_PACKAGE_MANAGERS.get(
+                entry.name, "N/A"
+            )
+            row.append(f"Requires: {requires}")
+        table.add_row(*row)
+
+    ezconsole.print(table)
+
+    _show_panel(
+        """Dependency commands:
+
+- womm deps check - Probe and report availability
+- womm deps list - Static inventory, no probing
+- womm deps status -v - Show details column""",
+        "Deps Commands",
+        "blue",
+    )
+
+
+def render_deps_inventory_result(result: DependencyInventoryResult) -> None:
+    """
+    Render the static dependency inventory (no probing).
+
+    Args:
+        result: Inventory collected by ``DepsInterface.list_all()``
+    """
+    if not result.success:
+        ezprinter.error(result.message or "Failed to list dependencies")
+        if result.error:
+            ezprinter.info(result.error)
+
+        _show_panel(
+            """The dependency inventory could not be listed.
+
+- This is a static listing; it should not depend on system state
+- Re-run with -v/--verbose for more detail""",
+            "Troubleshooting",
+            "yellow",
+        )
+        return
+
+    ezprinter.info("=== Runtimes (Strata 1) ===")
+    for entry in result.runtime:
+        ezprinter.info(f"  • {entry.name} ({entry.detail})")
+
+    ezprinter.info("\n=== Runtime Package Managers (Strata 2) ===")
+    for entry in result.package_managers:
+        ezprinter.info(f"  • {entry.name} ({entry.detail})")
+
+    _show_panel(
+        """Dependency commands:
+
+- womm deps check - Probe and report availability
+- womm deps status - Full status table with versions""",
+        "Deps Commands",
+        "blue",
+    )
+
+
+# ///////////////////////////////////////////////////////////////
+# PUBLIC API
+# ///////////////////////////////////////////////////////////////
+
+__all__ = [
+    "display_available_managers",
+    "display_best_manager",
+    "display_system_detection_results",
+    "display_system_managers_list",
+    "render_deps_check_result",
+    "render_deps_inventory_result",
+    "render_deps_status_result",
+    "render_doctor_result",
+    "render_environment_refresh_result",
+    "render_system_detection_result",
+]

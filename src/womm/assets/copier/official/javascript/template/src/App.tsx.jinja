@@ -1,0 +1,10 @@
+function App() {
+  return (
+    <div className="App">
+      <h1>Welcome to {{ project_name }}</h1>
+      <p>{ {{ description | tojson }} }</p>
+    </div>
+  );
+}
+
+export default App;

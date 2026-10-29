@@ -1,0 +1,40 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution and build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Editors
+.idea/
+{%- if not with_vscode %}
+.vscode/
+{%- endif %}
+
+# Environment files
+.env
+.env.local
+{%- if framework == "django" %}
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+{%- endif %}

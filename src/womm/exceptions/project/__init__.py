@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# ///////////////////////////////////////////////////////////////
+# EXCEPTIONS PROJECT - Project Service Exceptions
+# Project: works-on-my-machine
+# ///////////////////////////////////////////////////////////////
+
+"""
+Project service exceptions for Works On My Machine.
+
+This package exports all exceptions for project operations. Interfaces
+under ``interfaces/project`` never raise: they catch ``ProjectServiceError``
+and translate it into a typed Result.
+"""
+
+from __future__ import annotations
+
+# ///////////////////////////////////////////////////////////////
+# IMPORTS
+# ///////////////////////////////////////////////////////////////
+# Local imports
+from .project_service import ProjectServiceError
+
+# ///////////////////////////////////////////////////////////////
+# PUBLIC API
+# ///////////////////////////////////////////////////////////////
+
+__all__ = [
+    "ProjectServiceError",
+]

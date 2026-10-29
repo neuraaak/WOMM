@@ -1,0 +1,27 @@
+{%- set use_biome = framework != "vue" -%}
+{
+  "editor.codeActionsOnSave": {
+{%- if use_biome %}
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+{%- else %}
+    "source.fixAll.eslint": "explicit"
+{%- endif %}
+  },
+  "editor.defaultFormatter": "{% if use_biome %}biomejs.biome{% else %}esbenp.prettier-vscode{% endif %}",
+  "editor.formatOnSave": true,
+  "editor.rulers": [100],
+  "files.exclude": {
+    "**/coverage": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "search.exclude": {
+    "**/coverage": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

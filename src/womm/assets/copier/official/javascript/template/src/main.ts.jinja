@@ -1,0 +1,21 @@
+{%- if framework == "vue" -%}
+import { createApp } from "vue";
+import App from "./App.vue";
+
+createApp(App).mount("#app");
+{%- else -%}
+import { pathToFileURL } from "node:url";
+
+/**
+ * Main entry point for {{ project_name }}.
+ */
+
+export function main(): number {
+  console.log("Hello from {{ project_name }}!");
+  return 0;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exitCode = main();
+}
+{%- endif %}

@@ -1,0 +1,51 @@
+import eslint from "@eslint/js";
+import prettier from "eslint-config-prettier";
+import globals from "globals";
+{%- if typescript %}
+import tseslint from "typescript-eslint";
+{%- endif %}
+import vue from "eslint-plugin-vue";
+
+export default [
+  {
+    ignores: ["coverage/**", "dist/**", "node_modules/**"],
+  },
+  eslint.configs.recommended,
+{%- if typescript %}
+  ...tseslint.configs.recommended,
+{%- endif %}
+  ...vue.configs["flat/recommended"],
+  {
+    files: ["**/*.{js{% if typescript %},ts{% endif %},vue}"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      globals: {
+        ...globals.node,
+{%- if framework in ("react", "vue") %}
+        ...globals.browser,
+{%- endif %}
+      },
+{%- if typescript %}
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+{%- endif %}
+      sourceType: "module",
+    },
+    rules: {
+      "no-console": "warn",
+      "no-debugger": "error",
+      "no-eval": "error",
+      "no-var": "error",
+      "prefer-const": "error",
+{%- if typescript %}
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+{%- else %}
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+{%- endif %}
+      "vue/multi-word-component-names": "off",
+    },
+  },
+  prettier,
+];

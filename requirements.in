@@ -1,4 +1,4 @@
 click>=8.0.0
 rich>=13.0.0
+ezplog>=2.0.0,<3.0.0
 InquirerPy>=0.3.4
-ezplog>=1.0.0

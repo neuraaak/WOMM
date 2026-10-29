@@ -1,311 +1,172 @@
 # 🛠️ Works On My Machine (WOMM)
 
-> ## ⚠️ This package has been renamed
->
-> **`works-on-my-machine` is no longer maintained under this name on PyPI.**
-> Development continues as **[`womm-cli`](https://pypi.org/project/womm-cli/)** —
-> same tool, same `womm` command, same repository.
->
-> ```bash
-> pip uninstall works-on-my-machine
-> pip install womm-cli
-> ```
->
-> `3.2.4` is the final release published under this name. The repository has
-> moved to **[github.com/neuraaak/WOMM](https://github.com/neuraaak/WOMM)** and
-> the documentation to **[neuraaak.github.io/WOMM](https://neuraaak.github.io/WOMM/)**.
->
-> ### 🚫 Do not install `3.2.4`
->
-> This release exists **only to carry this notice**. On PyPI it jumps straight
-> from `2.6.8` to `3.2.4`: every version in between was developed but never
-> published, and this build has never been validated through the PyPI install
-> path. Treat it as a tombstone, not as working software — assume it may be
-> broken or incomplete, and install
-> **[`womm-cli`](https://pypi.org/project/womm-cli/)** instead.
->
-> The name change is purely administrative: the PyPI name `womm` was already
-> taken by an unrelated project, so `womm-cli` was chosen instead.
+[![CI](https://img.shields.io/github/actions/workflow/status/neuraaak/WOMM/01-ci.yml?style=flat&label=ci&logo=githubactions&logoColor=white)](https://github.com/neuraaak/WOMM/actions/workflows/01-ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue?style=flat&logo=materialformkdocs&logoColor=white)](https://neuraaak.github.io/WOMM/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat&logo=github&logoColor=white)](https://github.com/neuraaak/WOMM/blob/main/LICENSE)
+[![packaging](https://img.shields.io/badge/packaging-uv-DE5FE9?style=flat&logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+[![lint](https://img.shields.io/badge/lint-ruff-D7FF64?style=flat&logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
+[![types](https://img.shields.io/badge/types-ty-261230?style=flat&logo=astral&logoColor=white)](https://github.com/astral-sh/ty)
+[![tests](https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
-[![Version](https://img.shields.io/badge/Version-3.2.4-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
-[![PyPI](https://img.shields.io/badge/PyPI-works--on--my--machine-green.svg?style=for-the-badge&logo=pypi)](https://pypi.org/project/works-on-my-machine/)
-[![Docs](https://img.shields.io/badge/Docs-Online-blue.svg?style=for-the-badge&logo=readthedocs)](https://neuraaak.github.io/WOMM/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Deprecated-red.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
-[![Tests](https://img.shields.io/badge/Tests-TODO-orange.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
+![Logo](https://raw.githubusercontent.com/neuraaak/WOMM/main/docs/assets/logo-min.png)
 
-<!-- [![Coverage](https://img.shields.io/badge/Coverage-29%25-yellow.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM) -->
+**WOMM** is a command-line tool that creates Python and JavaScript projects from
+templates, configures existing ones, and keeps your PATH and Windows context
+menu under control.
 
-![WOMM Logo](docs/assets/logo-min.png)
-
-> **Universal development environment manager for Python and JavaScript**  
-> 🚀 **One command to rule them all** - Automatic setup, cross-platform configuration, professional tooling
+> **Installed as `womm-cli`, used as `womm`.** The name `womm` was already taken
+> on PyPI, so the package is published as `womm-cli`. You only type that name to
+> install or upgrade. The former name `works-on-my-machine` is no longer
+> maintained: its last release, `3.2.4`, exists only to carry that notice.
 
 ---
 
-## 🎯 What is WOMM?
+## 📦 Installation
 
-**Works On My Machine** is a comprehensive development environment manager that eliminates the "it works on my machine" problem. It provides a unified CLI tool that automatically sets up professional development environments for Python and JavaScript projects.
+```bash
+# Recommended: isolated install, uv provisions Python if needed
+uv tool install womm-cli
+uv tool update-shell   # once, if `womm` is not on your PATH yet
 
-### ✨ **Key Features**
+# Any other PEP 517 installer works on the same wheel
+pipx install womm-cli
+pip install --user womm-cli
 
-- 🚀 **One-Command Setup** - Complete project initialization with professional tooling
-- 🔧 **Cross-Platform** - Works seamlessly on Windows, macOS, and Linux
-- 🎯 **Smart Detection** - Automatically detects project types and applies appropriate configurations
-- 📦 **Template System** - Create reusable project templates from existing projects
-- 🛠️ **Professional Tooling** - Pre-configured with industry-standard tools (Black, ESLint, Prettier, etc.)
-- 🔄 **Interactive Mode** - Guided setup with beautiful CLI interfaces
-- 📚 **Comprehensive Documentation** - Complete guides for every feature
+# Run it without installing anything
+uvx womm-cli --help
+
+# Unreleased code, straight from the repository
+uv tool install git+https://github.com/neuraaak/WOMM.git
+```
+
+Upgrade with `uv tool upgrade womm-cli`, remove with
+`uv tool uninstall womm-cli`. Neither touches your data in `~/.womm`.
+
+Requires Python 3.13 or later — `uv tool install` provisions it for you.
 
 ---
 
 ## 🚀 Quick Start
 
-### **Installation**
-
 ```bash
-# Option 1: Install from PyPI (recommended)
-pip install works-on-my-machine
-# OR
-pip install womm
+# Create a Python project, then prepare its environment
+womm create official/python ./hello-womm --setup
 
-# Option 2: Install from source
-git clone https://github.com/neuraaak/WOMM.git
-cd works-on-my-machine
-python womm.py install
-
-# Restart your terminal, then use WOMM anywhere!
-```
-
-### **Create Your First Project**
-
-```bash
-# Create a Python project with full tooling
-womm new python my-awesome-app
-
-# Create a JavaScript/React project
-womm new javascript my-react-app --type react
-
-# Let WOMM detect and setup automatically (interactive mode)
-womm new --interactive
-```
-
-### **Setup Existing Projects**
-
-```bash
-# Setup Python project with professional tooling
-womm setup python
-
-# Setup JavaScript project with ESLint, Prettier, etc.
-womm setup javascript
-
-# Auto-detect and setup
+# Configure a project you already have
+cd my-existing-project
 womm setup detect
+
+# Check what WOMM resolves on this machine
+womm doctor
 ```
 
 ---
 
-## 🎯 Available Commands
+## 🎯 Key Features
 
-### **🆕 Project Creation**
-
-```bash
-womm new python <name>     # Create Python project with virtual env, Black, pytest
-womm new javascript <name> # Create JavaScript project with ESLint, Prettier
-womm new javascript <name> --type react # Create React project
-womm new javascript <name> --type vue # Create Vue project
-womm new --interactive    # Interactive project creation with auto-detection
-```
-
-### **⚙️ Project Setup**
-
-```bash
-womm setup python          # Setup Python project (dependencies, tools, config)
-womm setup javascript      # Setup JavaScript project (npm, ESLint, etc.)
-womm setup --interactive   # Interactive setup with auto-detection
-```
-
-### **🔍 Code Quality**
-
-```bash
-womm lint python           # Lint Python code (Black, isort, flake8)
-womm lint javascript       # Lint JavaScript code (ESLint, Prettier)
-womm lint all              # Lint all supported code in project
-womm spell check           # Check spelling in project files
-```
-
-### **📦 Template Management**
-
-```bash
-womm template create       # Create template from current project
-womm template list         # List available templates
-womm template info <name>  # Show template details
-womm template delete <name> # Delete template
-```
-
-### **🔧 System Management**
-
-```bash
-womm system detect         # Detect system information and tools
-womm system install <tools> # Install prerequisites (python, node, git)
-womm install               # Install WOMM globally
-womm uninstall             # Remove WOMM from system
-```
-
-### **🖱️ Windows Integration**
-
-```bash
-womm context register      # Register WOMM in Windows context menu
-womm context unregister    # Remove from context menu
-womm context list          # List registered entries
-```
+- ✅ Project creation from [Copier](https://copier.readthedocs.io/) templates,
+  with real questions and a catalog you can extend
+- ✅ Two official templates: Python (optional Django) and JavaScript/TypeScript
+  (optional React or Vue)
+- ✅ Environment setup for existing projects: virtual environment, dependencies,
+  dev tooling, git hooks
+- ✅ PATH management, with an automatic backup before every change
+- ✅ Windows context menu entries, with backups and selective restore
+- ✅ Read-only dependency report across runtimes and package managers
+- ✅ User data kept in `~/.womm`, untouched by upgrades
 
 ---
 
-## 🏗️ What WOMM Sets Up
+## 💻 CLI Usage
 
-### **🐍 Python Projects**
+```bash
+womm create TEMPLATE DESTINATION    # render a catalog template
+womm setup detect|python|javascript # configure an existing project
+womm template list|show|add|init|update|remove
+womm deps check|status|list         # report runtimes and package managers
+womm path list|add|remove|backup    # inspect and manage your PATH
+womm context register|list|unregister|quick-setup|backup  # Windows only
+womm system detect|refresh-env      # system information, Windows refresh
+womm doctor                         # what this installation resolves
+```
 
-- ✅ **Virtual Environment** with `venv`
-- ✅ **Code Formatting** with Black and isort
-- ✅ **Linting** with flake8 and ruff
-- ✅ **Testing** with pytest and coverage
-- ✅ **Pre-commit Hooks** for quality assurance
-- ✅ **VSCode Configuration** for consistent development
-- ✅ **pyproject.toml** with modern Python packaging
-- ✅ **Development Scripts** for common tasks
-
-### **🟨 JavaScript Projects**
-
-- ✅ **Package Management** with npm/yarn
-- ✅ **Code Formatting** with Prettier
-- ✅ **Linting** with ESLint
-- ✅ **Testing** with Jest
-- ✅ **Git Hooks** with Husky
-- ✅ **VSCode Configuration** for JavaScript development
-- ✅ **TypeScript Support** (optional)
-- ✅ **Modern ES6+ Configuration**
-
-### **🔧 Professional Tooling**
-
-- ✅ **Cross-Platform Compatibility**
-- ✅ **Consistent Code Style** across team
-- ✅ **Automated Quality Checks**
-- ✅ **Integrated Development Environment**
-- ✅ **Best Practices** out of the box
+Every command takes `-h` for its own options. The full list is in the
+[command reference](https://neuraaak.github.io/WOMM/reference/commands/).
 
 ---
 
 ## 📚 Documentation
 
-### **📖 [Complete Documentation](docs/index.md)**
+Complete documentation is available at
+**[neuraaak.github.io/WOMM](https://neuraaak.github.io/WOMM/)**
 
-- **📋 [CLI Overview](docs/cli/index.md)** - All available commands and options
-- **🔧 [Commands Reference](docs/cli/commands.md)** - Common commands quick reference
-- **🆕 [Project Creation](docs/cli/NEW.md)** - Create Python, JavaScript, React, and Vue projects
-- **⚙️ [Project Setup](docs/cli/setup.md)** - Configure existing projects with professional tooling
-- **🔍 [Linting](docs/cli/lint.md)** - Code quality and linting tools
-- **📝 [Spell Check](docs/cli/spell.md)** - Spell checking and dictionaries
-- **📦 [Templates](docs/cli/templates.md)** - Template management system
-- **🔧 [Installation](docs/cli/install.md)** - Installation and configuration
-- **🛠️ [System Tools](docs/cli/system.md)** - System detection and management
-- **🖱️ [Context Menu](docs/cli/context.md)** - Windows context menu integration
-
-### **🔌 [API Reference](docs/api/index.md)**
-
-- **🏗️ [Architecture](docs/api/architecture.md)** - Dependency management architecture
-- **⚡ [CLI Architecture](docs/api/cli-architecture.md)** - Unified CLI design
-- **📦 [Templates API](docs/api/templates.md)** - Template system reference
-- **⚠️ [Exceptions](docs/api/exceptions.md)** - Error handling architecture
-- **📊 [Logging](docs/api/logging.md)** - Normalized logging patterns
+| Section                                                                    | Description                                   |
+| -------------------------------------------------------------------------- | --------------------------------------------- |
+| **[Get started](https://neuraaak.github.io/WOMM/get-started/)**            | Install WOMM and create your first project    |
+| **[Guides](https://neuraaak.github.io/WOMM/tasks/)**                       | One page per task, from creation to the PATH  |
+| **[Concepts](https://neuraaak.github.io/WOMM/concepts/template-catalog/)** | The template catalog, dependencies, your data |
+| **[Reference](https://neuraaak.github.io/WOMM/reference/commands/)**       | Every command, option, file and variable      |
+| **[Troubleshooting](https://neuraaak.github.io/WOMM/troubleshooting/)**    | Symptoms, causes and fixes                    |
+| **[FAQ](https://neuraaak.github.io/WOMM/faq/)**                            | Short answers to recurring questions          |
+| **[Release notes](https://neuraaak.github.io/WOMM/release-notes/)**        | What changed for you in each version          |
 
 ---
 
-## 🎯 Use Cases
-
-### **👨‍💻 Individual Developers**
-
-- **Quick Project Setup** - Start coding in minutes, not hours
-- **Consistent Environments** - Same setup across all your machines
-- **Professional Standards** - Industry-standard tooling without the hassle
-
-### **👥 Development Teams**
-
-- **Standardized Workflows** - Everyone uses the same tools and configurations
-- **Onboarding** - New team members can start contributing immediately
-- **Quality Assurance** - Automated code quality checks for all projects
-
-### **🏢 Organizations**
-
-- **Template Library** - Create and share project templates across teams
-- **Best Practices** - Enforce coding standards and development workflows
-- **Cross-Platform** - Works consistently across Windows, macOS, and Linux
-
----
-
-## 🛠️ Technical Architecture
-
-### **Core Components**
-
-- **CLI Interface** - Modern Click-based command-line interface
-- **Project Managers** - Language-specific project creation and setup
-- **Template System** - Dynamic template generation and management
-- **System Detection** - Automatic detection of tools and environments
-- **UI Components** - Rich terminal interfaces with progress tracking
-
-### **Supported Platforms**
-
-- **Windows** - Full support with batch scripts and PowerShell
-- **macOS** - Native Unix-like environment support
-- **Linux** - Complete compatibility with various distributions
-
-### **Language Support**
-
-- **Python** - 3.8+ with modern tooling ecosystem
-- **JavaScript** - Node.js with modern development tools
-- **Extensible** - Framework for adding more languages
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### **Development Setup**
+## 🧪 Testing
 
 ```bash
-# Clone and setup development environment
-git clone https://github.com/neuraaak/WOMM.git
-cd works-on-my-machine
-
-# Install in development mode
-pip install -e .
-
-# Run tests
-pytest
-
-# Run linting
-womm lint python
+uv run pytest                 # unit tests with coverage
+uv run pytest tests/unit -q   # quick run
 ```
 
 ---
 
-## 📄 License
+## 🛠️ Development Setup
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```bash
+git clone https://github.com/neuraaak/WOMM.git
+cd WOMM
+
+uv sync --group dev        # install the project and its dev tooling
+uv run pre-commit install  # enable the git hooks
+
+uv run ruff check .        # lint
+uv run ruff format .       # format
+uv run ty check .          # type check
+uv run lint-imports        # layer contracts
+uv run mkdocs serve        # preview the documentation
+```
 
 ---
 
-## 🙏 Acknowledgments
+## 📦 Dependencies
 
-- **Click** - For the excellent CLI framework
-- **Rich** - For beautiful terminal interfaces
-- **InquirerPy** - For interactive command-line prompts
-- **Black, ESLint, Prettier** - For code quality tools
-- **The Python and JavaScript communities** - For amazing development tools
+| Dependency | Constraint       | Role                       |
+| ---------- | ---------------- | -------------------------- |
+| click      | `>=8.0.0`        | Command-line interface     |
+| rich       | `>=13.0.0`       | Terminal rendering         |
+| ezplog     | `>=2.0.0,<3.0.0` | Logging and console output |
+| InquirerPy | `>=0.3.4`        | Interactive prompts        |
+| copier     | `>=9.17,<10`     | Template rendering         |
+
+External programs WOMM reports on but never installs: Python 3.13+, Node.js
+18+, git 2.30+, and one of pip, uv, npm or yarn.
 
 ---
 
-_"It works on my machine, and now it will work on yours too!"_ 🚀
+## 📝 License
+
+Released under the [MIT License](https://github.com/neuraaak/WOMM/blob/main/LICENSE).
+
+---
+
+## 🔗 Links
+
+- **Repository** — [github.com/neuraaak/WOMM](https://github.com/neuraaak/WOMM)
+- **PyPI** — [pypi.org/project/womm-cli](https://pypi.org/project/womm-cli/)
+- **Documentation** — [neuraaak.github.io/WOMM](https://neuraaak.github.io/WOMM/)
+- **Issues** — [github.com/neuraaak/WOMM/issues](https://github.com/neuraaak/WOMM/issues)
+
+---
+
+**WOMM** – Scaffold it once, run it anywhere.
