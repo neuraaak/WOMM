@@ -30,7 +30,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
 [![Version](https://img.shields.io/badge/Version-3.2.4-lightgrey.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)
-[![PyPI](https://img.shields.io/badge/PyPI-works--on--my--machine-green.svg?style=for-the-badge&logo=pypi)](https://pypi.org/project/works-on-my-machine/)
+[![PyPI](https://img.shields.io/badge/PyPI-womm--cli-green.svg?style=for-the-badge&logo=pypi)](https://pypi.org/project/womm-cli/)
 [![Docs](https://img.shields.io/badge/Docs-Online-blue.svg?style=for-the-badge&logo=readthedocs)](https://neuraaak.github.io/WOMM/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Deprecated-red.svg?style=for-the-badge)](https://github.com/neuraaak/WOMM)

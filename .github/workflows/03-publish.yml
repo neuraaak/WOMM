@@ -51,8 +51,8 @@ env:
   # is the expected value, checked against the built artifact below, so a
   # mismatch fails the build instead of publishing under the wrong name.
   #
-  # Today pyproject.toml still says `works-on-my-machine`, so that check is
-  # exactly what keeps publication frozen until the rename lands.
+  # pyproject.toml declares this same name, so the check below passes; it
+  # stays as the guard against an accidental rename.
   DIST_NAME: womm-cli
 
   # Import package name — the directory inside the wheel, and the CLI command.

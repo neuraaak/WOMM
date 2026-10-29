@@ -13,7 +13,7 @@ build-backend = "hatchling.build"
 # /////////////////////////////////////////////////////////////////////
 
 [project]
-name = "WOMM"
+name = "womm-cli"
 version = "4.0.0"
 description = "Universal development tools for Python and JavaScript - Automatic installation, cross-platform configuration, global commands"
 readme = "README.md"
@@ -121,7 +121,7 @@ Homepage = "https://github.com/neuraaak/WOMM"
 Documentation = "https://neuraaak.github.io/WOMM/"
 Repository = "https://github.com/neuraaak/WOMM"
 Issues = "https://github.com/neuraaak/WOMM/issues"
-PyPI = "https://pypi.org/project/WOMM/"
+PyPI = "https://pypi.org/project/womm-cli/"
 
 # ///////////////////////////////////////////////////////////////
 # 🖥️ SCRIPTS

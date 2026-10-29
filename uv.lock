@@ -2001,7 +2001,7 @@ wheels = [
 ]
 
 [[package]]
-name = "womm"
+name = "womm-cli"
 version = "4.0.0"
 source = { editable = "." }
 dependencies = [
