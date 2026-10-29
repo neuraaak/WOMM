@@ -23,7 +23,6 @@ from ._version import __version__
 from .commands.core import doctor_cmd, path_group
 from .commands.project import create_command, setup_group, template_group
 from .commands.system import context_group, deps_group, system_group
-from .shared import startup as _startup  # noqa: F401
 from .ui.common import ezprinter
 
 # ///////////////////////////////////////////////////////////////

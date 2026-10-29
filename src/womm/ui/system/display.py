@@ -299,7 +299,6 @@ def render_doctor_result(result: DoctorResult, verbose: bool = False) -> None:
             ezprinter.info(result.error)
         return
 
-    ezprinter.system(f"Runtime channel: {result.channel}")
     ezprinter.system(f"Version: {result.version}")
     ezprinter.system(f"PATH command: {result.path_command or 'not found'}")
     ezprinter.system(f"Context menu: {result.context_menu_status}")

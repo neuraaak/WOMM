@@ -20,14 +20,10 @@ from pathlib import Path
 def get_womm_executable() -> Path:
     """Return the executable integrations should invoke.
 
-    Frozen distributions expose their real executable through ``sys.executable``.
-    For package installs, prefer uv's stable user shim and fall back to the
-    command currently resolvable on PATH. The returned path may not exist in a
-    source checkout; callers that need an executable must validate it.
+    Prefer uv's stable user shim and fall back to the command currently
+    resolvable on PATH. The returned path may not exist in a source checkout;
+    callers that need an executable must validate it.
     """
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable)
-
     executable_name = "womm.exe" if sys.platform == "win32" else "womm"
     uv_shim = Path.home() / ".local" / "bin" / executable_name
     if uv_shim.is_file():

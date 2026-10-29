@@ -8,15 +8,14 @@
 Path contract for Works On My Machine.
 
 This module is the **single authority** on where things live. It keeps two
-notions strictly apart, which the legacy self-installer incorrectly collapsed
-into one location:
+notions strictly apart:
 
 - **Data** — mutable, user-owned, always under ``~/.womm`` (overridable via
-  ``$WOMM_HOME``), in every channel: dev, ``uv tool``, or standalone. This
+  ``$WOMM_HOME``), both in a source checkout and in an installed package. This
   directory never contains code.
 - **Code and assets** — immutable, shipped inside the package, read through
-  :mod:`importlib.resources` so they resolve identically from a source tree,
-  a wheel, or a frozen executable.
+  :mod:`importlib.resources` so they resolve identically from a source tree
+  and from a wheel.
 
 Directory accessors create their target lazily on access; file accessors
 return a path and guarantee only that its parent exists.
@@ -54,7 +53,6 @@ BACKUPS_DIRNAME = "backups"
 PATH_BACKUPS_DIRNAME = "path"
 REGISTRY_BACKUPS_DIRNAME = "registry"
 CONFIG_FILENAME = "config.toml"
-STATE_FILENAME = "state.json"
 
 # Package subdirectory holding the shipped, read-only assets.
 ASSETS_DIRNAME = "assets"
@@ -144,11 +142,6 @@ def config_file() -> Path:
     return womm_data_dir() / CONFIG_FILENAME
 
 
-def state_file() -> Path:
-    """Get the data-state file path, used for migrations (not created)."""
-    return womm_data_dir() / STATE_FILENAME
-
-
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API - PACKAGED CODE AND ASSETS
 # ///////////////////////////////////////////////////////////////
@@ -192,7 +185,6 @@ __all__ = [
     "packaged_copier_meta",
     "path_backups_dir",
     "registry_backups_dir",
-    "state_file",
     "template_catalog_file",
     "user_templates_dir",
     "womm_data_path",

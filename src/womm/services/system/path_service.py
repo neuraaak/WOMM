@@ -436,27 +436,13 @@ class SystemPathService:
 
                 updated_lines: list[str] = []
                 removed_lines: list[str] = []
-                skip_next = False
 
                 for line in lines:
-                    line_stripped = line.strip()
-
-                    if "Added by Works On My Machine installer" in line:
-                        removed_lines.append(line_stripped)
-                        skip_next = True
-                        continue
-
-                    if skip_next and "export PATH=" in line and entry_path in line:
-                        removed_lines.append(line_stripped)
-                        skip_next = False
-                        continue
-
                     if "export PATH=" in line and entry_path in line:
-                        removed_lines.append(line_stripped)
+                        removed_lines.append(line.strip())
                         continue
 
                     updated_lines.append(line)
-                    skip_next = False
 
                 if removed_lines:
                     try:

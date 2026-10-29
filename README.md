@@ -66,18 +66,23 @@
 ### **Installation**
 
 ```bash
-# Option 1: Install from PyPI (recommended)
-pip install works-on-my-machine
-# OR
-pip install womm
+# Recommended: isolated install, uv provisions Python if needed
+uv tool install womm-cli
+uv tool update-shell   # once, if `womm` is not on your PATH yet
 
-# Option 2: Install from source
-git clone https://github.com/neuraaak/WOMM.git
-cd works-on-my-machine
-python womm.py install
+# Any other PEP 517 installer works on the same wheel
+pipx install womm-cli
+pip install --user womm-cli
 
-# Restart your terminal, then use WOMM anywhere!
+# Run it without installing anything
+uvx womm-cli --help
+
+# Unreleased code, straight from the repository
+uv tool install git+https://github.com/neuraaak/WOMM.git
 ```
+
+Upgrade with `uv tool upgrade womm-cli`, remove with
+`uv tool uninstall womm-cli`. Neither touches your data in `~/.womm`.
 
 ### **Create Your First Project**
 
@@ -150,8 +155,6 @@ womm template delete <name> # Delete template
 ```bash
 womm system detect         # Detect system information and tools
 womm system install <tools> # Install prerequisites (python, node, git)
-womm install               # Install WOMM globally
-womm uninstall             # Remove WOMM from system
 ```
 
 ### **🖱️ Windows Integration**
@@ -209,7 +212,6 @@ womm context list          # List registered entries
 - **🔍 [Linting](docs/cli/lint.md)** - Code quality and linting tools
 - **📝 [Spell Check](docs/cli/spell.md)** - Spell checking and dictionaries
 - **📦 [Templates](docs/cli/templates.md)** - Template management system
-- **🔧 [Installation](docs/cli/install.md)** - Installation and configuration
 - **🛠️ [System Tools](docs/cli/system.md)** - System detection and management
 - **🖱️ [Context Menu](docs/cli/context.md)** - Windows context menu integration
 

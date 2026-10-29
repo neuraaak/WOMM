@@ -7,7 +7,7 @@
 """
 Doctor Interface for Works On My Machine.
 
-Gathers the read-only runtime diagnostic (channel, version, executable,
+Gathers the read-only runtime diagnostic (version, executable,
 data directory, PATH registration, context menu status) into a
 ``DoctorResult``. This interface carries no UI: it does not print or log —
 the command layer owns presentation. It never modifies user configuration.
@@ -21,7 +21,6 @@ from __future__ import annotations
 # Standard library imports
 import os
 import shutil
-import sys
 from pathlib import Path
 
 # Local imports
@@ -53,12 +52,10 @@ class DoctorInterface:
             an inline status string rather than failing the report.
         """
         data_dir = womm_data_path()
-        channel = "standalone" if getattr(sys, "frozen", False) else "package"
 
         return DoctorResult(
             success=True,
             message="Runtime diagnostic completed successfully",
-            channel=channel,
             version=__version__,
             executable=str(get_womm_executable()),
             data_dir=str(data_dir),

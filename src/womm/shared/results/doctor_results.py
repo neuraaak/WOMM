@@ -26,7 +26,6 @@ from .base import BaseResult
 class DoctorResult(BaseResult):
     """Result for the runtime diagnostic report."""
 
-    channel: str = ""
     version: str = ""
     executable: str = ""
     data_dir: str = ""

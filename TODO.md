@@ -70,20 +70,6 @@ MkDocs sont vertes.
   documenter le hash du script et garder `uv tool install` comme voie
   principale.
 
-### 4.3 Canal standalone et Inno Setup
-
-Le modèle de référence retenu est `flash-excel` : compilation avec
-`ezcompiler`, wrappers de publication et signature hors CI. L'adaptation à
-WOMM reste à concevoir ; aucun script de build standalone n'est présent
-actuellement dans `.scripts/build/`.
-
-- [ ] Compiler l'entrée commune de WOMM et vérifier que les assets sont
-  inclus dans l'exécutable.
-- [ ] Installer sous `%LocalAppData%\Programs\WOMM`, avec PATH utilisateur
-  et désinstallation propre, sans toucher aux données `~/.womm`.
-- [ ] Ajouter un contrôle de mise à jour et vérifier cryptographiquement
-  tout artefact téléchargé avant son exécution.
-
 ### 4.4 Documentation produit finale
 
 Le reset documentaire a supprimé les anciennes pages obsolètes. Les pages
@@ -101,9 +87,9 @@ canaux d'installation.
 - [ ] Vérifier qu'aucune documentation utilisateur ne suggère une commande
   inexistante ou une sémantique incorrecte.
 
-**Critère de sortie du lot :** les canaux développement, `uv tool` et
-standalone appellent la même entrée, préservent les données utilisateur et
-sont vérifiés avant publication.
+**Critère de sortie du lot :** les canaux développement et `uv tool`
+appellent la même entrée, préservent les données utilisateur et sont
+vérifiés avant publication.
 
 ---
 
@@ -111,7 +97,7 @@ sont vérifiés avant publication.
 
 1. Reconstruire la documentation produit — la migration ezplog 2.x est
    bloquée en amont et ne tient plus la file.
-2. Finaliser le renommage PyPI en `womm-cli`, `install.ps1` et le canal
-   standalone, puis valider la chaîne CI/release complète.
+2. Finaliser le renommage PyPI en `womm-cli` et `install.ps1`, puis valider
+   la chaîne CI/release complète.
 3. Reprendre la suppression de `WommPrinter.console` dès qu'ezplog expose un
    accesseur public.

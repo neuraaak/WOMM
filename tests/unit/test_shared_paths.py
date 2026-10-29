@@ -8,8 +8,7 @@
 Tests for ``womm.shared.paths``.
 
 This module is the single authority on *where things live*. It answers two
-questions that the legacy self-installer used to conflate:
-where the mutable user data lives (``~/.womm``, overridable via
+separate questions: where the mutable user data lives (``~/.womm``, overridable via
 ``$WOMM_HOME``) and where the immutable packaged assets live (the package
 itself, read through ``importlib.resources``).
 
@@ -36,7 +35,6 @@ from womm.shared.paths import (
     packaged_assets,
     path_backups_dir,
     registry_backups_dir,
-    state_file,
     user_templates_dir,
     womm_data_dir,
     womm_data_path,
@@ -152,7 +150,6 @@ def test_path_and_registry_backups_are_distinct():
     ("accessor", "filename"),
     [
         (config_file, "config.toml"),
-        (state_file, "state.json"),
     ],
 )
 def test_files_resolve_under_data_dir_without_being_created(

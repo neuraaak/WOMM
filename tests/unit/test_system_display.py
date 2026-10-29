@@ -206,7 +206,6 @@ def test_render_doctor_result_reports_all_fields(monkeypatch):
     ezprinter, ezconsole, _ = _patch_ui(monkeypatch)
     result = DoctorResult(
         success=True,
-        channel="package",
         version="1.0.0",
         executable="/usr/bin/womm",
         data_dir="/home/user/.womm",
@@ -217,7 +216,6 @@ def test_render_doctor_result_reports_all_fields(monkeypatch):
 
     display_module.render_doctor_result(result, verbose=True)
 
-    ezprinter.system.assert_any_call("Runtime channel: package")
     ezprinter.success.assert_any_call("Data directory: /home/user/.womm (writable)")
     ezprinter.info.assert_any_call("Executable: /usr/bin/womm")
     ezconsole.print.assert_called()
