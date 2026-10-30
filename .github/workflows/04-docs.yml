@@ -1,18 +1,37 @@
 name: 04 · Docs
 
-# The product documentation is being rebuilt; validate it without deploying.
+# Pull requests validate the site; the release cascade deploys it with mike.
 on:
-  workflow_call:
-  workflow_dispatch:
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag_action:
+        description: "create = release + latest | skip = dev | preview = build only"
+        required: true
+        type: choice
+        default: preview
+        options: [preview, skip, create]
+      version:
+        description: "Documentation version (defaults to pyproject.toml)"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        required: false
+        type: string
+      tag_action:
+        required: false
+        type: string
+        default: preview
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   build:
     name: Build docs
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -26,3 +45,49 @@ jobs:
       - run: uv sync --frozen --no-build --group docs
       - name: Build docs
         run: uv run --no-sync poe docs-build
+
+  docs:
+    name: Build & deploy docs
+    if: inputs.tag_action == 'preview' || (github.ref == 'refs/heads/main' && (inputs.tag_action == 'create' || inputs.tag_action == 'skip'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write # mike pushes the built site to gh-pages
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --frozen --no-build --group docs
+      - name: Resolve docs version
+        id: docs_version
+        env:
+          INPUT_VERSION: ${{ inputs.version || '' }}
+        run: |
+          VERSION="${INPUT_VERSION:-$(uv run --no-sync poe -q read-version)}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Deploy release docs (create)
+        if: inputs.tag_action == 'create'
+        env:
+          DOCS_VERSION: ${{ steps.docs_version.outputs.version }}
+        run: |
+          uv run --no-sync mike deploy --push --update-aliases "$DOCS_VERSION" latest
+          uv run --no-sync mike set-default --push latest
+      - name: Deploy dev docs (skip)
+        if: inputs.tag_action == 'skip'
+        run: uv run --no-sync mike deploy --push --update-aliases dev
+      - name: Validate docs build (preview)
+        if: inputs.tag_action == 'preview'
+        env:
+          DOCS_VERSION: ${{ steps.docs_version.outputs.version }}
+        run: uv run --no-sync mike deploy --update-aliases "$DOCS_VERSION" latest

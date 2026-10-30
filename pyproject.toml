@@ -79,12 +79,12 @@ docs = [
     "mkdocs>=1.6.0,<2.0.0",
     "mkdocs-material>=9.5.0",
     "mkdocs-section-index>=0.3.0",
+    "mike>=2.0.0",
     "pymdown-extensions>=10.7",
     "git-cliff>=2.7.0",
     "grimp>=2.3.0",
 
-    # Task runner: 04-docs runs `poe docs-coverage|imports|graph` and syncs
-    # only `docs` + `test`, so poethepoet must be reachable from this group.
+    # 04-docs runs Poe's docs-build and read-version tasks with this group.
     "poethepoet>=0.32",
 ]
 dev = [

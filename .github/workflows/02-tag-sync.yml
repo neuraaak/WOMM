@@ -87,5 +87,10 @@ jobs:
 
   docs:
     name: Docs
-    needs: publish
+    needs: [tag-sync, publish]
+    permissions:
+      contents: write # mike pushes the built site to gh-pages
     uses: ./.github/workflows/04-docs.yml
+    with:
+      version: ${{ needs.tag-sync.outputs.version }}
+      tag_action: ${{ needs.tag-sync.outputs.tag_action }}
