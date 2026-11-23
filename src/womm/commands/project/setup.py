@@ -182,7 +182,7 @@ def setup_detect(
 @click.option(
     "--setup-git-hooks",
     is_flag=True,
-    help="Setup Git hooks",
+    help="Initialize the Git repository",
 )
 @click.option(
     "-v",
@@ -263,17 +263,12 @@ def setup_python(
 @click.option(
     "--install-deps",
     is_flag=True,
-    help="Install dependencies",
-)
-@click.option(
-    "--setup-dev-tools",
-    is_flag=True,
-    help="Setup development tools (linting, formatting, etc.)",
+    help="Install dependencies, devDependencies included",
 )
 @click.option(
     "--setup-git-hooks",
     is_flag=True,
-    help="Setup Git hooks",
+    help="Initialize the Git repository",
 )
 @click.option(
     "-v",
@@ -286,7 +281,6 @@ def setup_javascript(
     project_type: str | None,
     interactive: bool,
     install_deps: bool,
-    setup_dev_tools: bool,
     setup_git_hooks: bool,
     verbose: bool,
 ) -> None:
@@ -331,7 +325,6 @@ def setup_javascript(
         # Non-interactive mode
         options = {
             "install_deps": install_deps,
-            "setup_dev_tools": setup_dev_tools,
             "setup_git_hooks": setup_git_hooks,
         }
         success = _run_direct_setup(

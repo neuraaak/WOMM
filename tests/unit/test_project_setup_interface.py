@@ -249,29 +249,18 @@ def test_setup_javascript_runs_each_requested_operation_once(
     )
     monkeypatch.setattr(
         interface._javascript_service,
-        "setup_dev_tools",
-        succeed("dev_tools"),
-    )
-    monkeypatch.setattr(
-        interface._javascript_service,
         "setup_git_repository",
         succeed("git"),
-    )
-    monkeypatch.setattr(
-        interface._javascript_service,
-        "setup_git_hooks",
-        succeed("git_hooks"),
     )
 
     result = interface._setup_javascript_project(
         tmp_path,
         "react",
         install_deps=True,
-        setup_dev_tools=True,
         setup_git_hooks=True,
     )
 
-    assert calls == ["dependencies", "dev_tools", "git", "git_hooks"]
+    assert calls == ["dependencies", "git"]
     assert result["tools_configured"] == calls
     assert result["warnings"] == []
 
@@ -285,24 +274,19 @@ def test_setup_javascript_collects_unsuccessful_results(
         return ProjectCreationResult(success=False)
 
     monkeypatch.setattr(interface._javascript_service, "install_dependencies", failure)
-    monkeypatch.setattr(interface._javascript_service, "setup_dev_tools", failure)
     monkeypatch.setattr(interface._javascript_service, "setup_git_repository", failure)
-    monkeypatch.setattr(interface._javascript_service, "setup_git_hooks", failure)
 
     result = interface._setup_javascript_project(
         tmp_path,
         "vue",
         install_deps=True,
-        setup_dev_tools=True,
         setup_git_hooks=True,
     )
 
     assert result["tools_configured"] == []
     assert result["warnings"] == [
         "Dependency installation failed",
-        "Dev tools setup failed",
         "Git repository setup failed",
-        "Git hooks setup failed",
     ]
 
 

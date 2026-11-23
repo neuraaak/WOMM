@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from womm.services.project import env_utils
 from womm.utils.project import asset_utils
 
@@ -32,15 +30,9 @@ def test_copy_asset_file_and_directory_honor_overwrite_and_exclusions(
     assert (target / "keep.txt").read_text() == "new"
 
 
-def test_environment_helpers_find_executables_and_npm(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_environment_helpers_find_pip_executable(tmp_path: Path) -> None:
     venv = tmp_path / "venv"
     executable = venv / "bin" / "pip"
     executable.parent.mkdir(parents=True)
     executable.touch()
     assert env_utils.find_pip_executable(venv) == executable
-    monkeypatch.setattr(
-        env_utils.shutil, "which", lambda name: "/bin/npm" if name == "npm" else None
-    )
-    assert env_utils.check_npm_available()

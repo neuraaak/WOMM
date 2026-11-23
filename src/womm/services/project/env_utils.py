@@ -9,8 +9,7 @@ Pure utility functions for setting up project environments.
 
 This module provides stateless functions for:
 - Python virtual environment creation and management
-- npm project initialization
-- Dependency installation (pip, npm)
+- Dependency installation (pip, and npm, pnpm, yarn or bun)
 """
 
 from __future__ import annotations
@@ -19,6 +18,7 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
+import json
 import logging
 import shutil
 import tomllib
@@ -238,84 +238,76 @@ def install_python_dependencies(
 # ///////////////////////////////////////////////////////////////
 
 
-def check_npm_available() -> bool:
-    """Check if npm is available in PATH.
+JAVASCRIPT_PACKAGE_MANAGERS = frozenset({"npm", "pnpm", "yarn", "bun"})
+
+# Checked in order: a project carrying several lockfiles keeps the first match.
+_JAVASCRIPT_LOCKFILES = (
+    ("bun.lock", "bun"),
+    ("bun.lockb", "bun"),
+    ("pnpm-lock.yaml", "pnpm"),
+    ("yarn.lock", "yarn"),
+    ("package-lock.json", "npm"),
+)
+
+
+def detect_package_manager(project_path: Path) -> str:
+    """Return the package manager a JavaScript project uses.
+
+    The ``packageManager`` field of ``package.json`` wins, then the lockfile;
+    a project declaring neither uses npm.
+
+    Args:
+        project_path: Path to the project
 
     Returns:
-        bool: True if npm is available
+        str: One of ``JAVASCRIPT_PACKAGE_MANAGERS``
     """
-    return shutil.which("npm") is not None
+    try:
+        manifest = json.loads((project_path / "package.json").read_text("utf-8"))
+        declared = str(manifest.get("packageManager", "")).split("@", 1)[0]
+    except (OSError, ValueError, AttributeError):
+        declared = ""
+    if declared in JAVASCRIPT_PACKAGE_MANAGERS:
+        return declared
+
+    for lockfile, manager in _JAVASCRIPT_LOCKFILES:
+        if (project_path / lockfile).is_file():
+            return manager
+    return "npm"
 
 
-def install_npm_dependencies(project_path: Path) -> bool:
-    """Install npm dependencies.
+def install_javascript_dependencies(project_path: Path) -> str:
+    """Install the dependencies of a JavaScript project with its package manager.
 
     Args:
         project_path: Path to the project
 
     Returns:
-        bool: True if installation succeeded
+        str: The package manager that installed the dependencies
 
     Raises:
         ValueError: If validation fails
-        FileNotFoundError: If npm is not installed or not in PATH
-        RuntimeError: If the npm install command fails
+        FileNotFoundError: If the package manager is not installed or not in PATH
+        RuntimeError: If the install command fails
     """
     validate_project_path(project_path, must_exist=True, require_empty=False)
 
-    if not check_npm_available():
-        raise FileNotFoundError("npm is not installed or not in PATH")
+    manager = detect_package_manager(project_path)
+    # Run the resolved path: npm, pnpm and yarn are .cmd shims on Windows.
+    executable = shutil.which(manager)
+    if executable is None:
+        raise FileNotFoundError(f"{manager} is not installed or not in PATH")
 
-    # Install dependencies
-    command_runner = CommandRunnerService()
-    result = command_runner.run(
-        ["npm", "install"],
+    result = CommandRunnerService().run(
+        [executable, "install"],
         cwd=str(project_path),
     )
 
     if not result:
-        raise RuntimeError(f"Failed to install dependencies: {result.stderr}")
+        raise RuntimeError(f"{manager} install failed: {result.stderr}")
 
-    logger.info("Successfully installed npm dependencies")
-    return True
-
-
-def install_npm_dev_dependencies(project_path: Path, dependencies: list[str]) -> bool:
-    """Install npm development dependencies.
-
-    Args:
-        project_path: Path to the project
-        dependencies: List of package names to install
-
-    Returns:
-        bool: True if installation succeeded
-
-    Raises:
-        ValueError: If validation fails
-        FileNotFoundError: If npm is not installed or not in PATH
-        RuntimeError: If the npm install command fails
-    """
-    validate_project_path(project_path, must_exist=True, require_empty=False)
-
-    if not check_npm_available():
-        raise FileNotFoundError("npm is not installed or not in PATH")
-
-    if not dependencies:
-        logger.info("No dev dependencies to install")
-        return True
-
-    # Install dev dependencies
-    command_runner = CommandRunnerService()
-    result = command_runner.run(
-        ["npm", "install", "--save-dev", *dependencies],
-        cwd=str(project_path),
-    )
-
-    if not result:
-        raise RuntimeError(f"Failed to install development tools: {result.stderr}")
-
-    logger.info(f"Successfully installed {len(dependencies)} dev dependencies")
-    return True
+    logger.info(f"Successfully installed dependencies with {manager}")
+    return manager
 
 
 # ///////////////////////////////////////////////////////////////
@@ -323,11 +315,11 @@ def install_npm_dev_dependencies(project_path: Path, dependencies: list[str]) ->
 # ///////////////////////////////////////////////////////////////
 
 __all__ = [
-    "check_npm_available",
+    "JAVASCRIPT_PACKAGE_MANAGERS",
     "create_virtual_environment",
+    "detect_package_manager",
     "find_pip_executable",
     "get_virtual_environment_path",
-    "install_npm_dependencies",
-    "install_npm_dev_dependencies",
+    "install_javascript_dependencies",
     "install_python_dependencies",
 ]
