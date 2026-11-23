@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -301,7 +302,7 @@ def test_react_renders_the_description_as_a_string_literal(
     )
 
     app = out / "src" / ("App.tsx" if typescript else "App.jsx")
-    literal = _between(app.read_text(encoding="utf-8"), "<p>{ ", " }</p>")
+    literal = _between(app.read_text(encoding="utf-8"), "<p>{", "}</p>")
     assert json.loads(literal) == HOSTILE_DESCRIPTION
 
 
@@ -393,6 +394,39 @@ def test_biome_is_used_for_non_vue_frameworks(tmp_path: Path, framework: str):
     assert "prettier" not in manifest["devDependencies"]
     assert manifest["scripts"]["lint"] == "biome lint ."
     assert manifest["scripts"]["format"] == "biome format --write ."
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(shutil.which("npx") is None, reason="npx is not installed")
+@pytest.mark.parametrize("typescript", [False, True])
+@pytest.mark.parametrize("framework", ["none", "react"])
+def test_biome_accepts_the_rendered_project(
+    tmp_path: Path, framework: str, typescript: bool
+):
+    # The generated CI runs `format:check` and `lint` first: an invalid biome.json
+    # or an unformatted file fails it before the tests even run.
+    out = render(tmp_path / "p", framework=framework, typescript=typescript)
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    version = manifest["devDependencies"]["@biomejs/biome"]
+
+    result = subprocess.run(
+        [
+            shutil.which("npx"),
+            "--yes",
+            f"@biomejs/biome@{version}",
+            "ci",
+            "--colors=off",
+            ".",
+        ],
+        cwd=out,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=300,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_eslint_and_prettier_are_kept_for_vue(tmp_path: Path):
