@@ -1,4 +1,10 @@
 {%- set use_biome = framework != "vue" -%}
+{%- set extensions = (["biomejs.biome"] if use_biome else ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]) + (["vue.volar"] if framework == "vue" else []) + (["vitest.explorer"] if with_tests else []) -%}
+{%- set inline = '  "recommendations": [' ~ (extensions | map("tojson") | join(", ")) ~ "]" -%}
 {
-  "recommendations": [{% if use_biome %}"biomejs.biome"{% else %}"dbaeumer.vscode-eslint", "esbenp.prettier-vscode"{% endif %}{% if framework == "vue" %}, "vue.volar"{% endif %}{% if with_tests %}, "vitest.explorer"{% endif %}]
-}
+{# Biome and Prettier keep an array on one line only while it fits in 100 columns. -#}
+{% if inline | length <= 100 %}{{ inline }}
+{% else %}  "recommendations": [
+{% for extension in extensions %}    {{ extension | tojson }}{{ "," if not loop.last }}
+{% endfor %}  ]
+{% endif %}}
