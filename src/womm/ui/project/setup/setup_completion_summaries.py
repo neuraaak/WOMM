@@ -36,7 +36,7 @@ def print_setup_completion_summary(
     project_type: str,
     virtual_env: bool = False,
     install_deps: bool = False,
-    setup_dev_tools: bool = False,
+    git_repository: bool = False,
     setup_git_hooks: bool = False,
 ) -> None:
     """
@@ -47,16 +47,16 @@ def print_setup_completion_summary(
         project_type: Type of project (python, javascript, react, vue)
         virtual_env: Whether virtual environment was set up
         install_deps: Whether dependencies were installed
-        setup_dev_tools: Whether development tools were configured
-        setup_git_hooks: Whether Git hooks were set up
+        git_repository: Whether the Git repository was initialized
+        setup_git_hooks: Whether Git hooks were installed
     """
     completed = [
         label
         for enabled, label in (
             (virtual_env, "Virtual environment setup"),
             (install_deps, "Dependencies installed"),
-            (setup_dev_tools, "Development tools configured"),
-            (setup_git_hooks, "Git hooks configured"),
+            (git_repository, "Git repository initialized"),
+            (setup_git_hooks, "Git hooks installed"),
         )
         if enabled
     ]
@@ -97,7 +97,7 @@ def print_project_setup_result(result: ProjectSetupResult) -> None:
         result.project_type,
         virtual_env="venv" in configured_tools,
         install_deps="dependencies" in configured_tools,
-        setup_dev_tools="dev_tools" in configured_tools,
+        git_repository="git" in configured_tools,
         setup_git_hooks="git_hooks" in configured_tools,
     )
     for warning in result.warnings or []:

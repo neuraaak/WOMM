@@ -69,7 +69,6 @@ class ProjectManagerInterface:
         project_path: Path,
         virtual_env: bool = False,
         install_deps: bool = False,
-        setup_dev_tools: bool = False,
         setup_git_hooks: bool = False,
         **kwargs,
     ) -> ProjectSetupResult:
@@ -81,7 +80,6 @@ class ProjectManagerInterface:
             project_path: Path to the existing project
             virtual_env: Whether to create virtual environment (Python only)
             install_deps: Whether to install dependencies
-            setup_dev_tools: Whether to set up development tools
             setup_git_hooks: Whether to set up Git hooks
             **kwargs: Additional project-specific options
 
@@ -93,7 +91,6 @@ class ProjectManagerInterface:
             project_type=project_type,
             virtual_env=virtual_env,
             install_deps=install_deps,
-            setup_dev_tools=setup_dev_tools,
             setup_git_hooks=setup_git_hooks,
             **kwargs,
         )

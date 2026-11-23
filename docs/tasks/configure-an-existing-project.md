@@ -50,8 +50,7 @@ re-creating it from a template.
 | `-I, --interactive`    | Guided setup, one question at a time.                   | `detect`, `python`, `javascript` |     |     |
 | `-v, --verbose`        | Show the detailed output.                               | `detect`, `python`, `javascript` |     |     |
 | `--install-deps`       | Install the project dependencies, dev ones included.    | `python`, `javascript`           |     |     |
-| `--setup-dev-tools`    | Install the Python development dependencies.            | `python`                         |     |     |
-| `--setup-git-hooks`    | Initialize the git repository.                          | `python`, `javascript`           |     |     |
+| `--setup-git-hooks`    | Initialize git; on Python, install pre-commit hooks.    | `python`, `javascript`           |     |     |
 | `--virtual-env`        | Create the virtual environment.                         | `python`                         |     |     |
 | `-t, --type TYPE`      | Force the project type: `javascript`, `react` or `vue`. | `javascript`                     |     |     |
 
@@ -63,6 +62,10 @@ step it ran and what it skipped.
 A JavaScript project is installed with the package manager it declares: the
 `packageManager` field of `package.json`, then its lockfile, and npm otherwise.
 WOMM adds no linter, formatter or git hook of its own.
+
+On a Python project, `--setup-git-hooks` also runs `pre-commit install` when the
+project has a `.pre-commit-config.yaml`, with the `pre-commit` of its virtual
+environment: combine it with `--install-deps` so that `pre-commit` is there.
 
 If detection picks the wrong language, name it explicitly with `womm setup
 python` or `womm setup javascript` — see

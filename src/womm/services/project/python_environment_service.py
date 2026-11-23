@@ -9,9 +9,8 @@ Python Environment Service - Singleton service for Python environment setup.
 
 Handles post-creation Python environment setup including:
 - Virtual environment setup
-- Dependency installation
-- Development tools configuration
-- Git repository initialization
+- Dependency installation, development dependencies included
+- Git repository initialization and pre-commit hooks installation
 """
 
 from __future__ import annotations
@@ -29,9 +28,14 @@ from typing import ClassVar
 from ...exceptions.project import ProjectServiceError
 from ...shared.configs.project import PythonProjectConfig
 from ...shared.results import ProjectCreationResult
-from ...utils.project import create_python_dev_config_files, validate_project_path
+from ...utils.project import validate_project_path
 from ..common.command_runner_service import CommandRunnerService
-from .env_utils import create_virtual_environment, install_python_dependencies
+from .env_utils import (
+    create_virtual_environment,
+    find_venv_executable,
+    get_virtual_environment_path,
+    install_python_dependencies,
+)
 
 # ///////////////////////////////////////////////////////////////
 # LOGGER SETUP
@@ -145,35 +149,6 @@ class PythonEnvironmentService:
                 details=f"Exception type: {type(e).__name__}",
             ) from e
 
-    def setup_dev_tools(self, project_path: Path) -> ProjectCreationResult:
-        """Set up development tools for existing project.
-
-        Args:
-            project_path: Path to the project
-
-        Returns:
-            ProjectCreationResult: Result of dev tools setup
-
-        Raises:
-            ProjectServiceError: If dev tools setup fails
-        """
-        try:
-            # Create development configuration files if they don't exist
-            create_python_dev_config_files(project_path)
-
-            # Install development dependencies
-            return self.install_dev_dependencies(project_path)
-
-        except ProjectServiceError:
-            raise
-        except Exception as e:
-            logger.exception("Unexpected error in setup_dev_tools")
-            raise ProjectServiceError(
-                operation="setup_dev_tools",
-                reason=str(e),
-                details=f"Exception type: {type(e).__name__}",
-            ) from e
-
     def setup_git_repository(self, project_path: Path) -> ProjectCreationResult:
         """Initialize a Git repository for the project.
 
@@ -233,6 +208,77 @@ class PythonEnvironmentService:
             logger.exception("Unexpected error in setup_git_repository")
             raise ProjectServiceError(
                 operation="setup_git_repository",
+                reason=str(e),
+                details=f"Exception type: {type(e).__name__}",
+            ) from e
+
+    def install_git_hooks(self, project_path: Path) -> ProjectCreationResult:
+        """Install the pre-commit hooks declared by the project.
+
+        Runs the ``pre-commit`` of the project's virtual environment, so the
+        hooks follow the version the project itself depends on.
+
+        Args:
+            project_path: Path to a project with a ``.pre-commit-config.yaml``
+
+        Returns:
+            ProjectCreationResult: Result of the hooks installation
+
+        Raises:
+            ProjectServiceError: If the installation raises unexpectedly
+        """
+        try:
+            validate_project_path(project_path, must_exist=True, require_empty=False)
+
+            if not (project_path / ".git").exists():
+                return ProjectCreationResult(
+                    success=False,
+                    message="Git hooks need a Git repository",
+                    project_path=project_path,
+                    project_type="python",
+                    error="no Git repository",
+                )
+
+            venv_path = get_virtual_environment_path(project_path)
+            pre_commit = find_venv_executable(venv_path, "pre-commit")
+            if pre_commit is None:
+                return ProjectCreationResult(
+                    success=False,
+                    message="Git hooks not installed",
+                    project_path=project_path,
+                    project_type="python",
+                    error=(
+                        f"pre-commit is not installed in {venv_path.name}; "
+                        "install the development dependencies first"
+                    ),
+                )
+
+            result = self._command_runner.run(
+                [str(pre_commit), "install"],
+                description="Install pre-commit hooks",
+                cwd=project_path,
+            )
+            if result.returncode == 0:
+                return ProjectCreationResult(
+                    success=True,
+                    message="Git hooks installed successfully",
+                    project_path=project_path,
+                    project_type="python",
+                )
+            return ProjectCreationResult(
+                success=False,
+                message="Git hooks not installed",
+                project_path=project_path,
+                project_type="python",
+                error=result.stderr or "pre-commit install failed",
+            )
+
+        except ProjectServiceError:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error in install_git_hooks")
+            raise ProjectServiceError(
+                operation="install_git_hooks",
                 reason=str(e),
                 details=f"Exception type: {type(e).__name__}",
             ) from e

@@ -219,26 +219,6 @@ def test_create_python_requirements_files_creates_both_files(
     ]
 
 
-def test_create_python_dev_config_files_creates_pyproject_when_missing(
-    tmp_path: Path,
-) -> None:
-    created = core_utils.create_python_dev_config_files(tmp_path)
-
-    assert (tmp_path / "pyproject.toml").is_file()
-    assert created == [str(tmp_path / "pyproject.toml")]
-
-
-def test_create_python_dev_config_files_skips_existing_pyproject(
-    tmp_path: Path,
-) -> None:
-    (tmp_path / "pyproject.toml").write_text("[project]\n")
-
-    created = core_utils.create_python_dev_config_files(tmp_path)
-
-    assert created == []
-    assert (tmp_path / "pyproject.toml").read_text() == "[project]\n"
-
-
 def test_create_javascript_config_files_creates_package_json_and_gitignore(
     tmp_path: Path,
 ) -> None:

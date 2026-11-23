@@ -156,35 +156,44 @@ def test_setup_project_resolves_a_catalog_identifier_beyond_the_legacy_list(
 # ///////////////////////////////////////////////////////////////
 
 
-def test_setup_python_installs_dependencies_once_when_dev_tools_are_enabled(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("has_config", "expected_calls"),
+    [(True, ["dependencies", "git", "git_hooks"]), (False, ["dependencies", "git"])],
+)
+def test_setup_python_installs_hooks_only_when_the_project_declares_them(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    has_config: bool,
+    expected_calls: list[str],
 ) -> None:
     interface = ProjectSetupInterface()
-    install_calls = 0
+    calls: list[str] = []
+    if has_config:
+        (tmp_path / ".pre-commit-config.yaml").touch()
 
-    def install_dependencies(_path: Path) -> ProjectCreationResult:
-        nonlocal install_calls
-        install_calls += 1
-        return ProjectCreationResult(success=True)
+    def succeed(name: str):
+        def operation(_path: Path) -> ProjectCreationResult:
+            calls.append(name)
+            return ProjectCreationResult(success=True)
 
-    monkeypatch.setattr(
-        interface._python_service,
-        "install_dev_dependencies",
-        install_dependencies,
-    )
-    monkeypatch.setattr(
-        "womm.services.project.python_environment_service.create_python_dev_config_files",
-        lambda _path: [],
-    )
+        return operation
+
+    for method, name in [
+        ("install_dev_dependencies", "dependencies"),
+        ("setup_git_repository", "git"),
+        ("install_git_hooks", "git_hooks"),
+    ]:
+        monkeypatch.setattr(interface._python_service, method, succeed(name))
 
     result = interface._setup_python_project(
         tmp_path,
         install_deps=True,
-        setup_dev_tools=True,
+        setup_git_hooks=True,
     )
 
-    assert install_calls == 1
-    assert result["tools_configured"] == ["dependencies", "dev_tools"]
+    assert calls == expected_calls
+    assert result["tools_configured"] == expected_calls
+    assert result["warnings"] == []
 
 
 def test_setup_python_collects_failures_and_continues(
@@ -200,7 +209,7 @@ def test_setup_python_collects_failures_and_continues(
     )
     monkeypatch.setattr(
         interface._python_service,
-        "setup_dev_tools",
+        "install_dev_dependencies",
         lambda _path: ProjectCreationResult(success=False),
     )
     monkeypatch.setattr(
@@ -208,19 +217,28 @@ def test_setup_python_collects_failures_and_continues(
         "setup_git_repository",
         lambda _path: ProjectCreationResult(success=False),
     )
+    monkeypatch.setattr(
+        interface._python_service,
+        "install_git_hooks",
+        lambda _path: ProjectCreationResult(
+            success=False, message="Git hooks not installed", error="no pre-commit"
+        ),
+    )
+    (tmp_path / ".pre-commit-config.yaml").touch()
 
     result = interface._setup_python_project(
         tmp_path,
         virtual_env=True,
-        setup_dev_tools=True,
+        install_deps=True,
         setup_git_hooks=True,
     )
 
     assert result["tools_configured"] == []
     assert result["warnings"] == [
         "Virtual environment setup skipped: venv unavailable",
-        "Dev tools setup failed",
+        "Dependency installation failed",
         "Git repository setup failed",
+        "Git hooks not installed: no pre-commit",
     ]
 
 

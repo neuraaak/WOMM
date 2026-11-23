@@ -31,7 +31,6 @@ Every command, as `womm --help` reports it. `-h, --help` works on each one, and
 | `-I, --interactive`    | yes      | yes      | yes          |     |     |
 | `-v, --verbose`        | yes      | yes      | yes          |     |     |
 | `--install-deps`       | no       | yes      | yes          |     |     |
-| `--setup-dev-tools`    | no       | yes      | no           |     |     |
 | `--setup-git-hooks`    | no       | yes      | yes          |     |     |
 | `--virtual-env`        | no       | yes      | no           |     |     |
 | `-t, --type TYPE`      | no       | no       | yes          |     |     |

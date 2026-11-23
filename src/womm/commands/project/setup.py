@@ -172,17 +172,12 @@ def setup_detect(
 @click.option(
     "--install-deps",
     is_flag=True,
-    help="Install dependencies",
-)
-@click.option(
-    "--setup-dev-tools",
-    is_flag=True,
-    help="Setup development tools (linting, formatting, etc.)",
+    help="Install dependencies, development ones included",
 )
 @click.option(
     "--setup-git-hooks",
     is_flag=True,
-    help="Initialize the Git repository",
+    help="Initialize the Git repository and install its pre-commit hooks",
 )
 @click.option(
     "-v",
@@ -195,7 +190,6 @@ def setup_python(
     interactive: bool,
     virtual_env: bool,
     install_deps: bool,
-    setup_dev_tools: bool,
     setup_git_hooks: bool,
     verbose: bool,
 ) -> None:
@@ -219,7 +213,6 @@ def setup_python(
         options = {
             "virtual_env": virtual_env,
             "install_deps": install_deps,
-            "setup_dev_tools": setup_dev_tools,
             "setup_git_hooks": setup_git_hooks,
         }
         success = _run_direct_setup(project_manager, "python", project_path, options)
@@ -369,7 +362,6 @@ def _run_interactive_setup(
 
     virtual_env = _coerce_bool(options.get("virtual_env", False))
     install_deps = _coerce_bool(options.get("install_deps", False))
-    setup_dev_tools = _coerce_bool(options.get("setup_dev_tools", False))
     setup_git_hooks = _coerce_bool(options.get("setup_git_hooks", False))
 
     result = project_manager.setup_project(
@@ -377,7 +369,6 @@ def _run_interactive_setup(
         project_path=project_path,
         virtual_env=virtual_env,
         install_deps=install_deps,
-        setup_dev_tools=setup_dev_tools,
         setup_git_hooks=setup_git_hooks,
     )
 
@@ -411,7 +402,6 @@ def _run_direct_setup(
 
     virtual_env = _coerce_bool(options.get("virtual_env", False))
     install_deps = _coerce_bool(options.get("install_deps", False))
-    setup_dev_tools = _coerce_bool(options.get("setup_dev_tools", False))
     setup_git_hooks = _coerce_bool(options.get("setup_git_hooks", False))
 
     # Configure project
@@ -420,7 +410,6 @@ def _run_direct_setup(
         project_path=project_path,
         virtual_env=virtual_env,
         install_deps=install_deps,
-        setup_dev_tools=setup_dev_tools,
         setup_git_hooks=setup_git_hooks,
     )
 

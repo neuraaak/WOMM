@@ -103,8 +103,8 @@ def _upgrade_pip(project_path: Path, venv_path: Path) -> None:
     """
     try:
         # Find Python and pip executables
-        python_exe = _find_venv_executable(venv_path, "python")
-        pip_exe = _find_venv_executable(venv_path, "pip")
+        python_exe = find_venv_executable(venv_path, "python")
+        pip_exe = find_venv_executable(venv_path, "pip")
 
         if python_exe and pip_exe:
             command_runner = CommandRunnerService()
@@ -120,7 +120,7 @@ def _upgrade_pip(project_path: Path, venv_path: Path) -> None:
         logger.warning(f"Error upgrading pip: {e}")
 
 
-def _find_venv_executable(venv_path: Path, name: str) -> Path | None:
+def find_venv_executable(venv_path: Path, name: str) -> Path | None:
     """Find an executable in the virtual environment.
 
     Args:
@@ -168,7 +168,7 @@ def find_pip_executable(venv_path: Path) -> Path:
     Raises:
         FileNotFoundError: If pip executable not found
     """
-    pip_exe = _find_venv_executable(venv_path, "pip")
+    pip_exe = find_venv_executable(venv_path, "pip")
     if not pip_exe:
         raise FileNotFoundError("pip not found in virtual environment")
     return pip_exe
@@ -319,6 +319,7 @@ __all__ = [
     "create_virtual_environment",
     "detect_package_manager",
     "find_pip_executable",
+    "find_venv_executable",
     "get_virtual_environment_path",
     "install_javascript_dependencies",
     "install_python_dependencies",

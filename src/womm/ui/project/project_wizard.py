@@ -80,7 +80,7 @@ class ProjectWizard:
     ) -> dict[str, str | bool]:
         """Configure setup-specific options for an existing project."""
         options = {}
-        # The virtual environment and dev tools steps exist for Python only.
+        # The virtual environment step exists for Python only.
         is_python = project_type == "python"
 
         if INQUIRERPY_AVAILABLE:
@@ -94,12 +94,6 @@ class ProjectWizard:
                 message="Install dependencies?",
                 default=True,
             ).execute()
-
-            if is_python:
-                options["setup_dev_tools"] = inquirer.confirm(
-                    message="Setup development tools (linting, formatting, etc.)?",
-                    default=True,
-                ).execute()
 
             options["setup_git_hooks"] = inquirer.confirm(
                 message="Setup Git hooks?",
@@ -116,12 +110,6 @@ class ProjectWizard:
 
             install_deps = input("Install dependencies? (Y/n): ").strip().lower()
             options["install_deps"] = install_deps in ["", "y", "yes"]
-
-            if is_python:
-                setup_dev_tools = (
-                    input("Setup development tools? (Y/n): ").strip().lower()
-                )
-                options["setup_dev_tools"] = setup_dev_tools in ["", "y", "yes"]
 
             setup_git_hooks = input("Setup Git hooks? (Y/n): ").strip().lower()
             options["setup_git_hooks"] = setup_git_hooks in ["", "y", "yes"]
@@ -154,9 +142,6 @@ class ProjectWizard:
         )
         table.add_row(
             "Install dependencies", "Yes" if options.get("install_deps") else "No"
-        )
-        table.add_row(
-            "Setup dev tools", "Yes" if options.get("setup_dev_tools") else "No"
         )
         table.add_row(
             "Setup Git hooks", "Yes" if options.get("setup_git_hooks") else "No"
