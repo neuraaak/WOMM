@@ -12,7 +12,8 @@ re-creating it from a template.
 
 ## 📝 Steps
 
-1. Let WOMM detect the project type:
+1. Let WOMM detect the project type. It shows the steps available for it and
+   writes nothing:
 
     ```bash
     cd my-existing-project
@@ -33,8 +34,8 @@ re-creating it from a template.
     womm setup python --virtual-env --install-deps
     ```
 
-    Run without options, WOMM detects and validates the project, then reports
-    that no step was requested.
+    Run without options, WOMM detects and validates the project, writes
+    nothing, and lists the options of the available steps.
 
 4. To be guided question by question, use the interactive mode:
 
@@ -51,6 +52,7 @@ re-creating it from a template.
 | `-v, --verbose`        | Show the detailed output.                               | `detect`, `python`, `javascript` |     |     |
 | `--install-deps`       | Install the project dependencies, dev ones included.    | `python`, `javascript`           |     |     |
 | `--setup-git-hooks`    | Initialize git; on Python, install pre-commit hooks.    | `python`, `javascript`           |     |     |
+| `--setup-vscode`       | Write the VS Code settings and recommended extensions.  | `python`, `javascript`           |     |     |
 | `--virtual-env`        | Create the virtual environment.                         | `python`                         |     |     |
 | `-t, --type TYPE`      | Force the project type: `javascript`, `react` or `vue`. | `javascript`                     |     |     |
 

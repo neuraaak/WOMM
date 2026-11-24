@@ -86,6 +86,7 @@ class ProjectSetupInterface:
         virtual_env: bool = False,
         install_deps: bool = False,
         setup_git_hooks: bool = False,
+        setup_vscode: bool = False,
         template_answers: Mapping[str, object] | None = None,
         **kwargs,  # noqa: ARG002
     ) -> ProjectSetupResult:
@@ -97,6 +98,7 @@ class ProjectSetupInterface:
             virtual_env: Whether to create virtual environment (Python only)
             install_deps: Whether to install dependencies, dev ones included
             setup_git_hooks: Whether to initialize Git (and pre-commit hooks for Python)
+            setup_vscode: Whether to write the VS Code configuration
             template_answers: Answers from a preceding Copier render, used only
                 to preserve its variant in generated editor configuration.
             **kwargs: Additional project-specific options
@@ -163,16 +165,17 @@ class ProjectSetupInterface:
             warnings = []
 
             # Copy VSCode configuration
-            try:
-                self._copy_vscode_config(
-                    project_path,
-                    profile,
-                    template_answers=template_answers,
-                )
-                tools_configured.append("vscode")
-            except Exception as e:
-                logger.warning(f"Failed to copy VSCode config: {e}")
-                warnings.append(f"VSCode configuration skipped: {e}")
+            if setup_vscode:
+                try:
+                    self._copy_vscode_config(
+                        project_path,
+                        profile,
+                        template_answers=template_answers,
+                    )
+                    tools_configured.append("vscode")
+                except Exception as e:
+                    logger.warning(f"Failed to copy VSCode config: {e}")
+                    warnings.append(f"VSCode configuration skipped: {e}")
 
             # Set up project based on language family
             if profile.language == "python":

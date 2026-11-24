@@ -70,6 +70,7 @@ class ProjectManagerInterface:
         virtual_env: bool = False,
         install_deps: bool = False,
         setup_git_hooks: bool = False,
+        setup_vscode: bool = False,
         **kwargs,
     ) -> ProjectSetupResult:
         """
@@ -81,6 +82,7 @@ class ProjectManagerInterface:
             virtual_env: Whether to create virtual environment (Python only)
             install_deps: Whether to install dependencies
             setup_git_hooks: Whether to set up Git hooks
+            setup_vscode: Whether to write the VS Code configuration
             **kwargs: Additional project-specific options
 
         Returns:
@@ -92,5 +94,6 @@ class ProjectManagerInterface:
             virtual_env=virtual_env,
             install_deps=install_deps,
             setup_git_hooks=setup_git_hooks,
+            setup_vscode=setup_vscode,
             **kwargs,
         )

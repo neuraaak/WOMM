@@ -8,7 +8,7 @@ Every command, as `womm --help` reports it. `-h, --help` works on each one, and
 | Command                     | What it does                               |
 | :-------------------------- | :----------------------------------------- |
 | `womm create TEMPLATE DEST` | Render a catalog template into `DEST`      |
-| `womm setup detect`         | Detect the project type, then configure it |
+| `womm setup detect`         | Detect the project type, list its steps    |
 | `womm setup python`         | Configure an existing Python project       |
 | `womm setup javascript`     | Configure an existing JavaScript project   |
 
@@ -32,6 +32,7 @@ Every command, as `womm --help` reports it. `-h, --help` works on each one, and
 | `-v, --verbose`        | yes      | yes      | yes          |     |     |
 | `--install-deps`       | no       | yes      | yes          |     |     |
 | `--setup-git-hooks`    | no       | yes      | yes          |     |     |
+| `--setup-vscode`       | no       | yes      | yes          |     |     |
 | `--virtual-env`        | no       | yes      | no           |     |     |
 | `-t, --type TYPE`      | no       | no       | yes          |     |     |
 

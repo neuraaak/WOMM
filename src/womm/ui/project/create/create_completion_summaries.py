@@ -27,13 +27,14 @@ from ...common.logging import ezprinter
 
 
 def render_project_creation_result(
-    result: ProjectCreationResult, *, verbose: bool = False
+    result: ProjectCreationResult, *, verbose: bool = False, suggest_setup: bool = False
 ) -> None:
     """Render the outcome of a template-driven project creation.
 
     Args:
         result: Outcome returned by ``ProjectCreateInterface.create_project``.
         verbose: Whether to also print the project template identifier.
+        suggest_setup: Whether to point to `womm setup` for the environment.
     """
     if not result.success:
         ezprinter.error(result.error or "Project creation failed")
@@ -46,6 +47,11 @@ def render_project_creation_result(
         ezprinter.info(f"Template: {result.project_type}")
     for warning in result.warnings or []:
         ezprinter.warning(warning)
+    if suggest_setup and result.project_path is not None:
+        ezprinter.info(
+            "To prepare its environment (venv, dependencies, git, VS Code), "
+            f'run womm setup detect -p "{result.project_path}" to list the steps'
+        )
 
 
 # ///////////////////////////////////////////////////////////////

@@ -100,6 +100,11 @@ class ProjectWizard:
                 default=True,
             ).execute()
 
+            options["setup_vscode"] = inquirer.confirm(
+                message="Write VS Code settings?",
+                default=True,
+            ).execute()
+
         else:
             # Fallback to simple input
             if is_python:
@@ -113,6 +118,9 @@ class ProjectWizard:
 
             setup_git_hooks = input("Setup Git hooks? (Y/n): ").strip().lower()
             options["setup_git_hooks"] = setup_git_hooks in ["", "y", "yes"]
+
+            setup_vscode = input("Write VS Code settings? (Y/n): ").strip().lower()
+            options["setup_vscode"] = setup_vscode in ["", "y", "yes"]
 
         return options
 
@@ -145,6 +153,9 @@ class ProjectWizard:
         )
         table.add_row(
             "Setup Git hooks", "Yes" if options.get("setup_git_hooks") else "No"
+        )
+        table.add_row(
+            "VS Code settings", "Yes" if options.get("setup_vscode") else "No"
         )
 
         console.print("")

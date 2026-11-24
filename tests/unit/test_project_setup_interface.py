@@ -67,7 +67,7 @@ def test_setup_project_auto_detects_and_aggregates_results(
         },
     )
 
-    result = interface.setup_project(tmp_path)
+    result = interface.setup_project(tmp_path, setup_vscode=True)
 
     assert result.success
     assert result.project_type == "python"
@@ -104,12 +104,25 @@ def test_setup_project_keeps_vscode_copy_failure_as_warning(
 
     monkeypatch.setattr(interface, "_copy_vscode_config", fail_copy)
 
-    result = interface.setup_project(tmp_path, project_type="python")
+    result = interface.setup_project(tmp_path, project_type="python", setup_vscode=True)
 
     assert result.success
     assert result.tools_configured is not None
     assert "vscode" not in result.tools_configured
     assert result.warnings == ["VSCode configuration skipped: assets unavailable"]
+
+
+def test_setup_project_without_steps_writes_nothing(tmp_path: Path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0"\n', encoding="utf-8"
+    )
+    interface = ProjectSetupInterface()
+
+    result = interface.setup_project(tmp_path, project_type="python")
+
+    assert result.success
+    assert result.tools_configured == []
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["pyproject.toml"]
 
 
 def test_setup_project_rejects_unknown_type_via_resolver(tmp_path: Path) -> None:
