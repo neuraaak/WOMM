@@ -193,6 +193,79 @@ def test_install_python_dependencies_uses_alt_venv_dir(tmp_path: Path) -> None:
 
 
 # ///////////////////////////////////////////////////////////////
+# UV ENVIRONMENT
+# ///////////////////////////////////////////////////////////////
+
+
+@pytest.mark.parametrize(
+    ("has_lock", "pyproject", "expected"),
+    [
+        (True, None, True),
+        (False, "[tool.uv]\npackage = true\n", True),
+        (False, "[tool.ruff]\nline-length = 88\n", False),
+        (False, "not = [valid toml", False),
+        (False, None, False),
+    ],
+)
+def test_uses_uv_reads_the_lockfile_or_the_uv_table(
+    tmp_path: Path, has_lock: bool, pyproject: str | None, expected: bool
+) -> None:
+    if has_lock:
+        (tmp_path / "uv.lock").touch()
+    if pyproject is not None:
+        (tmp_path / "pyproject.toml").write_text(pyproject, encoding="utf-8")
+
+    assert env_utils.uses_uv(tmp_path) is expected
+
+
+def test_sync_uv_environment_raises_when_uv_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(env_utils.shutil, "which", lambda _name: None)
+
+    with pytest.raises(FileNotFoundError, match="uv is not installed"):
+        env_utils.sync_uv_environment(tmp_path, install_deps=True)
+
+
+@pytest.mark.parametrize(
+    ("install_deps", "arguments"),
+    [(True, ["sync", "--group", "dev"]), (False, ["venv", "--allow-existing"])],
+)
+def test_sync_uv_environment_runs_the_resolved_uv(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    install_deps: bool,
+    arguments: list[str],
+) -> None:
+    monkeypatch.setattr(env_utils.shutil, "which", lambda _name: "/opt/uv")
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs: object):
+        captured["command"] = command
+        captured["cwd"] = kwargs["cwd"]
+        return CommandResult(returncode=0)
+
+    _patch_command_runner(monkeypatch, fake_run)
+
+    env_utils.sync_uv_environment(tmp_path, install_deps=install_deps)
+
+    assert captured["command"] == ["/opt/uv", *arguments]
+    assert captured["cwd"] == str(tmp_path)
+
+
+def test_sync_uv_environment_raises_on_command_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(env_utils.shutil, "which", lambda _name: "/opt/uv")
+    _patch_command_runner(
+        monkeypatch, lambda *_a, **_k: CommandResult(returncode=2, stderr="boom")
+    )
+
+    with pytest.raises(RuntimeError, match="uv sync failed: boom"):
+        env_utils.sync_uv_environment(tmp_path, install_deps=True)
+
+
+# ///////////////////////////////////////////////////////////////
 # DETECT PACKAGE MANAGER
 # ///////////////////////////////////////////////////////////////
 

@@ -2,6 +2,7 @@
 
 import ast
 import shutil
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from womm.services.project.copier_project_creation_service import (
     CopierProjectCreationService,
     ProjectCreationRequest,
 )
+from womm.services.project.env_utils import sync_uv_environment, uses_uv
 from womm.services.project.template_store_service import TemplateStoreService
 
 # Quotes and backslashes are legal in a free-text answer and must survive
@@ -271,6 +273,9 @@ def test_django_pytest_ini_declares_settings_module(tmp_path: Path):
 def test_uv_workflow_uses_uv_commands(tmp_path: Path):
     out = render(tmp_path / "p", framework="django")
 
+    # `womm setup` recognizes a uv project before it has a uv.lock by this table.
+    assert uses_uv(out)
+
     readme = (out / "README.md").read_text(encoding="utf-8")
     assert "uv sync --group dev" in readme
     assert "uv run pytest" in readme
@@ -301,6 +306,8 @@ def test_uv_workflow_uses_uv_commands(tmp_path: Path):
 def test_pip_workflow_used_when_uv_disabled(tmp_path: Path):
     out = render(tmp_path / "p", framework="django", use_uv=False)
 
+    assert not uses_uv(out)
+
     readme = (out / "README.md").read_text(encoding="utf-8")
     assert "pip install -e . --group dev" in readme
     assert "uv" not in readme.lower()
@@ -318,3 +325,25 @@ def test_pip_workflow_used_when_uv_disabled(tmp_path: Path):
     precommit = (out / ".pre-commit-config.yaml").read_text(encoding="utf-8")
     assert "entry: ruff check --fix" in precommit
     assert "entry: uv run" not in precommit
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(shutil.which("uv") is None, reason="uv is not installed")
+def test_uv_setup_leaves_the_lockfile_the_generated_ci_requires(tmp_path: Path):
+    # The generated CI starts with `uv sync --locked`: without a uv.lock it
+    # fails before running anything.
+    out = render(tmp_path / "p")
+
+    sync_uv_environment(out, install_deps=True)
+
+    assert (out / "uv.lock").is_file()
+    result = subprocess.run(
+        [shutil.which("uv"), "sync", "--locked", "--group", "dev"],
+        cwd=out,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=300,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

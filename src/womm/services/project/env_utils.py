@@ -9,7 +9,7 @@ Pure utility functions for setting up project environments.
 
 This module provides stateless functions for:
 - Python virtual environment creation and management
-- Dependency installation (pip, and npm, pnpm, yarn or bun)
+- Dependency installation (pip or uv, and npm, pnpm, yarn or bun)
 """
 
 from __future__ import annotations
@@ -233,6 +233,63 @@ def install_python_dependencies(
     return True
 
 
+def uses_uv(project_path: Path) -> bool:
+    """Tell whether a Python project is managed by uv.
+
+    A freshly rendered uv project has no lockfile yet: the official template
+    marks it with a ``[tool.uv]`` table instead.
+
+    Args:
+        project_path: Path to the project
+
+    Returns:
+        bool: True when the project has a ``uv.lock`` or a ``[tool.uv]`` table
+    """
+    if (project_path / "uv.lock").is_file():
+        return True
+    pyproject_file = project_path / PythonProjectConfig.PYPROJECT_FILE
+    if not pyproject_file.is_file():
+        return False
+    try:
+        with pyproject_file.open("rb") as file:
+            pyproject = tomllib.load(file)
+    except tomllib.TOMLDecodeError:
+        return False
+    return "uv" in pyproject.get("tool", {})
+
+
+def sync_uv_environment(project_path: Path, install_deps: bool) -> None:
+    """Create the project environment with uv, and install it on request.
+
+    uv picks the interpreter from ``.python-version`` and ``requires-python``,
+    and ``uv sync`` writes the ``uv.lock`` the generated CI requires.
+
+    Args:
+        project_path: Path to the project
+        install_deps: Run ``uv sync --group dev`` instead of ``uv venv``
+
+    Raises:
+        FileNotFoundError: If uv is not on PATH
+        RuntimeError: If the uv command fails
+    """
+    uv = shutil.which("uv")
+    if not uv:
+        raise FileNotFoundError(
+            "uv is not installed or not on PATH; install uv, then run "
+            "'uv sync' in the project"
+        )
+
+    command = (
+        [uv, "sync", "--group", "dev"]
+        if install_deps
+        else [uv, "venv", "--allow-existing"]
+    )
+    result = CommandRunnerService().run(command, cwd=str(project_path))
+    if not result:
+        raise RuntimeError(f"uv {command[1]} failed: {result.stderr}")
+    logger.info(f"Python environment ready with uv {command[1]}")
+
+
 # ///////////////////////////////////////////////////////////////
 # JAVASCRIPT ENVIRONMENT FUNCTIONS
 # ///////////////////////////////////////////////////////////////
@@ -323,4 +380,6 @@ __all__ = [
     "get_virtual_environment_path",
     "install_javascript_dependencies",
     "install_python_dependencies",
+    "sync_uv_environment",
+    "uses_uv",
 ]

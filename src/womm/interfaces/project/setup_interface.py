@@ -38,7 +38,7 @@ from ...services.project.copier_project_creation_service import (
     CopierProjectCreationService,
     ProjectCreationRequest,
 )
-from ...services.project.env_utils import get_virtual_environment_path
+from ...services.project.env_utils import get_virtual_environment_path, uses_uv
 from ...services.project.setup_profile_resolver import (
     SetupProfile,
     resolve_setup_profile,
@@ -181,6 +181,7 @@ class ProjectSetupInterface:
                     virtual_env=virtual_env,
                     install_deps=install_deps,
                     setup_git_hooks=setup_git_hooks,
+                    use_uv=uses_uv(project_path),
                 )
             else:
                 result = self._setup_javascript_project(
@@ -235,6 +236,7 @@ class ProjectSetupInterface:
         virtual_env: bool = False,
         install_deps: bool = False,
         setup_git_hooks: bool = False,
+        use_uv: bool = False,
     ) -> dict[str, list[str]]:
         """Set up Python project.
 
@@ -243,6 +245,7 @@ class ProjectSetupInterface:
             virtual_env: Whether to create virtual environment
             install_deps: Whether to install dependencies, dev ones included
             setup_git_hooks: Whether to initialize Git and install pre-commit hooks
+            use_uv: Whether uv manages the project's environment instead of pip
 
         Returns:
             dict: Metadata about setup with 'files_modified', 'tools_configured', 'warnings'
@@ -250,6 +253,24 @@ class ProjectSetupInterface:
         files_modified = []
         tools_configured = []
         warnings = []
+
+        # uv creates the environment and installs it in one run, so it
+        # replaces both pip steps below.
+        if use_uv and (virtual_env or install_deps):
+            try:
+                uv_result = self._python_service.setup_uv_environment(
+                    project_path, install_deps
+                )
+                if uv_result.success:
+                    tools_configured.append("venv")
+                    if install_deps:
+                        tools_configured.append("dependencies")
+                else:
+                    warnings.append("uv environment setup failed")
+            except Exception as e:
+                logger.warning(f"Failed to set up the uv environment: {e}")
+                warnings.append(f"uv environment setup skipped: {e}")
+            virtual_env = install_deps = False
 
         # Setup virtual environment
         if virtual_env:

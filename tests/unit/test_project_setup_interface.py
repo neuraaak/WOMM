@@ -242,6 +242,86 @@ def test_setup_python_collects_failures_and_continues(
     ]
 
 
+@pytest.mark.parametrize(
+    ("install_deps", "expected_tools"),
+    [(True, ["venv", "dependencies"]), (False, ["venv"])],
+)
+def test_setup_python_uses_uv_instead_of_pip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    install_deps: bool,
+    expected_tools: list[str],
+) -> None:
+    interface = ProjectSetupInterface()
+    uv_calls: list[bool] = []
+
+    def uv_setup(_path: Path, deps: bool) -> ProjectCreationResult:
+        uv_calls.append(deps)
+        return ProjectCreationResult(success=True)
+
+    def pip_step(_path: Path) -> ProjectCreationResult:
+        raise AssertionError("pip must not run on a uv project")
+
+    monkeypatch.setattr(interface._python_service, "setup_uv_environment", uv_setup)
+    monkeypatch.setattr(
+        interface._python_service, "setup_virtual_environment", pip_step
+    )
+    monkeypatch.setattr(interface._python_service, "install_dev_dependencies", pip_step)
+
+    result = interface._setup_python_project(
+        tmp_path, virtual_env=True, install_deps=install_deps, use_uv=True
+    )
+
+    assert uv_calls == [install_deps]
+    assert result["tools_configured"] == expected_tools
+    assert result["warnings"] == []
+
+
+def test_setup_python_reports_a_missing_uv_as_warning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    interface = ProjectSetupInterface()
+
+    def uv_setup(_path: Path, _deps: bool) -> ProjectCreationResult:
+        raise OSError("uv is not installed")
+
+    monkeypatch.setattr(interface._python_service, "setup_uv_environment", uv_setup)
+
+    result = interface._setup_python_project(
+        tmp_path, virtual_env=True, install_deps=True, use_uv=True
+    )
+
+    assert result["tools_configured"] == []
+    assert result["warnings"] == ["uv environment setup skipped: uv is not installed"]
+
+
+@pytest.mark.parametrize(("has_lock", "expected"), [(True, True), (False, False)])
+def test_setup_project_detects_uv_from_the_project(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    has_lock: bool,
+    expected: bool,
+) -> None:
+    if has_lock:
+        (tmp_path / "uv.lock").touch()
+    interface = ProjectSetupInterface()
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(interface, "_check_dependencies", lambda _type: "")
+    monkeypatch.setattr(
+        interface, "_copy_vscode_config", lambda *_args, **_kwargs: None
+    )
+
+    def setup_python(*_args: object, **kwargs: object) -> dict[str, list[str]]:
+        captured.update(kwargs)
+        return {}
+
+    monkeypatch.setattr(interface, "_setup_python_project", setup_python)
+
+    interface.setup_project(tmp_path, "python")
+
+    assert captured["use_uv"] is expected
+
+
 # ///////////////////////////////////////////////////////////////
 # JAVASCRIPT ORCHESTRATION
 # ///////////////////////////////////////////////////////////////

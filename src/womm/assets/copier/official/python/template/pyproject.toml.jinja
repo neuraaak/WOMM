@@ -57,6 +57,12 @@ packages = ["src/{{ package_name }}"]
 {%- else %}
 packages = ["{{ package_name }}"]
 {%- endif %}
+{%- if use_uv %}
+
+[tool.uv]
+# uv builds and installs this project into its environment.
+package = true
+{%- endif %}
 
 [tool.ruff]
 target-version = "py{{ python_version | replace('.', '') }}"
