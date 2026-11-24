@@ -171,6 +171,26 @@ def test_install_python_dependencies_installs_from_requirements_file(
     assert captured["command"][1:] == ["install", "-r", "requirements-dev.txt"]
 
 
+def test_install_python_dependencies_installs_the_project_editable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_venv(tmp_path / ".venv")
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\n\n[dependency-groups]\ndev = ["pytest"]\n',
+        encoding="utf-8",
+    )
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str], **_kwargs: object):
+        commands.append(command[1:])
+        return CommandResult(returncode=0)
+
+    _patch_command_runner(monkeypatch, fake_run)
+
+    assert env_utils.install_python_dependencies(tmp_path) is True
+    assert commands == [["install", "-e", "."], ["install", "--group", "dev"]]
+
+
 def test_install_python_dependencies_raises_on_command_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

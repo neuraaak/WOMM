@@ -217,7 +217,8 @@ def install_python_dependencies(
 
         commands = []
         if "project" in pyproject:
-            commands.append([str(pip_exe), "install", "."])
+            # Editable, as the generated README and CI install it.
+            commands.append([str(pip_exe), "install", "-e", "."])
         if "dev" in pyproject.get("dependency-groups", {}):
             commands.append([str(pip_exe), "install", "--group", "dev"])
 
