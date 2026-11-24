@@ -35,6 +35,7 @@ _NON_WINDOWS_MESSAGE = "Context menu management is Windows-specific"
 
 
 @click.group(invoke_without_command=True)
+@click.help_option("-h", "--help")
 @click.pass_context
 def context_group(ctx: click.Context) -> None:
     """Windows context menu management."""

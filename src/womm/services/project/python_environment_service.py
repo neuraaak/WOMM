@@ -35,6 +35,7 @@ from .env_utils import (
     find_venv_executable,
     get_virtual_environment_path,
     install_python_dependencies,
+    sync_uv_environment,
 )
 
 # ///////////////////////////////////////////////////////////////
@@ -145,6 +146,38 @@ class PythonEnvironmentService:
             logger.exception("Unexpected error in install_dev_dependencies")
             raise ProjectServiceError(
                 operation="install_dev_dependencies",
+                reason=str(e),
+                details=f"Exception type: {type(e).__name__}",
+            ) from e
+
+    def setup_uv_environment(
+        self, project_path: Path, install_deps: bool
+    ) -> ProjectCreationResult:
+        """Create the environment of a uv project, and install it on request.
+
+        Args:
+            project_path: Path to the project
+            install_deps: Install the dependencies, dev group included
+
+        Returns:
+            ProjectCreationResult: Result of the uv run
+
+        Raises:
+            ProjectServiceError: If uv is missing or fails
+        """
+        try:
+            sync_uv_environment(project_path, install_deps)
+            return ProjectCreationResult(
+                success=True,
+                message="Python environment set up with uv",
+                project_path=project_path,
+                project_type="python",
+            )
+
+        except Exception as e:
+            logger.exception("Unexpected error in setup_uv_environment")
+            raise ProjectServiceError(
+                operation="setup_uv_environment",
                 reason=str(e),
                 details=f"Exception type: {type(e).__name__}",
             ) from e

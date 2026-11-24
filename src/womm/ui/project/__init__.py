@@ -22,6 +22,7 @@ from .project_wizard import ProjectWizard
 from .setup.setup_completion_summaries import (
     print_project_setup_result,
     print_setup_completion_summary,
+    print_setup_steps_hint,
 )
 from .templates.template_store_display import (
     render_template_list,
@@ -36,6 +37,7 @@ __all__ = [
     "ProjectWizard",
     "print_project_setup_result",
     "print_setup_completion_summary",
+    "print_setup_steps_hint",
     "render_project_creation_result",
     "render_template_list",
     "render_template_result",

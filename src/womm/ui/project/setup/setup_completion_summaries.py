@@ -27,6 +27,25 @@ from ....shared.results import ProjectSetupResult
 from ...common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
+# CONSTANTS
+# ///////////////////////////////////////////////////////////////
+
+# Step flags of `womm setup <language>`; a test keeps them in sync with the CLI.
+SETUP_STEP_FLAGS: dict[str, tuple[tuple[str, str], ...]] = {
+    "python": (
+        ("--virtual-env", "Create the virtual environment"),
+        ("--install-deps", "Install the dependencies, dev ones included"),
+        ("--setup-git-hooks", "Initialize Git and install the pre-commit hooks"),
+        ("--setup-vscode", "Write the VS Code settings and extensions"),
+    ),
+    "javascript": (
+        ("--install-deps", "Install the dependencies, devDependencies included"),
+        ("--setup-git-hooks", "Initialize the Git repository"),
+        ("--setup-vscode", "Write the VS Code settings and extensions"),
+    ),
+}
+
+# ///////////////////////////////////////////////////////////////
 # FUNCTIONS
 # ///////////////////////////////////////////////////////////////
 
@@ -38,6 +57,7 @@ def print_setup_completion_summary(
     install_deps: bool = False,
     git_repository: bool = False,
     setup_git_hooks: bool = False,
+    vscode: bool = False,
 ) -> None:
     """
     Print a completion summary for project setup.
@@ -49,6 +69,7 @@ def print_setup_completion_summary(
         install_deps: Whether dependencies were installed
         git_repository: Whether the Git repository was initialized
         setup_git_hooks: Whether Git hooks were installed
+        vscode: Whether the VS Code configuration was written
     """
     completed = [
         label
@@ -57,6 +78,7 @@ def print_setup_completion_summary(
             (install_deps, "Dependencies installed"),
             (git_repository, "Git repository initialized"),
             (setup_git_hooks, "Git hooks installed"),
+            (vscode, "VS Code configuration written"),
         )
         if enabled
     ]
@@ -99,13 +121,52 @@ def print_project_setup_result(result: ProjectSetupResult) -> None:
         install_deps="dependencies" in configured_tools,
         git_repository="git" in configured_tools,
         setup_git_hooks="git_hooks" in configured_tools,
+        vscode="vscode" in configured_tools,
     )
     for warning in result.warnings or []:
         ezprinter.warning(warning)
+
+
+def print_setup_steps_hint(language: str, project_path: Path) -> None:
+    """Tell the user that no step ran, and which flags select them.
+
+    Args:
+        language: Language family of the project ("python" or "javascript")
+        project_path: Path to the project
+    """
+    flags = SETUP_STEP_FLAGS.get(language, SETUP_STEP_FLAGS["javascript"])
+    command = f"womm setup {language}"
+    if project_path.resolve() != Path.cwd().resolve():
+        command += f' -p "{project_path}"'
+    width = max(len(flag) for flag, _description in flags)
+    content = "No setup step requested: nothing was changed.\n\n"
+    content += "🔧 Choose the steps to run:\n"
+    content += "\n".join(
+        f"  {flag:<{width}}  {description}" for flag, description in flags
+    )
+    content += "\n\n🚀 For example, all of them:\n"
+    content += f"  {command} " + " ".join(flag for flag, _description in flags)
+    content += f"\n\nGuided mode: {command} -I"
+
+    ezconsole.print("")
+    ezconsole.print(
+        Panel(
+            content,
+            title="🔧 No Setup Step Requested",
+            border_style="bright_blue",
+            width=80,
+            padding=(1, 1),
+        )
+    )
 
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
-__all__ = ["print_project_setup_result", "print_setup_completion_summary"]
+__all__ = [
+    "SETUP_STEP_FLAGS",
+    "print_project_setup_result",
+    "print_setup_completion_summary",
+    "print_setup_steps_hint",
+]

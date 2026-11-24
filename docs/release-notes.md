@@ -3,6 +3,41 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.1.0 — 2026-11-24
+
+!!! warning "Read before upgrading"
+
+    - **Python projects managed by uv are set up with uv.** On a project with
+      a `uv.lock` or a `[tool.uv]` table, `womm setup python` and
+      `womm create --setup` run `uv sync` instead of `venv` and pip: the
+      installed versions are those of the lockfile, and uv must be on your
+      `PATH`.
+    - **`womm setup` writes nothing without an option.** The VS Code
+      configuration it used to write on every run is now the
+      `--setup-vscode` step of `womm setup python` and `womm setup
+      javascript`. `womm setup detect` detects the project and lists the
+      steps; use `-I` for the guided setup.
+
+### Improved
+
+- `womm setup python` and `womm setup javascript` run without options list the
+  available step options instead of reporting a completed setup.
+- `womm create` without `--setup` tells you how to prepare the environment.
+- `-h` works on every command, `womm context`, `womm deps` and `womm system`
+  included.
+
+### Fixed
+
+- Python projects created with uv (the template default) pass their own CI
+  after `womm create --setup`: it now writes the `uv.lock` the workflow
+  requires, instead of a pip install without a lockfile.
+- `--setup` uses the Python version the project asks for: a project needing a
+  newer Python than WOMM's own was left without its dependencies.
+- Python projects set up with pip are installed in editable mode, so code
+  changes are visible without reinstalling.
+- The GitHub Actions workflow of the Python template uses the current
+  setup-uv and setup-python releases.
+
 ## 5.0.0 — 2026-11-24
 
 !!! warning "Read before upgrading"

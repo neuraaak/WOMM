@@ -27,9 +27,16 @@ from ezplog import LogLevel
 
 # Local imports
 from ...interfaces import ProjectManagerInterface
-from ...services.project.setup_profile_resolver import list_setup_identifiers
+from ...services.project.setup_profile_resolver import (
+    list_setup_identifiers,
+    resolve_setup_profile,
+)
 from ...ui.common import ezpl, ezprinter
-from ...ui.project import ProjectWizard, print_project_setup_result
+from ...ui.project import (
+    ProjectWizard,
+    print_project_setup_result,
+    print_setup_steps_hint,
+)
 
 # ///////////////////////////////////////////////////////////////
 # COMMAND GROUPS
@@ -87,7 +94,10 @@ def setup_detect(
     interactive: bool,
     verbose: bool,
 ) -> None:
-    """🔍 Auto-detect project type and configure development environment."""
+    """🔍 Detect the project type and show the setup steps available for it.
+
+    Use -I to run the guided setup on the detected type.
+    """
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -180,6 +190,11 @@ def setup_detect(
     help="Initialize the Git repository and install its pre-commit hooks",
 )
 @click.option(
+    "--setup-vscode",
+    is_flag=True,
+    help="Write the VS Code settings and recommended extensions",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -191,9 +206,14 @@ def setup_python(
     virtual_env: bool,
     install_deps: bool,
     setup_git_hooks: bool,
+    setup_vscode: bool,
     verbose: bool,
 ) -> None:
-    """🐍 Configure existing Python project with development environment."""
+    """🐍 Configure existing Python project with development environment.
+
+    Every step is opt-in: pass the flags of the steps to run. Without any,
+    the project is only checked and nothing is written.
+    """
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -214,6 +234,7 @@ def setup_python(
             "virtual_env": virtual_env,
             "install_deps": install_deps,
             "setup_git_hooks": setup_git_hooks,
+            "setup_vscode": setup_vscode,
         }
         success = _run_direct_setup(project_manager, "python", project_path, options)
         if not success:
@@ -264,6 +285,11 @@ def setup_python(
     help="Initialize the Git repository",
 )
 @click.option(
+    "--setup-vscode",
+    is_flag=True,
+    help="Write the VS Code settings and recommended extensions",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
@@ -275,9 +301,14 @@ def setup_javascript(
     interactive: bool,
     install_deps: bool,
     setup_git_hooks: bool,
+    setup_vscode: bool,
     verbose: bool,
 ) -> None:
-    """🟨 Configure existing JavaScript project with development environment."""
+    """🟨 Configure existing JavaScript project with development environment.
+
+    Every step is opt-in: pass the flags of the steps to run. Without any,
+    the project is only checked and nothing is written.
+    """
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -319,6 +350,7 @@ def setup_javascript(
         options = {
             "install_deps": install_deps,
             "setup_git_hooks": setup_git_hooks,
+            "setup_vscode": setup_vscode,
         }
         success = _run_direct_setup(
             project_manager, project_type_value, project_path, options
@@ -355,28 +387,7 @@ def _run_interactive_setup(
         ezprinter.error("Invalid options returned by wizard")
         return False
 
-    def _coerce_bool(value: object) -> bool:
-        if isinstance(value, str):
-            return value.strip().lower() in {"1", "true", "yes", "y", "on"}
-        return bool(value)
-
-    virtual_env = _coerce_bool(options.get("virtual_env", False))
-    install_deps = _coerce_bool(options.get("install_deps", False))
-    setup_git_hooks = _coerce_bool(options.get("setup_git_hooks", False))
-
-    result = project_manager.setup_project(
-        project_type=project_type,
-        project_path=project_path,
-        virtual_env=virtual_env,
-        install_deps=install_deps,
-        setup_git_hooks=setup_git_hooks,
-    )
-
-    if result.success:
-        print_project_setup_result(result)
-        return True
-    ezprinter.error(f"Failed to configure {project_type} project: {result.error}")
-    return False
+    return _setup_and_report(project_manager, project_type, project_path, options)
 
 
 # ///////////////////////////////////////////////////////////////
@@ -391,30 +402,39 @@ def _run_direct_setup(
     options: dict[str, Any] | None = None,
 ) -> bool:
     """Run direct project setup."""
+    return _setup_and_report(project_manager, project_type, project_path, options or {})
 
-    if options is None:
-        options = {}
+
+def _setup_and_report(
+    project_manager: ProjectManagerInterface,
+    project_type: str,
+    project_path: Path,
+    options: dict[str, Any],
+) -> bool:
+    """Run the requested setup steps, or point to their flags when none is."""
 
     def _coerce_bool(value: object) -> bool:
         if isinstance(value, str):
             return value.strip().lower() in {"1", "true", "yes", "y", "on"}
         return bool(value)
 
-    virtual_env = _coerce_bool(options.get("virtual_env", False))
-    install_deps = _coerce_bool(options.get("install_deps", False))
-    setup_git_hooks = _coerce_bool(options.get("setup_git_hooks", False))
+    steps = {
+        name: _coerce_bool(options.get(name, False))
+        for name in ("virtual_env", "install_deps", "setup_git_hooks", "setup_vscode")
+    }
 
-    # Configure project
+    # With no step, setup_project only checks the project: nothing is written.
     result = project_manager.setup_project(
-        project_type=project_type,
-        project_path=project_path,
-        virtual_env=virtual_env,
-        install_deps=install_deps,
-        setup_git_hooks=setup_git_hooks,
+        project_type=project_type, project_path=project_path, **steps
     )
 
-    if result.success:
+    if not result.success:
+        ezprinter.error(f"Failed to configure {project_type} project: {result.error}")
+        return False
+    if any(steps.values()):
         print_project_setup_result(result)
-        return True
-    ezprinter.error(f"Failed to configure {project_type} project: {result.error}")
-    return False
+    else:
+        profile = resolve_setup_profile(project_type)
+        language = profile.language if profile else "javascript"
+        print_setup_steps_hint(language, project_path)
+    return True

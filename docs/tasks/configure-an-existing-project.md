@@ -12,7 +12,8 @@ re-creating it from a template.
 
 ## 📝 Steps
 
-1. Let WOMM detect the project type:
+1. Let WOMM detect the project type. It shows the steps available for it and
+   writes nothing:
 
     ```bash
     cd my-existing-project
@@ -33,8 +34,8 @@ re-creating it from a template.
     womm setup python --virtual-env --install-deps
     ```
 
-    Run without options, WOMM detects and validates the project, then reports
-    that no step was requested.
+    Run without options, WOMM detects and validates the project, writes
+    nothing, and lists the options of the available steps.
 
 4. To be guided question by question, use the interactive mode:
 
@@ -51,6 +52,7 @@ re-creating it from a template.
 | `-v, --verbose`        | Show the detailed output.                               | `detect`, `python`, `javascript` |     |     |
 | `--install-deps`       | Install the project dependencies, dev ones included.    | `python`, `javascript`           |     |     |
 | `--setup-git-hooks`    | Initialize git; on Python, install pre-commit hooks.    | `python`, `javascript`           |     |     |
+| `--setup-vscode`       | Write the VS Code settings and recommended extensions.  | `python`, `javascript`           |     |     |
 | `--virtual-env`        | Create the virtual environment.                         | `python`                         |     |     |
 | `-t, --type TYPE`      | Force the project type: `javascript`, `react` or `vue`. | `javascript`                     |     |     |
 
@@ -62,6 +64,12 @@ step it ran and what it skipped.
 A JavaScript project is installed with the package manager it declares: the
 `packageManager` field of `package.json`, then its lockfile, and npm otherwise.
 WOMM adds no linter, formatter or git hook of its own.
+
+A Python project with a `uv.lock` or a `[tool.uv]` table in its `pyproject.toml`
+is set up with uv: `uv sync --group dev`, or `uv venv` with `--virtual-env`
+alone. uv picks the Python version the project asks for and writes `uv.lock`;
+it must be on your `PATH`. Any other Python project gets a virtual environment
+and an editable `pip install`.
 
 On a Python project, `--setup-git-hooks` also runs `pre-commit install` when the
 project has a `.pre-commit-config.yaml`, with the `pre-commit` of its virtual

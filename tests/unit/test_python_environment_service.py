@@ -125,6 +125,44 @@ def test_install_dev_dependencies_wraps_utility_error(
     assert isinstance(excinfo.value.__cause__, FileNotFoundError)
 
 
+def test_setup_uv_environment_forwards_the_install_flag(
+    tmp_path: Path,
+    service: PythonEnvironmentService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[Path, bool]] = []
+    monkeypatch.setattr(
+        "womm.services.project.python_environment_service.sync_uv_environment",
+        lambda path, install_deps: calls.append((path, install_deps)),
+    )
+
+    result = service.setup_uv_environment(tmp_path, install_deps=True)
+
+    assert result.success
+    assert calls == [(tmp_path, True)]
+
+
+def test_setup_uv_environment_wraps_utility_error(
+    tmp_path: Path,
+    service: PythonEnvironmentService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_sync(_path: Path, _install_deps: bool) -> None:
+        raise FileNotFoundError("uv is not installed")
+
+    monkeypatch.setattr(
+        "womm.services.project.python_environment_service.sync_uv_environment",
+        fail_sync,
+    )
+
+    with pytest.raises(ProjectServiceError) as excinfo:
+        service.setup_uv_environment(tmp_path, install_deps=False)
+
+    assert excinfo.value.operation == "setup_uv_environment"
+    assert excinfo.value.reason == "uv is not installed"
+    assert isinstance(excinfo.value.__cause__, FileNotFoundError)
+
+
 # ///////////////////////////////////////////////////////////////
 # GIT SETUP
 # ///////////////////////////////////////////////////////////////

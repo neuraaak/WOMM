@@ -116,7 +116,9 @@ def create_command(
         defaults=defaults,
         setup=setup,
     )
-    render_project_creation_result(result, verbose=verbose)
+    render_project_creation_result(
+        result, verbose=verbose, suggest_setup=not (setup or pretend)
+    )
     if not result.success:
         raise SystemExit(1)
 

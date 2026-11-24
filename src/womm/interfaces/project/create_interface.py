@@ -145,6 +145,7 @@ class ProjectCreateInterface:
             virtual_env=True,
             install_deps=True,
             setup_git_hooks=True,
+            setup_vscode=True,
         )
         if result and result.success:
             return list(result.warnings or [])
