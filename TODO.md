@@ -1,6 +1,6 @@
 # Backlog consolidé — WOMM
 
-> État vérifié le **2026-10-29** sur `optimisations-and-refactoring`.
+> État vérifié le **2026-11-25** sur `main` (`6cb0c80`, release 5.1.0).
 > Vue actionnable de la mémoire du projet :
 > `~/.agents/memory/projects/e-dev-python-womm/current-backlog.md`.
 > La numérotation des lots est conservée pour les références existantes ;
@@ -15,9 +15,9 @@ l'accès temporaire à la console Rich est isolé dans `WommPrinter.console`.
 Il ne reste que l'attente amont.
 
 - [ ] Supprimer `WommPrinter.console` lorsque ezplog exposera un accesseur
-  public équivalent. **Bloqué en amont** : vérifié sur ezplog 2.3.3, aucun
-  accesseur public de console n'existe encore, et l'adaptateur a 19
-  appelants de production.
+  public équivalent. **Bloqué en amont** : revérifié sur ezplog 2.3.4 le
+  2026-11-23, aucun accesseur public de console n'existe encore, et
+  l'adaptateur a 19 appelants de production.
 
 **Critère de sortie du lot :** l'intégration ne duplique aucune capacité
 publique d'ezplog 2.x et n'accède à ses attributs privés qu'au travers du
@@ -27,69 +27,72 @@ seul adaptateur temporaire documenté.
 
 ## Priorité 4 — distribution, release et documentation
 
-> Lot différé jusqu'à stabilisation du comportement métier. Les workflows
-> `00` à `04` et la matrice de tests Ubuntu/Windows existent déjà ; valider
-> leur état sur le commit destiné à la release avant toute publication.
->
 > **Canal arrêté le 2026-10-29 : `uv tool install` ou pip, et rien d'autre.**
 > Le canal standalone (Inno Setup) et le dispatcher `install.ps1` sont
 > abandonnés : un script maison ne ferait que relayer `uv tool install`,
 > tout en créant une surface d'attaque et un jumeau à maintenir pour les
-> autres OS. La documentation présente les deux commandes — installer `uv`,
-> puis `uv tool install womm-cli`.
+> autres OS.
 
-### 4.3 Déploiement de la documentation
-
-Le site publié date du 2026-10-25 et décrit encore `works-on-my-machine` :
-`04-docs.yml` ne fait que **construire** la doc, et les Pages sont servies
-depuis la branche `gh-pages` que rien ne met à jour. Le README et la page PyPI
-pointent dessus.
-
-- [ ] Ajouter au workflow `04-docs` le job de déploiement du modèle de
-  référence (`ezcompiler` déploie avec `mike`, `contents: write`, selon le
-  `tag_action`), ou déployer une première fois à la main.
-
-### 4.4 Documentation produit finale
-
-Le reset documentaire a supprimé les anciennes pages obsolètes ; `docs/`
-ne contient plus qu'un index et le changelog. Les pages produit restent à
-reconstruire après stabilisation des commandes.
-
-- [ ] Refaire le README : remplacer `womm new` et `womm lint`, qui
-  n'existent pas (les commandes réelles sont `create`, `setup`, `template`,
-  `deps`, `path`, `context`, `system` et `doctor`), corriger le badge
-  Python 3.10+ en 3.13+ et revoir les exemples d'outillage généré.
-- [ ] Documenter `womm doctor`, `path add/remove`,
-  `path backup restore [name]` et `context backup`.
-- [ ] Décrire `--force` comme une fusion explicite, sans promettre
-  d'écrasement global.
-- [ ] Vérifier qu'aucune documentation utilisateur ne suggère une commande
-  inexistante ou une sémantique incorrecte.
-
-### 4.5 Publication PyPI et notes de version
+### 4.5 Publication PyPI
 
 > **Nommage arrêté le 2026-10-29 :** le projet reste `womm` partout — dépôt,
 > paquet importable, commande, données `~/.womm`. Seul le nom de
-> distribution est `womm-cli`, parce que `womm` est pris sur PyPI ; il
-> n'apparaît qu'à l'installation et à la mise à jour via uv ou pip. L'écart
-> est assumé, non bloquant. `[project] name`, l'URL `PyPI`, le badge du
-> README et `uv.lock` sont alignés.
+> distribution est `womm-cli`, parce que `womm` est pris sur PyPI.
 
-`womm-cli` 4.0.0 est publié depuis le 2026-10-29 par le Trusted Publisher,
-sans jeton. Piège rencontré : PyPI compare le nom de dépôt **à la casse près**,
-`womm` ne correspond pas à `WOMM`.
+`womm-cli` 5.1.0 est publié par le Trusted Publisher, sans jeton ; la doc
+versionnée (mike) est déployée à chaque release et la racine de `gh-pages`
+ne contient plus que ce que mike gère. `works-on-my-machine` 3.2.4 est
+publié avec le statut *Inactive*.
 
-**Critère de sortie du lot :** les canaux développement et `uv tool`
-appellent la même entrée, préservent les données utilisateur et sont
-vérifiés avant publication.
+- [ ] Archiver `works-on-my-machine` sur PyPI. **Manuel et irréversible** :
+  dernière étape, à faire depuis l'interface PyPI.
+
+**Critère de sortie du lot :** l'ancien nom est archivé et ne propose plus
+de mise à jour silencieuse.
+
+---
+
+## Priorité 5 — tester les services qui écrivent sur la machine
+
+Couverture mesurée le 2026-11-25 (globale : 71,33 %).
+
+- [ ] `services/system/path_service.py` — **20 %**. Écrit le PATH
+  utilisateur : un défaut y fait perdre des données. Priorité de ce lot.
+- [ ] `services/context/registry_service.py` — **9 %**. Écrit dans le
+  registre Windows (menu contextuel).
+- [ ] `services/context/validation_service.py` — **10 %**.
+
+**Critère de sortie du lot :** chaque écriture (PATH, registre) a un test
+qui vérifie ce qui est écrit, et un test du chemin d'échec qui vérifie
+que rien n'est perdu.
+
+---
+
+## Priorité 6 — corrections qui changent un comportement
+
+- [ ] `ui/context/wizard.py` (l. 105 et l. 394, `FIXME`) :
+  `PathValidator.validate()` renvoie `None`, donc le contrôle d'extension
+  des scripts n'est jamais appliqué. Le réparer refuse des scripts
+  aujourd'hui acceptés : **décision du user**, puis test.
+- [ ] Essayer une fois `womm setup python -I` : la question VS Code
+  ajoutée en 5.1.0 n'a pas de test automatique.
+
+---
+
+## Décisions assumées, à ne pas rouvrir sans raison
+
+- `--setup` sur un projet pip qui demande un Python plus récent que celui de
+  WOMM : pip refuse l'installation avec un message clair, affiché en
+  avertissement. Non traité (2026-11-24) ; avec uv, le cas n'existe pas.
+- `setup python --setup-git-hooks` lance le `pre-commit` du `.venv` du
+  projet : même modèle de confiance que le `pip` du venv. Jugé non bloquant.
 
 ---
 
 ## Ordre de reprise recommandé
 
-1. Reconstruire la documentation produit — la migration ezplog 2.x est
-   bloquée en amont et ne tient plus la file.
-2. Finaliser le renommage PyPI en `womm-cli`, puis valider la chaîne
-   CI/release complète.
-3. Reprendre la suppression de `WommPrinter.console` dès qu'ezplog expose un
+1. Tests de `path_service` (priorité 5) — seul risque de perte de données.
+2. Tests du registre `context`, puis la décision sur le `FIXME` du wizard.
+3. Archiver `works-on-my-machine` sur PyPI.
+4. Reprendre la suppression de `WommPrinter.console` dès qu'ezplog expose un
    accesseur public.
