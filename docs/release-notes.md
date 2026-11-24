@@ -3,6 +3,36 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.0.0 — 2026-11-24
+
+!!! warning "Read before upgrading"
+
+    - **`--setup-dev-tools` is gone** from `womm setup python` and
+      `womm setup javascript`; Click now rejects it. Use `--install-deps`,
+      which already installs the development dependencies the project
+      declares.
+
+### Improved
+
+- `womm create --setup` and `womm setup javascript --install-deps` install
+  with the project's own package manager: the `packageManager` field of
+  `package.json`, then its lockfile, and npm otherwise. They no longer force
+  npm on pnpm, Yarn or Bun projects.
+- On a Python project, `--setup-git-hooks` now also runs `pre-commit install`
+  when the project has a `.pre-commit-config.yaml`, with the `pre-commit` of
+  its virtual environment.
+- The setup summary lists only the steps that actually ran.
+
+### Fixed
+
+- On Windows, `womm create official/javascript --setup` installed nothing.
+- Projects generated from the JavaScript template pass their own CI again:
+  the Biome configuration was rejected, Vue projects failed the format check,
+  Yarn projects linted Yarn's own files, and ESLint crashed on Vue projects
+  installed with Yarn.
+- `womm setup javascript` no longer adds ESLint, Prettier, Husky and
+  lint-staged on top of the toolchain the template ships.
+
 ## 4.0.0 — 2026-10-29
 
 !!! warning "Read before upgrading"
