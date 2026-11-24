@@ -7,11 +7,12 @@
 """
 JavaScript Environment Service - Singleton service for JavaScript environment setup.
 
-Handles post-creation JavaScript/Node.js/React/Vue environment setup including:
-- Dependency installation
-- Development tools configuration
+Handles post-creation JavaScript/Node.js/React/Vue environment setup:
+- Dependency installation with the project's package manager
 - Git repository initialization
-- Git hooks setup
+
+Development tools are the project's own devDependencies: WOMM installs them
+and never adds a linter, formatter or hook manager of its own.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ from ...exceptions.project import ProjectServiceError
 from ...shared.results import ProjectCreationResult
 from ...utils.project import validate_project_path
 from ..common.command_runner_service import CommandRunnerService
-from .env_utils import install_npm_dependencies, install_npm_dev_dependencies
+from .env_utils import install_javascript_dependencies
 
 # ///////////////////////////////////////////////////////////////
 # LOGGER SETUP
@@ -109,17 +110,11 @@ class JavaScriptEnvironmentService:
             validate_project_path(project_path, must_exist=True, require_empty=False)
             _validate_javascript_project_type(project_type)
 
-            success = install_npm_dependencies(project_path)
-            if not success:
-                raise ProjectServiceError(
-                    operation="install_dependencies",
-                    reason="npm install command failed",
-                    details="npm install did not complete successfully",
-                )
+            manager = install_javascript_dependencies(project_path)
 
             return ProjectCreationResult(
                 success=True,
-                message="Dependencies installed successfully",
+                message=f"Dependencies installed with {manager}",
                 project_path=project_path,
                 project_type=project_type,
             )
@@ -130,85 +125,6 @@ class JavaScriptEnvironmentService:
             logger.exception("install_dependencies failed")
             raise ProjectServiceError(
                 operation="install_dependencies",
-                reason=str(e),
-                details=f"Exception type: {type(e).__name__}",
-            ) from e
-
-    def setup_dev_tools(
-        self, project_path: Path, project_type: str
-    ) -> ProjectCreationResult:
-        """Set up development tools.
-
-        Args:
-            project_path: Path to the project
-            project_type: Type of JavaScript project (node, react, vue)
-
-        Returns:
-            ProjectCreationResult: Result of dev tools setup
-
-        Raises:
-            ProjectServiceError: If development tools setup fails
-        """
-        try:
-            validate_project_path(project_path, must_exist=True, require_empty=False)
-            _validate_javascript_project_type(project_type)
-
-            # Check if npm is available
-            if not shutil.which("npm"):
-                raise ProjectServiceError(
-                    operation="setup_dev_tools",
-                    reason="npm is not installed or not in PATH",
-                    details="npm command not found in PATH",
-                )
-
-            # Install development dependencies
-            dev_dependencies = [
-                "eslint",
-                "prettier",
-                "husky",
-                "lint-staged",
-                "@types/node",
-            ]
-
-            # Add type-specific dev dependencies
-            if project_type == "react":
-                dev_dependencies.extend(
-                    [
-                        "@types/react",
-                        "@types/react-dom",
-                        "@testing-library/react",
-                        "@testing-library/jest-dom",
-                    ]
-                )
-            elif project_type == "vue":
-                dev_dependencies.extend(
-                    [
-                        "@vue/cli-service",
-                        "@vue/compiler-sfc",
-                    ]
-                )
-
-            # Install dev dependencies
-            success = install_npm_dev_dependencies(project_path, dev_dependencies)
-            if not success:
-                raise ProjectServiceError(
-                    operation="setup_dev_tools",
-                    reason="Failed to install development tools",
-                    details="npm install dev tools command failed",
-                )
-
-            return ProjectCreationResult(
-                success=True,
-                message="Development tools installed successfully",
-                project_path=project_path,
-                project_type=project_type,
-            )
-
-        except ProjectServiceError:
-            raise
-        except Exception as e:
-            raise ProjectServiceError(
-                operation="setup_dev_tools",
                 reason=str(e),
                 details=f"Exception type: {type(e).__name__}",
             ) from e
@@ -264,78 +180,6 @@ class JavaScriptEnvironmentService:
         except Exception as e:
             raise ProjectServiceError(
                 operation="setup_git_repository",
-                reason=str(e),
-                details=f"Exception type: {type(e).__name__}",
-            ) from e
-
-    def setup_git_hooks(self, project_path: Path) -> ProjectCreationResult:
-        """Set up Git hooks with Husky.
-
-        Args:
-            project_path: Path to the project
-
-        Returns:
-            ProjectCreationResult: Result of Git hooks setup
-
-        Raises:
-            ProjectServiceError: If Git hooks setup fails
-        """
-        try:
-            validate_project_path(project_path, must_exist=True, require_empty=False)
-
-            # Initialize husky using CommandRunnerService
-            npx_path = shutil.which("npx")
-            if not npx_path:
-                logger.warning("npx not found, skipping Git hooks setup")
-                return ProjectCreationResult(
-                    success=True,
-                    message="Git hooks setup skipped (npx not found)",
-                    project_path=project_path,
-                    warnings=["npx not found in system PATH"],
-                )
-            result = self._command_runner.run(
-                [npx_path, "husky", "install"],
-                description="Install Husky Git hooks",
-                cwd=project_path,
-            )
-
-            if result.returncode == 0:
-                hook_result = self._command_runner.run(
-                    [
-                        npx_path,
-                        "husky",
-                        "add",
-                        ".husky/pre-commit",
-                        "npm run lint-staged",
-                    ],
-                    description="Add pre-commit hook",
-                    cwd=project_path,
-                )
-                if hook_result.returncode != 0:
-                    return ProjectCreationResult(
-                        success=False,
-                        message="Failed to create Git pre-commit hook",
-                        project_path=project_path,
-                        error=hook_result.stderr,
-                    )
-                return ProjectCreationResult(
-                    success=True,
-                    message="Git hooks installed successfully",
-                    project_path=project_path,
-                )
-            else:
-                return ProjectCreationResult(
-                    success=False,
-                    message="Failed to initialize Husky",
-                    project_path=project_path,
-                    error=result.stderr,
-                )
-
-        except ProjectServiceError:
-            raise
-        except Exception as e:
-            raise ProjectServiceError(
-                operation="setup_git_hooks",
                 reason=str(e),
                 details=f"Exception type: {type(e).__name__}",
             ) from e

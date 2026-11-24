@@ -76,25 +76,22 @@ class ProjectWizard:
 
     @staticmethod
     def _configure_setup_options(
-        _project_type: str,
+        project_type: str,
     ) -> dict[str, str | bool]:
         """Configure setup-specific options for an existing project."""
         options = {}
+        # The virtual environment step exists for Python only.
+        is_python = project_type == "python"
 
         if INQUIRERPY_AVAILABLE:
-            # Common setup options
-            options["virtual_env"] = inquirer.confirm(
-                message="Create virtual environment?",
-                default=False,
-            ).execute()
+            if is_python:
+                options["virtual_env"] = inquirer.confirm(
+                    message="Create virtual environment?",
+                    default=False,
+                ).execute()
 
             options["install_deps"] = inquirer.confirm(
                 message="Install dependencies?",
-                default=True,
-            ).execute()
-
-            options["setup_dev_tools"] = inquirer.confirm(
-                message="Setup development tools (linting, formatting, etc.)?",
                 default=True,
             ).execute()
 
@@ -105,14 +102,14 @@ class ProjectWizard:
 
         else:
             # Fallback to simple input
-            virtual_env = input("Create virtual environment? (y/N): ").strip().lower()
-            options["virtual_env"] = virtual_env in ["y", "yes"]
+            if is_python:
+                virtual_env = (
+                    input("Create virtual environment? (y/N): ").strip().lower()
+                )
+                options["virtual_env"] = virtual_env in ["y", "yes"]
 
             install_deps = input("Install dependencies? (Y/n): ").strip().lower()
             options["install_deps"] = install_deps in ["", "y", "yes"]
-
-            setup_dev_tools = input("Setup development tools? (Y/n): ").strip().lower()
-            options["setup_dev_tools"] = setup_dev_tools in ["", "y", "yes"]
 
             setup_git_hooks = input("Setup Git hooks? (Y/n): ").strip().lower()
             options["setup_git_hooks"] = setup_git_hooks in ["", "y", "yes"]
@@ -145,9 +142,6 @@ class ProjectWizard:
         )
         table.add_row(
             "Install dependencies", "Yes" if options.get("install_deps") else "No"
-        )
-        table.add_row(
-            "Setup dev tools", "Yes" if options.get("setup_dev_tools") else "No"
         )
         table.add_row(
             "Setup Git hooks", "Yes" if options.get("setup_git_hooks") else "No"

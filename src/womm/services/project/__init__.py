@@ -19,11 +19,9 @@ from __future__ import annotations
 # Local imports
 from .detection_service import ProjectDetectionService
 from .env_utils import (
-    check_npm_available,
     create_virtual_environment,
     find_pip_executable,
-    install_npm_dependencies,
-    install_npm_dev_dependencies,
+    install_javascript_dependencies,
     install_python_dependencies,
 )
 from .javascript_environment_service import JavaScriptEnvironmentService
@@ -39,10 +37,8 @@ __all__ = [
     "ProjectDetectionService",
     "ProjectValidationService",
     "PythonEnvironmentService",
-    "check_npm_available",
     "create_virtual_environment",
     "find_pip_executable",
-    "install_npm_dependencies",
-    "install_npm_dev_dependencies",
+    "install_javascript_dependencies",
     "install_python_dependencies",
 ]

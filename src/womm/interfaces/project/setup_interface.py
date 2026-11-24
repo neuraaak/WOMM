@@ -85,7 +85,6 @@ class ProjectSetupInterface:
         project_type: str | None = None,
         virtual_env: bool = False,
         install_deps: bool = False,
-        setup_dev_tools: bool = False,
         setup_git_hooks: bool = False,
         template_answers: Mapping[str, object] | None = None,
         **kwargs,  # noqa: ARG002
@@ -96,9 +95,8 @@ class ProjectSetupInterface:
             project_path: Path to the existing project
             project_type: Type of project (python, javascript, react, vue). Auto-detected if None.
             virtual_env: Whether to create virtual environment (Python only)
-            install_deps: Whether to install dependencies
-            setup_dev_tools: Whether to set up development tools
-            setup_git_hooks: Whether to set up Git hooks
+            install_deps: Whether to install dependencies, dev ones included
+            setup_git_hooks: Whether to initialize Git (and pre-commit hooks for Python)
             template_answers: Answers from a preceding Copier render, used only
                 to preserve its variant in generated editor configuration.
             **kwargs: Additional project-specific options
@@ -182,7 +180,6 @@ class ProjectSetupInterface:
                     project_path,
                     virtual_env=virtual_env,
                     install_deps=install_deps,
-                    setup_dev_tools=setup_dev_tools,
                     setup_git_hooks=setup_git_hooks,
                 )
             else:
@@ -190,7 +187,6 @@ class ProjectSetupInterface:
                     project_path,
                     project_type,
                     install_deps=install_deps,
-                    setup_dev_tools=setup_dev_tools,
                     setup_git_hooks=setup_git_hooks,
                 )
             files_modified.extend(result.get("files_modified", []))
@@ -238,7 +234,6 @@ class ProjectSetupInterface:
         project_path: Path,
         virtual_env: bool = False,
         install_deps: bool = False,
-        setup_dev_tools: bool = False,
         setup_git_hooks: bool = False,
     ) -> dict[str, list[str]]:
         """Set up Python project.
@@ -246,9 +241,8 @@ class ProjectSetupInterface:
         Args:
             project_path: Path to the project
             virtual_env: Whether to create virtual environment
-            install_deps: Whether to install dependencies
-            setup_dev_tools: Whether to set up development tools
-            setup_git_hooks: Whether to set up Git hooks
+            install_deps: Whether to install dependencies, dev ones included
+            setup_git_hooks: Whether to initialize Git and install pre-commit hooks
 
         Returns:
             dict: Metadata about setup with 'files_modified', 'tools_configured', 'warnings'
@@ -271,8 +265,7 @@ class ProjectSetupInterface:
                 logger.warning(f"Failed to setup venv: {e}")
                 warnings.append(f"Virtual environment setup skipped: {e}")
 
-        # setup_dev_tools installs the Python development dependencies itself.
-        if install_deps and not setup_dev_tools:
+        if install_deps:
             try:
                 deps_result = self._python_service.install_dev_dependencies(
                     project_path
@@ -285,21 +278,7 @@ class ProjectSetupInterface:
                 logger.warning(f"Failed to install dependencies: {e}")
                 warnings.append(f"Dependency installation skipped: {e}")
 
-        # Setup dev tools
-        if setup_dev_tools:
-            try:
-                dev_tools_result = self._python_service.setup_dev_tools(project_path)
-                if dev_tools_result.success:
-                    if install_deps:
-                        tools_configured.append("dependencies")
-                    tools_configured.append("dev_tools")
-                else:
-                    warnings.append("Dev tools setup failed")
-            except Exception as e:
-                logger.warning(f"Failed to setup dev tools: {e}")
-                warnings.append(f"Dev tools setup skipped: {e}")
-
-        # Setup Git repository and hooks (if needed)
+        # Initialize Git, then install the pre-commit hooks the project declares
         if setup_git_hooks:
             try:
                 git_result = self._python_service.setup_git_repository(project_path)
@@ -310,6 +289,17 @@ class ProjectSetupInterface:
             except Exception as e:
                 logger.warning(f"Failed to setup git repository: {e}")
                 warnings.append(f"Git repository setup skipped: {e}")
+
+            if (project_path / ".pre-commit-config.yaml").is_file():
+                try:
+                    hooks_result = self._python_service.install_git_hooks(project_path)
+                    if hooks_result.success:
+                        tools_configured.append("git_hooks")
+                    else:
+                        warnings.append(f"{hooks_result.message}: {hooks_result.error}")
+                except Exception as e:
+                    logger.warning(f"Failed to install git hooks: {e}")
+                    warnings.append(f"Git hooks setup skipped: {e}")
 
         return {
             "files_modified": files_modified,
@@ -322,7 +312,6 @@ class ProjectSetupInterface:
         project_path: Path,
         project_type: str,
         install_deps: bool = False,
-        setup_dev_tools: bool = False,
         setup_git_hooks: bool = False,
     ) -> dict[str, list[str]]:
         """Set up JavaScript project.
@@ -330,9 +319,8 @@ class ProjectSetupInterface:
         Args:
             project_path: Path to the project
             project_type: Type of JavaScript project (node, react, vue)
-            install_deps: Whether to install dependencies
-            setup_dev_tools: Whether to set up development tools
-            setup_git_hooks: Whether to set up Git hooks
+            install_deps: Whether to install dependencies, devDependencies included
+            setup_git_hooks: Whether to initialize the Git repository
 
         Returns:
             dict: Metadata about setup with 'files_modified', 'tools_configured', 'warnings'
@@ -355,21 +343,7 @@ class ProjectSetupInterface:
                 logger.warning(f"Failed to install dependencies: {e}")
                 warnings.append(f"Dependency installation skipped: {e}")
 
-        # Setup dev tools
-        if setup_dev_tools:
-            try:
-                dev_tools_result = self._javascript_service.setup_dev_tools(
-                    project_path, project_type
-                )
-                if dev_tools_result.success:
-                    tools_configured.append("dev_tools")
-                else:
-                    warnings.append("Dev tools setup failed")
-            except Exception as e:
-                logger.warning(f"Failed to setup dev tools: {e}")
-                warnings.append(f"Dev tools setup skipped: {e}")
-
-        # Setup Git repository and hooks
+        # Same contract as Python: the flag initializes the Git repository.
         if setup_git_hooks:
             try:
                 git_result = self._javascript_service.setup_git_repository(project_path)
@@ -380,16 +354,6 @@ class ProjectSetupInterface:
             except Exception as e:
                 logger.warning(f"Failed to setup git repository: {e}")
                 warnings.append(f"Git repository setup skipped: {e}")
-
-            try:
-                hooks_result = self._javascript_service.setup_git_hooks(project_path)
-                if hooks_result.success:
-                    tools_configured.append("git_hooks")
-                else:
-                    warnings.append("Git hooks setup failed")
-            except Exception as e:
-                logger.warning(f"Failed to setup git hooks: {e}")
-                warnings.append(f"Git hooks setup skipped: {e}")
 
         return {
             "files_modified": files_modified,

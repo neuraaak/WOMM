@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -301,7 +302,7 @@ def test_react_renders_the_description_as_a_string_literal(
     )
 
     app = out / "src" / ("App.tsx" if typescript else "App.jsx")
-    literal = _between(app.read_text(encoding="utf-8"), "<p>{ ", " }</p>")
+    literal = _between(app.read_text(encoding="utf-8"), "<p>{", "}</p>")
     assert json.loads(literal) == HOSTILE_DESCRIPTION
 
 
@@ -393,6 +394,82 @@ def test_biome_is_used_for_non_vue_frameworks(tmp_path: Path, framework: str):
     assert "prettier" not in manifest["devDependencies"]
     assert manifest["scripts"]["lint"] == "biome lint ."
     assert manifest["scripts"]["format"] == "biome format --write ."
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(shutil.which("npx") is None, reason="npx is not installed")
+@pytest.mark.parametrize("typescript", [False, True])
+@pytest.mark.parametrize("framework", ["none", "react"])
+def test_biome_accepts_the_rendered_project(
+    tmp_path: Path, framework: str, typescript: bool
+):
+    # The generated CI runs `format:check` and `lint` first: an invalid biome.json
+    # or an unformatted file fails it before the tests even run.
+    out = render(tmp_path / "p", framework=framework, typescript=typescript)
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    version = manifest["devDependencies"]["@biomejs/biome"]
+
+    result = subprocess.run(
+        [
+            shutil.which("npx"),
+            "--yes",
+            f"@biomejs/biome@{version}",
+            "ci",
+            "--colors=off",
+            ".",
+        ],
+        cwd=out,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=300,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(shutil.which("npx") is None, reason="npx is not installed")
+@pytest.mark.parametrize("typescript", [False, True])
+def test_prettier_accepts_the_rendered_vue_project(tmp_path: Path, typescript: bool):
+    # Vue keeps Prettier: its `format:check` runs first in the generated CI.
+    out = render(tmp_path / "p", framework="vue", typescript=typescript)
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    version = manifest["devDependencies"]["prettier"]
+
+    result = subprocess.run(
+        [shutil.which("npx"), "--yes", f"prettier@{version}", "--check", "."],
+        cwd=out,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=300,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_vue_declares_the_eslint_parser_peer(tmp_path: Path):
+    # eslint-plugin-vue only peers on vue-eslint-parser: strict installs (Yarn
+    # Plug'n'Play) refuse to resolve it unless the project declares it.
+    out = render(tmp_path / "p", framework="vue")
+
+    manifest = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    assert "vue-eslint-parser" in manifest["devDependencies"]
+
+
+@pytest.mark.parametrize("framework", ["none", "vue"])
+def test_yarn_plug_n_play_files_are_ignored(tmp_path: Path, framework: str):
+    # Yarn writes .pnp.* and .yarn/ at install; linters must not scan them.
+    out = render(tmp_path / "p", framework=framework, package_manager="yarn")
+
+    gitignore = (out / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert {".pnp.*", ".yarn/*"} <= set(gitignore)
+    if framework == "vue":
+        eslint_config = (out / "eslint.config.mjs").read_text(encoding="utf-8")
+        assert '".pnp.*", ".yarn/**"' in eslint_config
 
 
 def test_eslint_and_prettier_are_kept_for_vue(tmp_path: Path):

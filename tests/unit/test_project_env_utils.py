@@ -193,119 +193,97 @@ def test_install_python_dependencies_uses_alt_venv_dir(tmp_path: Path) -> None:
 
 
 # ///////////////////////////////////////////////////////////////
-# NPM AVAILABILITY
+# DETECT PACKAGE MANAGER
 # ///////////////////////////////////////////////////////////////
 
 
-def test_check_npm_available_reflects_shutil_which(
-    monkeypatch: pytest.MonkeyPatch,
+def test_detect_package_manager_defaults_to_npm(tmp_path: Path) -> None:
+    assert env_utils.detect_package_manager(tmp_path) == "npm"
+
+
+@pytest.mark.parametrize(
+    ("lockfile", "expected"),
+    [
+        ("bun.lock", "bun"),
+        ("bun.lockb", "bun"),
+        ("pnpm-lock.yaml", "pnpm"),
+        ("yarn.lock", "yarn"),
+        ("package-lock.json", "npm"),
+    ],
+)
+def test_detect_package_manager_reads_the_lockfile(
+    tmp_path: Path, lockfile: str, expected: str
+) -> None:
+    (tmp_path / lockfile).touch()
+
+    assert env_utils.detect_package_manager(tmp_path) == expected
+
+
+def test_detect_package_manager_prefers_the_package_json_field(tmp_path: Path) -> None:
+    (tmp_path / "package.json").write_text(
+        '{"packageManager": "pnpm@10.0.0"}', encoding="utf-8"
+    )
+    (tmp_path / "yarn.lock").touch()
+
+    assert env_utils.detect_package_manager(tmp_path) == "pnpm"
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    ['{"packageManager": "evil@1.0.0"}', "[]", "not json"],
+)
+def test_detect_package_manager_ignores_an_unusable_field(
+    tmp_path: Path, manifest: str
+) -> None:
+    (tmp_path / "package.json").write_text(manifest, encoding="utf-8")
+    (tmp_path / "yarn.lock").touch()
+
+    assert env_utils.detect_package_manager(tmp_path) == "yarn"
+
+
+# ///////////////////////////////////////////////////////////////
+# INSTALL JAVASCRIPT DEPENDENCIES
+# ///////////////////////////////////////////////////////////////
+
+
+def test_install_javascript_dependencies_raises_when_manager_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "bun.lock").touch()
+    monkeypatch.setattr(env_utils.shutil, "which", lambda _name: None)
+
+    with pytest.raises(FileNotFoundError, match="bun is not installed"):
+        env_utils.install_javascript_dependencies(tmp_path)
+
+
+def test_install_javascript_dependencies_runs_the_resolved_executable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # On Windows, which() resolves pnpm to its .CMD shim, which must be run.
+    (tmp_path / "pnpm-lock.yaml").touch()
+    resolved = "/opt/nodejs/pnpm.CMD"
+    monkeypatch.setattr(
+        env_utils.shutil, "which", lambda name: resolved if name == "pnpm" else None
+    )
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **_kwargs: object):
+        captured["command"] = command
+        return CommandResult(returncode=0)
+
+    _patch_command_runner(monkeypatch, fake_run)
+
+    assert env_utils.install_javascript_dependencies(tmp_path) == "pnpm"
+    assert captured["command"] == [resolved, "install"]
+
+
+def test_install_javascript_dependencies_raises_on_command_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(env_utils.shutil, "which", lambda _name: "/usr/bin/npm")
-    assert env_utils.check_npm_available() is True
-
-    monkeypatch.setattr(env_utils.shutil, "which", lambda _name: None)
-    assert env_utils.check_npm_available() is False
-
-
-# ///////////////////////////////////////////////////////////////
-# INSTALL NPM DEPENDENCIES
-# ///////////////////////////////////////////////////////////////
-
-
-def test_install_npm_dependencies_raises_when_npm_missing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: False)
-
-    with pytest.raises(FileNotFoundError, match="npm is not installed"):
-        env_utils.install_npm_dependencies(tmp_path)
-
-
-def test_install_npm_dependencies_runs_npm_install(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: True)
-    captured: dict[str, object] = {}
-
-    def fake_run(command: list[str], **_kwargs: object):
-        captured["command"] = command
-        return CommandResult(returncode=0)
-
-    _patch_command_runner(monkeypatch, fake_run)
-
-    result = env_utils.install_npm_dependencies(tmp_path)
-
-    assert result is True
-    assert captured["command"] == ["npm", "install"]
-
-
-def test_install_npm_dependencies_raises_on_command_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: True)
     _patch_command_runner(
         monkeypatch, lambda *_a, **_k: CommandResult(returncode=1, stderr="boom")
     )
 
-    with pytest.raises(RuntimeError, match="Failed to install dependencies"):
-        env_utils.install_npm_dependencies(tmp_path)
-
-
-# ///////////////////////////////////////////////////////////////
-# INSTALL NPM DEV DEPENDENCIES
-# ///////////////////////////////////////////////////////////////
-
-
-def test_install_npm_dev_dependencies_skips_when_no_dependencies(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: True)
-
-    result = env_utils.install_npm_dev_dependencies(tmp_path, [])
-
-    assert result is True
-
-
-def test_install_npm_dev_dependencies_raises_when_npm_missing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: False)
-
-    with pytest.raises(FileNotFoundError, match="npm is not installed"):
-        env_utils.install_npm_dev_dependencies(tmp_path, ["eslint"])
-
-
-def test_install_npm_dev_dependencies_installs_given_packages(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: True)
-    captured: dict[str, object] = {}
-
-    def fake_run(command: list[str], **_kwargs: object):
-        captured["command"] = command
-        return CommandResult(returncode=0)
-
-    _patch_command_runner(monkeypatch, fake_run)
-
-    result = env_utils.install_npm_dev_dependencies(tmp_path, ["eslint", "prettier"])
-
-    assert result is True
-    assert captured["command"] == [
-        "npm",
-        "install",
-        "--save-dev",
-        "eslint",
-        "prettier",
-    ]
-
-
-def test_install_npm_dev_dependencies_raises_on_command_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(env_utils, "check_npm_available", lambda: True)
-    _patch_command_runner(
-        monkeypatch, lambda *_a, **_k: CommandResult(returncode=1, stderr="boom")
-    )
-
-    with pytest.raises(RuntimeError, match="Failed to install development tools"):
-        env_utils.install_npm_dev_dependencies(tmp_path, ["eslint"])
+    with pytest.raises(RuntimeError, match="npm install failed: boom"):
+        env_utils.install_javascript_dependencies(tmp_path)

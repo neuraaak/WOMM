@@ -36,7 +36,7 @@ def service() -> JavaScriptEnvironmentService:
 
 
 # ///////////////////////////////////////////////////////////////
-# NPM AND DEVELOPMENT TOOLS
+# DEPENDENCIES
 # ///////////////////////////////////////////////////////////////
 
 
@@ -48,93 +48,39 @@ def test_install_dependencies_accepts_javascript_variants(
     project_type: str,
 ) -> None:
     monkeypatch.setattr(
-        "womm.services.project.javascript_environment_service.install_npm_dependencies",
-        lambda _path: True,
+        "womm.services.project.javascript_environment_service.install_javascript_dependencies",
+        lambda _path: "pnpm",
     )
 
     result = service.install_dependencies(tmp_path, project_type)
 
     assert result.success
     assert result.project_type == project_type
+    assert result.message == "Dependencies installed with pnpm"
 
 
-def test_install_dependencies_rejects_failed_install(
+def test_install_dependencies_wraps_install_failure(
     tmp_path: Path,
     service: JavaScriptEnvironmentService,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    def fail(_path: Path) -> str:
+        raise RuntimeError("npm install failed: boom")
+
     monkeypatch.setattr(
-        "womm.services.project.javascript_environment_service.install_npm_dependencies",
-        lambda _path: False,
+        "womm.services.project.javascript_environment_service.install_javascript_dependencies",
+        fail,
     )
 
     with pytest.raises(ProjectServiceError) as excinfo:
         service.install_dependencies(tmp_path, "node")
 
     assert excinfo.value.operation == "install_dependencies"
-    assert excinfo.value.reason == "npm install command failed"
-
-
-@pytest.mark.parametrize(
-    ("project_type", "specific_dependencies"),
-    [
-        ("node", set()),
-        (
-            "react",
-            {
-                "@types/react",
-                "@types/react-dom",
-                "@testing-library/react",
-                "@testing-library/jest-dom",
-            },
-        ),
-        ("vue", {"@vue/cli-service", "@vue/compiler-sfc"}),
-    ],
-)
-def test_setup_dev_tools_installs_variant_dependencies(
-    tmp_path: Path,
-    service: JavaScriptEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-    project_type: str,
-    specific_dependencies: set[str],
-) -> None:
-    captured: list[str] = []
-    monkeypatch.setattr("shutil.which", lambda _command: "npm")
-
-    def install(_path: Path, dependencies: list[str]) -> bool:
-        captured.extend(dependencies)
-        return True
-
-    monkeypatch.setattr(
-        "womm.services.project.javascript_environment_service.install_npm_dev_dependencies",
-        install,
-    )
-
-    result = service.setup_dev_tools(tmp_path, project_type)
-
-    assert result.success
-    assert {"eslint", "prettier", "husky", "lint-staged", "@types/node"} <= set(
-        captured
-    )
-    assert specific_dependencies <= set(captured)
-
-
-def test_setup_dev_tools_validates_project_path_before_npm(
-    tmp_path: Path,
-    service: JavaScriptEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr("shutil.which", lambda _command: None)
-
-    with pytest.raises(ProjectServiceError) as excinfo:
-        service.setup_dev_tools(tmp_path / "missing", "node")
-
-    assert excinfo.value.operation == "setup_dev_tools"
-    assert excinfo.value.reason.startswith("Project directory does not exist:")
+    assert excinfo.value.reason == "npm install failed: boom"
 
 
 # ///////////////////////////////////////////////////////////////
-# GIT AND HUSKY
+# GIT
 # ///////////////////////////////////////////////////////////////
 
 
@@ -176,71 +122,3 @@ def test_setup_git_repository_reports_command_result(
 
     assert result.success is expected_success
     assert result.error == ("" if expected_success else "git failed")
-
-
-def test_setup_git_hooks_skips_when_npx_is_unavailable(
-    tmp_path: Path,
-    service: JavaScriptEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr("shutil.which", lambda _command: None)
-
-    result = service.setup_git_hooks(tmp_path)
-
-    assert result.success
-    assert result.warnings == ["npx not found in system PATH"]
-
-
-@pytest.mark.parametrize(
-    ("returncodes", "expected_error"),
-    [
-        ([1], "husky init failed"),
-        ([0, 1], "husky hook creation failed"),
-    ],
-)
-def test_setup_git_hooks_reports_command_failure(
-    tmp_path: Path,
-    service: JavaScriptEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-    returncodes: list[int],
-    expected_error: str,
-) -> None:
-    (tmp_path / "package.json").touch()
-    results = iter(
-        SimpleNamespace(returncode=code, stderr=expected_error) for code in returncodes
-    )
-    monkeypatch.setattr("shutil.which", lambda _command: "npx")
-    monkeypatch.setattr(
-        service._command_runner,
-        "run",
-        lambda *_args, **_kwargs: next(results),
-    )
-
-    result = service.setup_git_hooks(tmp_path)
-
-    assert not result.success
-    assert result.error == expected_error
-
-
-def test_setup_git_hooks_runs_init_then_add(
-    tmp_path: Path,
-    service: JavaScriptEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    commands: list[list[str]] = []
-    (tmp_path / "package.json").touch()
-    monkeypatch.setattr("shutil.which", lambda _command: "npx")
-
-    def run(command: list[str], **_kwargs: object) -> SimpleNamespace:
-        commands.append(command)
-        return SimpleNamespace(returncode=0, stderr="")
-
-    monkeypatch.setattr(service._command_runner, "run", run)
-
-    result = service.setup_git_hooks(tmp_path)
-
-    assert result.success
-    assert commands == [
-        ["npx", "husky", "install"],
-        ["npx", "husky", "add", ".husky/pre-commit", "npm run lint-staged"],
-    ]

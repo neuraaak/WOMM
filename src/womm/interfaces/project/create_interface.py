@@ -144,7 +144,6 @@ class ProjectCreateInterface:
             template_answers=template_answers,
             virtual_env=True,
             install_deps=True,
-            setup_dev_tools=True,
             setup_git_hooks=True,
         )
         if result and result.success:

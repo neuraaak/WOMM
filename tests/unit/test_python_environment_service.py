@@ -23,7 +23,6 @@ from womm.exceptions.project import ProjectServiceError
 from womm.services.project.python_environment_service import (
     PythonEnvironmentService,
 )
-from womm.shared.results import ProjectCreationResult
 
 # ///////////////////////////////////////////////////////////////
 # FIXTURES
@@ -126,33 +125,6 @@ def test_install_dev_dependencies_wraps_utility_error(
     assert isinstance(excinfo.value.__cause__, FileNotFoundError)
 
 
-def test_setup_dev_tools_creates_config_then_installs_dependencies(
-    tmp_path: Path,
-    service: PythonEnvironmentService,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls: list[str] = []
-
-    def create_config(_path: Path) -> list[str]:
-        calls.append("config")
-        return []
-
-    def install_dependencies(_path: Path) -> ProjectCreationResult:
-        calls.append("dependencies")
-        return ProjectCreationResult(success=True)
-
-    monkeypatch.setattr(
-        "womm.services.project.python_environment_service.create_python_dev_config_files",
-        create_config,
-    )
-    monkeypatch.setattr(service, "install_dev_dependencies", install_dependencies)
-
-    result = service.setup_dev_tools(tmp_path)
-
-    assert result.success
-    assert calls == ["config", "dependencies"]
-
-
 # ///////////////////////////////////////////////////////////////
 # GIT SETUP
 # ///////////////////////////////////////////////////////////////
@@ -196,3 +168,68 @@ def test_setup_git_repository_reports_command_result(
 
     assert result.success is expected_success
     assert result.error == ("" if expected_success else "git failed")
+
+
+# ///////////////////////////////////////////////////////////////
+# GIT HOOKS
+# ///////////////////////////////////////////////////////////////
+
+
+def _make_pre_commit(project: Path) -> Path:
+    """Create a fake pre-commit executable in the project's .venv."""
+    windows = bool(project.drive)
+    folder = project / ".venv" / ("Scripts" if windows else "bin")
+    folder.mkdir(parents=True)
+    executable = folder / ("pre-commit.exe" if windows else "pre-commit")
+    executable.touch()
+    return executable
+
+
+def test_install_git_hooks_requires_a_git_repository(
+    tmp_path: Path, service: PythonEnvironmentService
+) -> None:
+    _make_pre_commit(tmp_path)
+
+    result = service.install_git_hooks(tmp_path)
+
+    assert not result.success
+    assert result.error == "no Git repository"
+
+
+def test_install_git_hooks_requires_pre_commit_in_the_venv(
+    tmp_path: Path, service: PythonEnvironmentService
+) -> None:
+    (tmp_path / ".git").mkdir()
+
+    result = service.install_git_hooks(tmp_path)
+
+    assert not result.success
+    assert "pre-commit is not installed in .venv" in result.error
+
+
+@pytest.mark.parametrize(
+    ("returncode", "expected_success"),
+    [(0, True), (1, False)],
+)
+def test_install_git_hooks_runs_the_venv_pre_commit(
+    tmp_path: Path,
+    service: PythonEnvironmentService,
+    monkeypatch: pytest.MonkeyPatch,
+    returncode: int,
+    expected_success: bool,
+) -> None:
+    (tmp_path / ".git").mkdir()
+    executable = _make_pre_commit(tmp_path)
+    commands: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: object) -> SimpleNamespace:
+        commands.append(command)
+        return SimpleNamespace(returncode=returncode, stderr="hook failed")
+
+    monkeypatch.setattr(service._command_runner, "run", run)
+
+    result = service.install_git_hooks(tmp_path)
+
+    assert commands == [[str(executable), "install"]]
+    assert result.success is expected_success
+    assert result.error == ("" if expected_success else "hook failed")

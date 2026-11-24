@@ -1,5 +1,16 @@
 # Dependencies
 node_modules/
+{%- if package_manager == "yarn" %}
+
+# Yarn Plug'n'Play
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+{%- endif %}
 
 # Build outputs
 dist/

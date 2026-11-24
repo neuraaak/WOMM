@@ -346,26 +346,6 @@ def create_python_requirements_files(project_path: Path) -> list[str]:
     return created
 
 
-def create_python_dev_config_files(project_path: Path) -> list[str]:
-    """
-    Create Python development configuration files.
-
-    Args:
-        project_path: Path to Python project
-
-    Returns:
-        List of created files
-    """
-    created = []
-
-    pyproject_toml = project_path / "pyproject.toml"
-    if not pyproject_toml.exists():
-        pyproject_toml.touch()
-        created.append(str(pyproject_toml))
-
-    return created
-
-
 def create_javascript_config_files(project_path: Path) -> list[str]:
     """
     Create JavaScript configuration files.
