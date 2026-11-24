@@ -43,6 +43,7 @@ from ...ui.system import (
 
 
 @click.group(invoke_without_command=True)
+@click.help_option("-h", "--help")
 @click.pass_context
 def deps_group(ctx: click.Context) -> None:
     """
