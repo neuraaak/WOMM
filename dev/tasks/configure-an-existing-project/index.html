@@ -1437,7 +1437,8 @@ re-creating it from a template.</p>
 <h2 id="steps">📝 Steps<a class="headerlink" href="#steps" title="Anchor link to this section">&para;</a></h2>
 <ol>
 <li>
-<p>Let WOMM detect the project type:</p>
+<p>Let WOMM detect the project type. It shows the steps available for it and
+   writes nothing:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>my-existing-project
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>womm<span class="w"> </span>setup<span class="w"> </span>detect
 </span></code></pre></div>
@@ -1453,8 +1454,8 @@ re-creating it from a template.</p>
    options for the steps you want, and nothing else happens.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>womm<span class="w"> </span>setup<span class="w"> </span>python<span class="w"> </span>--virtual-env<span class="w"> </span>--install-deps
 </span></code></pre></div>
-<p>Run without options, WOMM detects and validates the project, then reports
-that no step was requested.</p>
+<p>Run without options, WOMM detects and validates the project, writes
+nothing, and lists the options of the available steps.</p>
 </li>
 <li>
 <p>To be guided question by question, use the interactive mode:</p>
@@ -1497,21 +1498,21 @@ that no step was requested.</p>
 </tr>
 <tr>
 <td style="text-align: left;"><code>--install-deps</code></td>
-<td style="text-align: left;">Install the project dependencies.</td>
-<td style="text-align: left;"><code>python</code>, <code>javascript</code></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>--setup-dev-tools</code></td>
-<td style="text-align: left;">Configure linting and formatting.</td>
+<td style="text-align: left;">Install the project dependencies, dev ones included.</td>
 <td style="text-align: left;"><code>python</code>, <code>javascript</code></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>--setup-git-hooks</code></td>
-<td style="text-align: left;">Install the git hooks.</td>
+<td style="text-align: left;">Initialize git; on Python, install pre-commit hooks.</td>
+<td style="text-align: left;"><code>python</code>, <code>javascript</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--setup-vscode</code></td>
+<td style="text-align: left;">Write the VS Code settings and recommended extensions.</td>
 <td style="text-align: left;"><code>python</code>, <code>javascript</code></td>
 <td></td>
 <td></td>
@@ -1535,6 +1536,17 @@ that no step was requested.</p>
 <h2 id="result">✅ Result<a class="headerlink" href="#result" title="Anchor link to this section">&para;</a></h2>
 <p>The project has the environment and the tooling you asked for. WOMM reports each
 step it ran and what it skipped.</p>
+<p>A JavaScript project is installed with the package manager it declares: the
+<code>packageManager</code> field of <code>package.json</code>, then its lockfile, and npm otherwise.
+WOMM adds no linter, formatter or git hook of its own.</p>
+<p>A Python project with a <code>uv.lock</code> or a <code>[tool.uv]</code> table in its <code>pyproject.toml</code>
+is set up with uv: <code>uv sync --group dev</code>, or <code>uv venv</code> with <code>--virtual-env</code>
+alone. uv picks the Python version the project asks for and writes <code>uv.lock</code>;
+it must be on your <code>PATH</code>. Any other Python project gets a virtual environment
+and an editable <code>pip install</code>.</p>
+<p>On a Python project, <code>--setup-git-hooks</code> also runs <code>pre-commit install</code> when the
+project has a <code>.pre-commit-config.yaml</code>, with the <code>pre-commit</code> of its virtual
+environment: combine it with <code>--install-deps</code> so that <code>pre-commit</code> is there.</p>
 <p>If detection picks the wrong language, name it explicitly with <code>womm setup
 python</code> or <code>womm setup javascript</code> — see
 <a href="../../troubleshooting/#womm-setup-detect-picks-the-wrong-language">Troubleshooting</a>.</p>
