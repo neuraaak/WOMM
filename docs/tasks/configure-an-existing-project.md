@@ -63,6 +63,12 @@ A JavaScript project is installed with the package manager it declares: the
 `packageManager` field of `package.json`, then its lockfile, and npm otherwise.
 WOMM adds no linter, formatter or git hook of its own.
 
+A Python project with a `uv.lock` or a `[tool.uv]` table in its `pyproject.toml`
+is set up with uv: `uv sync --group dev`, or `uv venv` with `--virtual-env`
+alone. uv picks the Python version the project asks for and writes `uv.lock`;
+it must be on your `PATH`. Any other Python project gets a virtual environment
+and an editable `pip install`.
+
 On a Python project, `--setup-git-hooks` also runs `pre-commit install` when the
 project has a `.pre-commit-config.yaml`, with the `pre-commit` of its virtual
 environment: combine it with `--install-deps` so that `pre-commit` is there.
