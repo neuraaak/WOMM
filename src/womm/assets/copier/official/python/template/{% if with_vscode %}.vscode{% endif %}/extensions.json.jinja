@@ -1,7 +1,11 @@
 {
   "recommendations": [
     "charliermarsh.ruff",
-    "astral-sh.ty",
+{%- if tooling == "black-isort" %}
+    "ms-python.black-formatter",
+    "ms-python.isort",
+{%- endif %}
+    "{{ {'ty': 'astral-sh.ty', 'mypy': 'ms-python.mypy-type-checker', 'pyright': 'ms-python.vscode-pylance'}[type_checker] }}",
     "ms-python.python"{% if framework == "django" %},
     "batisteo.vscode-django"{% endif %}
   ]

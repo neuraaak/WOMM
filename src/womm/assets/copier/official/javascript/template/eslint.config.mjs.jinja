@@ -4,7 +4,11 @@ import globals from "globals";
 {%- if typescript %}
 import tseslint from "typescript-eslint";
 {%- endif %}
+{%- if framework == "vue" %}
 import vue from "eslint-plugin-vue";
+{%- elif framework == "react" %}
+import reactHooks from "eslint-plugin-react-hooks";
+{%- endif %}
 
 export default [
   {
@@ -14,9 +18,13 @@ export default [
 {%- if typescript %}
   ...tseslint.configs.recommended,
 {%- endif %}
+{%- if framework == "vue" %}
   ...vue.configs["flat/recommended"],
+{%- elif framework == "react" %}
+  reactHooks.configs.flat.recommended,
+{%- endif %}
   {
-    files: ["**/*.{js{% if typescript %},ts{% endif %},vue}"],
+    files: ["**/*.{js,mjs{% if typescript %},ts{% endif %}{% if framework == 'react' %},jsx{% if typescript %},tsx{% endif %}{% elif framework == 'vue' %},vue{% endif %}}"],
     languageOptions: {
       ecmaVersion: "latest",
       globals: {
@@ -25,9 +33,13 @@ export default [
         ...globals.browser,
 {%- endif %}
       },
-{%- if typescript %}
+{%- if typescript and framework == "vue" %}
       parserOptions: {
         parser: tseslint.parser,
+      },
+{%- elif framework == "react" %}
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
       },
 {%- endif %}
       sourceType: "module",
@@ -42,9 +54,11 @@ export default [
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
 {%- else %}
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_"{% if framework == 'react' %}, varsIgnorePattern: "^[A-Z]"{% endif %} }],
 {%- endif %}
+{%- if framework == "vue" %}
       "vue/multi-word-component-names": "off",
+{%- endif %}
     },
   },
   prettier,

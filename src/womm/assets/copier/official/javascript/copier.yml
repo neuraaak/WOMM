@@ -1,10 +1,38 @@
 _womm:
   description: "JavaScript or TypeScript project (optional React or Vue)"
-  version: "2.0.0"
+  version: &template_version "3.0.0"
   setup:
     language: javascript
 
 _subdirectory: template
+
+template_version:
+  type: str
+  default: *template_version
+  when: false
+
+# Keep tool dependencies and their configuration schemas in sync.
+tool_versions:
+  type: yaml
+  when: false
+  default:
+    biome: "2.6.8"
+    eslint: "10.7.0"
+    eslint_js: "10.0.0"
+    eslint_config_prettier: "10.1.0"
+    globals: "16.0.0"
+    prettier: "3.9.0"
+    typescript: "5.9.3"
+    typescript_eslint: "8.74.0"
+    eslint_plugin_vue: "10.12.1"
+    vue_eslint_parser: "10.3.0"
+    eslint_plugin_react_hooks: "7.1.1"
+    vue_tsc: "3.3.14"
+    vitest: "4.1.0"
+    knip: "6.48.0"
+    vite: "8.1.0"
+    vite_plugin_react: "6.0.0"
+    vite_plugin_vue: "6.0.11"
 
 project_name:
   type: str
@@ -34,6 +62,17 @@ typescript:
   help: "Use TypeScript"
   default: false
 
+tooling:
+  type: str
+  help: "Lint and formatting tools"
+  choices: "{{ {'ESLint + Prettier': 'eslint-prettier'} if framework == 'vue' else {'Biome (recommended)': 'biome', 'ESLint + Prettier': 'eslint-prettier'} }}"
+  default: "{{ 'eslint-prettier' if framework == 'vue' else 'biome' }}"
+
+with_knip:
+  type: bool
+  help: "Check unused files, exports and dependencies with Knip"
+  default: false
+
 package_manager:
   type: str
   help: "Package manager"
@@ -48,6 +87,12 @@ with_tests:
   type: bool
   help: "Include a Vitest setup"
   default: true
+
+with_coverage:
+  type: bool
+  help: "Include test coverage"
+  when: "{{ with_tests }}"
+  default: false
 
 with_ci:
   type: bool
@@ -89,10 +134,11 @@ _exclude:
   - "{% if not typescript %}tsconfig.json{% endif %}"
   - "{% if framework == 'none' %}index.html{% endif %}"
   - "{% if framework == 'none' %}vite.config.mjs{% endif %}"
-  - "{% if framework != 'vue' %}eslint.config.mjs{% endif %}"
-  - "{% if framework != 'vue' %}prettier.config.mjs{% endif %}"
-  - "{% if framework != 'vue' %}.prettierignore{% endif %}"
-  - "{% if framework == 'vue' %}biome.json{% endif %}"
+  - "{% if tooling != 'eslint-prettier' %}eslint.config.mjs{% endif %}"
+  - "{% if tooling != 'eslint-prettier' %}prettier.config.mjs{% endif %}"
+  - "{% if tooling != 'eslint-prettier' %}.prettierignore{% endif %}"
+  - "{% if tooling != 'biome' %}biome.json{% endif %}"
+  - "{% if not with_knip %}knip.json{% endif %}"
   - "{% if typescript or framework == 'react' %}src/main.js{% endif %}"
   - "{% if not typescript or framework == 'react' %}src/main.ts{% endif %}"
   - "{% if framework != 'react' or typescript %}src/index.jsx{% endif %}"

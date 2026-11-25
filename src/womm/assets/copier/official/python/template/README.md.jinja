@@ -67,16 +67,47 @@ pytest
 ```bash
 {%- if use_uv %}
 uv run ruff check .
+{%- if tooling == "ruff" %}
 uv run ruff format --check .
-uv run ty check .
+{%- else %}
+uv run isort --check-only .
+uv run black --check .
+{%- endif %}
+uv run {{ type_checker }}{% if type_checker == "ty" %} check .{% endif %}
 uv run pre-commit install
 {%- else %}
 ruff check .
+{%- if tooling == "ruff" %}
 ruff format --check .
-ty check .
+{%- else %}
+isort --check-only .
+black --check .
+{%- endif %}
+{{ type_checker }}{% if type_checker == "ty" %} check .{% endif %}
 pre-commit install
 {%- endif %}
 ```
+
+## Tool versions and updates
+
+The development tools are pinned in `pyproject.toml` to versions tested with
+these configurations. Run them from this project's environment. Ruff's
+`required-version` rejects a different version. Editor extensions may ship
+their own tools; use the project environment where supported and run the
+pinned command-line checks before committing.
+
+`.womm-template.json` records the generator, template version and original
+choices. It is provenance, not a list of the tools currently installed.
+
+To upgrade a tool, change its dependency pin and any matching version guard,
+review its release notes, and update its configuration if needed.
+{% if use_uv %}Run `uv lock` and `uv sync --locked --group dev`, then run all quality,
+test and build checks before committing the updated configuration and lockfile.
+{% else %}Reinstall with `python -m pip install -e . --group dev`, then run all
+quality, test and build checks. Exact tool pins do not lock transitive
+dependencies; use a separate constraints workflow if you need a fully locked
+pip environment.
+{% endif %}Upgrading WOMM does not update this project's files.
 
 ## License
 

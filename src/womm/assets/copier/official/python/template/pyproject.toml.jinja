@@ -29,18 +29,24 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff>=0.5.0",
-    "ty>=0.0.13",
-    "pre-commit>=3.0.0",
+    "ruff=={{ tool_versions.ruff }}",
+{%- if tooling == "black-isort" %}
+    "black=={{ tool_versions.black }}",
+    "isort=={{ tool_versions.isort }}",
+{%- endif %}
+    "{{ type_checker }}=={{ tool_versions[type_checker] }}",
+    "pre-commit=={{ tool_versions.pre_commit }}",
 {%- if with_tests %}
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
+    "pytest=={{ tool_versions.pytest }}",
+{%- if with_coverage %}
+    "pytest-cov=={{ tool_versions.pytest_cov }}",
+{%- endif %}
 {%- endif %}
 {%- if with_tests and framework == "django" %}
-    "pytest-django>=4.8.0",
+    "pytest-django=={{ tool_versions.pytest_django }}",
 {%- endif %}
 {%- if framework == "django" %}
-    "django-stubs>=5.0.0",
+    "django-stubs=={{ tool_versions.django_stubs }}",
 {%- endif %}
 ]
 
@@ -65,16 +71,33 @@ package = true
 {%- endif %}
 
 [tool.ruff]
+required-version = "=={{ tool_versions.ruff }}"
 target-version = "py{{ python_version | replace('.', '') }}"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM", "N", "ANN", "RUF"]
+select = ["E", "W", "F", {% if tooling == 'ruff' %}"I", {% endif %}"B", "C4", "UP", "SIM", "N", "ANN", "RUF"]
 ignore = ["E501"]
+
+{%- if tooling == "ruff" %}
 
 [tool.ruff.format]
 quote-style = "double"
 docstring-code-format = true
+{%- else %}
+
+[tool.black]
+required-version = "{{ tool_versions.black }}"
+target-version = ["py{{ python_version | replace('.', '') }}"]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_gitignore = true
+{%- endif %}
+
+{%- if type_checker == "ty" %}
 
 [tool.ty.environment]
 python-version = "{{ python_version }}"
@@ -91,17 +114,33 @@ include = ["src/{{ package_name }}"]
 include = ["{{ package_name }}"]
 {%- endif %}
 respect-ignore-files = true
+{%- elif type_checker == "mypy" %}
+
+[tool.mypy]
+python_version = "{{ python_version }}"
+files = ["{% if use_src_layout %}src{% else %}{{ package_name }}{% endif %}"]
+strict = true
+{%- else %}
+
+[tool.pyright]
+pythonVersion = "{{ python_version }}"
+include = ["{% if use_src_layout %}src{% else %}{{ package_name }}{% endif %}"]
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+{%- endif %}
 {%- if with_tests %}
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = ["--strict-markers", "--strict-config"]
+addopts = ["--strict-markers", "--strict-config"{% if with_coverage %}, "--cov={{ package_name }}", "--cov-report=term-missing"{% endif %}]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 {%- if framework == "django" %}
 DJANGO_SETTINGS_MODULE = "{{ package_name }}.settings"
 {%- endif %}
+{%- if with_coverage %}
 
 [tool.coverage.run]
 {%- if use_src_layout %}
@@ -117,4 +156,5 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
 ]
+{%- endif %}
 {%- endif %}

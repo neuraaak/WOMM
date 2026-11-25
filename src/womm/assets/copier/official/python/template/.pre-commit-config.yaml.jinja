@@ -6,14 +6,27 @@ repos:
         entry: {% if use_uv %}uv run ruff check --fix{% else %}ruff check --fix{% endif %}
         language: system
         types: [python]
+{%- if tooling == "ruff" %}
       - id: ruff-format
         name: ruff format
         entry: {% if use_uv %}uv run ruff format{% else %}ruff format{% endif %}
         language: system
         types: [python]
-      - id: ty
-        name: ty check
-        entry: {% if use_uv %}uv run ty check{% else %}ty check{% endif %}
+{%- else %}
+      - id: isort
+        name: isort
+        entry: {% if use_uv %}uv run {% endif %}isort
+        language: system
+        types: [python]
+      - id: black
+        name: black
+        entry: {% if use_uv %}uv run {% endif %}black
+        language: system
+        types: [python]
+{%- endif %}
+      - id: {{ type_checker }}
+        name: {{ type_checker }}{% if type_checker == "ty" %} check{% endif %}
+        entry: {% if use_uv %}uv run {% endif %}{{ type_checker }}{% if type_checker == "ty" %} check{% endif %}
         language: system
         pass_filenames: false
         types: [python]

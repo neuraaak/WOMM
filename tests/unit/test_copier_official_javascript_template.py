@@ -79,6 +79,9 @@ def test_defaults_produce_a_coherent_project(tmp_path: Path):
     assert (out / ".nvmrc").read_text(encoding="utf-8").strip() == "24"
     assert "vitest" in manifest["devDependencies"]
     assert "@biomejs/biome" in manifest["devDependencies"]
+    assert "knip" not in manifest["devDependencies"]
+    assert "@vitest/coverage-v8" not in manifest["devDependencies"]
+    assert not (out / "knip.json").exists()
     assert (out / "biome.json").is_file()
     assert (out / ".vscode" / "settings.json").is_file()
     assert not (out / ".eslintrc.json").exists()

@@ -1,10 +1,32 @@
 _womm:
   description: "Python project (optional Django)"
-  version: "2.0.0"
+  version: &template_version "3.0.0"
   setup:
     language: python
 
 _subdirectory: template
+
+template_version:
+  type: str
+  default: *template_version
+  when: false
+
+# These versions and the generated configurations are validated together.
+tool_versions:
+  type: yaml
+  when: false
+  default:
+    ruff: "0.17.2"
+    black: "26.10.1"
+    isort: "9.0.2"
+    ty: "0.0.91"
+    mypy: "2.4.1"
+    pyright: "1.1.414"
+    pre_commit: "4.7.0"
+    pytest: "9.1.1"
+    pytest_cov: "7.1.0"
+    pytest_django: "4.14.0"
+    django_stubs: "5.2.8"
 
 project_name:
   type: str
@@ -51,10 +73,33 @@ framework:
     - django
   default: none
 
+tooling:
+  type: str
+  help: "Lint and formatting tools"
+  choices:
+    "Ruff (recommended)": ruff
+    "Black + isort, Ruff for lint only": black-isort
+  default: ruff
+
+type_checker:
+  type: str
+  help: "Type checker"
+  choices:
+    "ty (recommended)": ty
+    mypy: mypy
+    Pyright: pyright
+  default: ty
+
 with_tests:
   type: bool
   help: "Include a pytest setup"
   default: true
+
+with_coverage:
+  type: bool
+  help: "Include test coverage"
+  when: "{{ with_tests }}"
+  default: "{{ with_tests }}"
 
 with_ci:
   type: bool
