@@ -8,6 +8,49 @@
 
 ---
 
+## Branche en cours — outillage des templates officiels
+
+### Dans le périmètre
+
+- [x] Python : proposer Ruff (recommandé) ou Black + isort avec Ruff pour
+  le lint seulement ; proposer ty, mypy ou Pyright pour le typage.
+- [x] JavaScript/TypeScript : proposer Biome ou ESLint + Prettier selon
+  les profils compatibles ; proposer Knip en option.
+- [x] Rendre la couverture de tests optionnelle dans les deux templates.
+- [x] Aligner dépendances, configurations, CI, hooks éventuels, VS Code
+  et README sur les choix effectués, sans responsabilités en doublon.
+- [x] Centraliser et épingler les versions des outils dont WOMM génère
+  la configuration ; synchroniser contraintes, schémas et garde de version.
+- [x] Enregistrer la provenance du projet : version WOMM, identifiant et
+  version du template, choix de génération. Les versions résolues restent
+  dans les lockfiles ; la provenance n'est pas un inventaire installé.
+- [x] Exécuter les contrôles réels des projets générés, en plus des tests
+  de rendu, pour valider les combinaisons proposées.
+- [x] Documenter la procédure de mise à jour explicite des outils et
+  configurations, avec validation et mise à jour du lockfile.
+
+### Hors périmètre — à cadrer ultérieurement
+
+- [ ] Examiner le délai de 30 secondes du runner pour les installations de
+  `setup` : la matrice complète n'a pas été validée, contrairement aux 22
+  profils exécutés directement. Prévoir un délai adapté par opération sans
+  allonger les diagnostics rapides.
+- [ ] Décider si WOMM doit mettre à jour les projets déjà générés : commande
+  dédiée, aperçu du diff, gestion des personnalisations et des conflits.
+- [ ] Étudier l'usage de `copier update` : accès aux versions historiques
+  des templates embarqués, réponses persistées et stratégie de distribution.
+- [ ] Définir les migrations entre générations de configurations, en
+  utilisant les outils natifs lorsqu'ils existent (ex. `biome migrate`).
+- [ ] Décider d'une éventuelle politique de support de plusieurs versions
+  d'un même outil ; aucune compatibilité universelle n'est promise.
+- [ ] Cadrer un éventuel verrouillage complet des projets pip : les versions
+  exactes des outils ne verrouillent pas leurs dépendances transitives.
+- [ ] Étudier l'automatisation des mises à jour des versions centralisées :
+  proposition de changement, exécution des profils générés, validation avant
+  release ; aucune mise à jour silencieuse des projets utilisateurs.
+
+---
+
 ## Priorité 3 — finaliser la migration ezplog 2.x
 
 `EzplBridge` est supprimé, les API publiques d'ezplog 2.x sont adoptées et
@@ -50,6 +93,13 @@ publié avec le statut *Inactive*.
 **Critère de sortie du lot :** l'ancien nom est archivé et ne propose plus
 de mise à jour silencieuse.
 
+### 4.6 Cohérence des textes avec le périmètre actuel
+
+- [ ] Corriger `docs/reference/files-and-variables.md` : WOMM peut modifier
+  un projet existant via `setup`, contrairement à l'affirmation actuelle.
+- [ ] Actualiser la description dans `pyproject.toml` : « Automatic
+  installation » ne décrit plus clairement le périmètre actuel de WOMM.
+
 ---
 
 ## Priorité 5 — tester les services qui écrivent sur la machine
@@ -72,8 +122,8 @@ que rien n'est perdu.
 
 - [ ] `ui/context/wizard.py` (l. 105 et l. 394, `FIXME`) :
   `PathValidator.validate()` renvoie `None`, donc le contrôle d'extension
-  des scripts n'est jamais appliqué. Le réparer refuse des scripts
-  aujourd'hui acceptés : **décision du user**, puis test.
+  des scripts et des icônes n'est jamais appliqué. Le réparer refuse des
+  fichiers aujourd'hui acceptés : **décision du user**, puis test.
 - [ ] Essayer une fois `womm setup python -I` : la question VS Code
   ajoutée en 5.1.0 n'a pas de test automatique.
 
