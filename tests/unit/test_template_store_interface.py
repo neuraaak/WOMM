@@ -80,4 +80,4 @@ def test_update_points_at_a_new_source(local_template: Path, tmp_path: Path):
 
     assert result.success is True
     assert result.entry is not None
-    assert result.entry.source == moved
+    assert result.entry.copied_from == moved.resolve()

@@ -154,7 +154,10 @@ def template_remove(identifier: str | None, interactive: bool, verbose: bool) ->
 def template_update(
     identifier: str | None, source: Path | None, interactive: bool, verbose: bool
 ) -> None:
-    """Point an existing user template at a new source."""
+    """Refresh WOMM's copy of a user template, or copy it from SOURCE.
+
+    Without SOURCE, the copy is refreshed from the directory it was made from.
+    """
     from ...interfaces.project.template_store_interface import TemplateStoreInterface
     from ...ui.common import ezprinter
     from ...ui.project import ask_text, confirm_action, render_template_result
@@ -166,14 +169,12 @@ def template_update(
         if not current.success or current.entry is None:
             render_template_result(current)
             raise SystemExit(1)
-        source = source or Path(
-            ask_text("New template directory", default=str(current.entry.source))
-        )
-        if not confirm_action(f"Point {current.entry.qualified_id} at {source}?"):
+        origin = current.entry.copied_from or current.entry.source
+        source = source or Path(ask_text("Copy it from", default=str(origin)))
+        if not confirm_action(f"Copy {current.entry.qualified_id} from {source}?"):
             ezprinter.info("Cancelled, nothing was updated")
             return
     identifier = _require(identifier, "IDENTIFIER")
-    source = _require(source, "SOURCE")
 
     result = store.update_template(identifier, source)
     render_template_result(result, verbose=verbose)

@@ -8,7 +8,8 @@
 
 Official templates ship inside the wheel and are discovered at read time;
 they are never written to the user catalog. ``catalog.json`` holds only
-user-registered templates.
+user-registered templates, each rendered from a copy WOMM keeps under
+``copies/`` so that moving or archiving the original breaks nothing.
 """
 
 from __future__ import annotations
@@ -18,7 +19,10 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 import json
 import os
+import re
+import shutil
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +45,16 @@ TEMPLATE_MANIFESTS = ("copier.yml", "copier.yaml")
 
 # Namespaces a user identifier may not use: they would read as an origin.
 RESERVED_NAMESPACES = frozenset(origin.value for origin in TemplateOrigin)
+
+# Each identifier part becomes a directory name: keep it valid on Windows too.
+IDENTIFIER_PART = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?")
+WINDOWS_RESERVED_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"{device}{n}" for device in ("COM", "LPT") for n in range(1, 10)}
+)
+
+# Subdirectory of the templates directory holding WOMM's template copies.
+COPIES_DIRNAME = "copies"
 
 # Key carrying WOMM metadata inside a template manifest.
 WOMM_METADATA_KEY = "_womm"
@@ -143,24 +157,32 @@ class TemplateStoreService:
         return self._build_user_entry(identifier, source)
 
     def add(self, identifier: str, source: Path) -> TemplateEntry:
-        """Register a local template under the user namespace.
+        """Copy a local template into WOMM and register it.
 
         Args:
-            identifier: Short identifier, without any separator.
+            identifier: ``name`` or ``namespace/name``.
             source: Directory holding ``copier.yml`` or ``copier.yaml``.
 
         Returns:
-            TemplateEntry: The registered entry.
+            TemplateEntry: The registered entry, rendered from the copy.
 
         Raises:
-            ProjectServiceError: If the identifier or source is refused.
+            ProjectServiceError: If the identifier or source is refused, or the
+                copy cannot be written.
         """
         entry = self.preview(identifier, source)
-        self._save_user_entries([*self._load_user_entries(), entry])
-        return entry
+        stored = self._store_copy(identifier, entry.source)
+        try:
+            self._save_user_entries([*self._load_user_entries(), stored])
+        except ProjectServiceError:
+            shutil.rmtree(stored.source, ignore_errors=True)
+            raise
+        return stored
 
     def remove(self, identifier: str) -> TemplateEntry:
-        """Unregister a user template.
+        """Unregister a user template and delete WOMM's copy of it.
+
+        The original directory is never touched.
 
         Args:
             identifier: Qualified or short identifier.
@@ -179,10 +201,16 @@ class TemplateStoreService:
             )
         remaining = [item for item in self._load_user_entries() if item.id != entry.id]
         self._save_user_entries(remaining)
+        if self._is_copy(entry.source):
+            shutil.rmtree(entry.source, ignore_errors=True)
         return entry
 
-    def update(self, identifier: str, source: Path) -> TemplateEntry:
-        """Point an existing user template at a new source.
+    def update(self, identifier: str, source: Path | None = None) -> TemplateEntry:
+        """Refresh WOMM's copy of a user template.
+
+        Without ``source``, the copy is refreshed from the directory it was
+        made from; with it, that directory becomes the new origin. An entry
+        registered by path before copies existed becomes a copy.
 
         Args:
             identifier: Qualified or short identifier.
@@ -192,7 +220,8 @@ class TemplateStoreService:
             TemplateEntry: The updated entry.
 
         Raises:
-            ProjectServiceError: If unknown, not user-owned, or source invalid.
+            ProjectServiceError: If unknown, not user-owned, or the origin is
+                gone or invalid.
         """
         entry = self.resolve(identifier)
         if entry.origin is not TemplateOrigin.USER:
@@ -200,8 +229,16 @@ class TemplateStoreService:
                 operation="update_template",
                 reason=f"Official templates cannot be updated: {identifier}",
             )
-        self._validate_source(source, operation="update_template")
-        updated = self._build_user_entry(entry.id, source)
+        origin = source or entry.copied_from or entry.source
+        if source is None and not origin.is_dir():
+            raise ProjectServiceError(
+                operation="update_template",
+                reason=f"Template origin is gone: {origin}",
+                details=f"Pass its new location: womm template update "
+                f"{entry.id} SOURCE",
+            )
+        self._validate_source(origin, operation="update_template")
+        updated = self._store_copy(entry.id, origin.expanduser().resolve())
         remaining = [item for item in self._load_user_entries() if item.id != entry.id]
         self._save_user_entries([*remaining, updated])
         return updated
@@ -251,8 +288,8 @@ class TemplateStoreService:
     def _load_user_entries(self) -> list[TemplateEntry]:
         """Read the user catalog, treating absence as empty.
 
-        Metadata is read from each template's manifest, so edits to it show
-        without re-registering; the stored copy only serves a missing source.
+        Metadata is read from each template's manifest; the stored copy of it
+        only serves a missing source.
         """
         catalog = template_catalog_file()
         if not catalog.is_file():
@@ -261,14 +298,19 @@ class TemplateStoreService:
             payload = json.loads(catalog.read_text(encoding="utf-8"))
             items = payload["templates"]
             return [
-                self._build_user_entry(item["id"], Path(item["source"]))
-                if _find_manifest(Path(item["source"]))
-                else TemplateEntry(
-                    id=item["id"],
-                    origin=TemplateOrigin.USER,
-                    source=Path(item["source"]),
-                    version=item.get("version", ""),
-                    description=item.get("description", ""),
+                replace(
+                    self._build_user_entry(item["id"], Path(item["source"]))
+                    if _find_manifest(Path(item["source"]))
+                    else TemplateEntry(
+                        id=item["id"],
+                        origin=TemplateOrigin.USER,
+                        source=Path(item["source"]),
+                        version=item.get("version", ""),
+                        description=item.get("description", ""),
+                    ),
+                    copied_from=Path(item["copied_from"])
+                    if item.get("copied_from")
+                    else None,
                 )
                 for item in items
             ]
@@ -288,6 +330,9 @@ class TemplateStoreService:
                 {
                     "id": entry.id,
                     "source": str(entry.source),
+                    "copied_from": str(entry.copied_from)
+                    if entry.copied_from
+                    else None,
                     "version": entry.version,
                     "description": entry.description,
                 }
@@ -312,27 +357,28 @@ class TemplateStoreService:
     # ///////////////////////////////////////////////////////////
 
     def _validate_identifier(self, identifier: str, *, operation: str) -> None:
-        """Accept ``name`` or ``namespace/name``; reject reserved namespaces."""
+        """Accept ``name`` or ``namespace/name``; reject reserved namespaces.
+
+        Each part names a directory of the copy, hence the strict charset.
+        """
         if not identifier or identifier != identifier.strip():
             raise ProjectServiceError(
                 operation=operation,
                 reason="Template identifier must not be empty",
             )
         parts = identifier.split("/")
-        if (
-            len(parts) > 2
-            or "\\" in identifier
-            or any(
-                not part or part != part.strip() or part.startswith(".")
-                for part in parts
-            )
+        if len(parts) > 2 or not all(
+            IDENTIFIER_PART.fullmatch(part)
+            and part.split(".")[0].upper() not in WINDOWS_RESERVED_NAMES
+            for part in parts
         ):
             raise ProjectServiceError(
                 operation=operation,
                 reason=f"Template identifier must be name or namespace/name: "
                 f"{identifier}",
-                details="One namespace level at most; no backslash, empty part "
-                "or part starting with a dot.",
+                details="One namespace level at most; each part uses letters, "
+                "digits, '.', '_' or '-', starts and ends with a letter or "
+                "digit, and is not a reserved Windows name such as CON.",
             )
         if len(parts) == 2 and parts[0].lower() in RESERVED_NAMESPACES:
             raise ProjectServiceError(
@@ -357,6 +403,47 @@ class TemplateStoreService:
                 details=f"Expected a {' or '.join(TEMPLATE_MANIFESTS)} file "
                 "at the root.",
             )
+
+    # ///////////////////////////////////////////////////////////
+    # PRIVATE METHODS - COPIES
+    # ///////////////////////////////////////////////////////////
+
+    def _store_copy(self, identifier: str, origin: Path) -> TemplateEntry:
+        """Copy ``origin`` into WOMM, replacing any previous copy only once
+        the new one is complete.
+
+        Returns:
+            TemplateEntry: The entry rendered from the copy.
+        """
+        target = user_templates_dir() / COPIES_DIRNAME / Path(*identifier.split("/"))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(dir=target.parent, prefix=f".{target.name}-"))
+        fresh, previous = staging / "fresh", staging / "previous"
+        try:
+            # A template's history is not part of it; symlinks stay links.
+            shutil.copytree(
+                origin, fresh, symlinks=True, ignore=shutil.ignore_patterns(".git")
+            )
+            if target.exists():
+                target.rename(previous)
+            fresh.rename(target)
+        except OSError as exc:
+            if previous.exists() and not target.exists():
+                previous.rename(target)
+            raise ProjectServiceError(
+                operation="copy_template",
+                reason=f"Template could not be copied into WOMM: {origin}",
+                details=str(exc),
+            ) from exc
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+        return replace(self._build_user_entry(identifier, target), copied_from=origin)
+
+    def _is_copy(self, path: Path) -> bool:
+        """Tell whether ``path`` is a copy WOMM owns, safe to delete."""
+        copies = (user_templates_dir() / COPIES_DIRNAME).resolve()
+        resolved = path.resolve()
+        return resolved != copies and resolved.is_relative_to(copies)
 
     def _build_user_entry(self, identifier: str, source: Path) -> TemplateEntry:
         """Build a user entry, reading metadata from the manifest."""

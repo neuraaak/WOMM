@@ -49,6 +49,8 @@ def _entry_panel(entry: TemplateEntry, *, verbose: bool) -> Panel:
     ]
     if verbose:
         lines.append(f"[b]Source:[/b] {entry.source}")
+        if entry.copied_from is not None:
+            lines.append(f"[b]Copied from:[/b] {entry.copied_from}")
 
     return Panel(
         "\n".join(lines),

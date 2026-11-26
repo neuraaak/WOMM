@@ -146,7 +146,7 @@ def test_update_interactive_asks_the_new_source(
     from womm.services.project.template_store_service import TemplateStoreService
 
     assert result.exit_code == 0, result.output
-    assert TemplateStoreService().resolve("user/mine").source == moved.resolve()
+    assert TemplateStoreService().resolve("user/mine").copied_from == moved.resolve()
 
 
 def test_init_interactive_scaffolds_then_registers(tmp_path: Path):

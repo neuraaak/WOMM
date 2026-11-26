@@ -3,6 +3,18 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.5.0 — Unreleased
+
+### Changed
+
+- `womm template add` copies your template into `~/.womm` and renders from the
+  copy, so moving or archiving the original no longer breaks the entry.
+  `womm template update NAME` refreshes the copy from the original, and
+  `remove` deletes the copy. Entries registered earlier keep pointing at
+  their directory until you update them.
+- Template identifiers are restricted to letters, digits, `.`, `_` and `-`
+  in each part, since they now name directories.
+
 ## 5.4.0 — 2026-11-26
 
 ### New

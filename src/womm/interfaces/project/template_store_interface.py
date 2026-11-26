@@ -144,12 +144,15 @@ class TemplateStoreInterface:
             entry=entry,
         )
 
-    def update_template(self, identifier: str, source: Path) -> TemplateStoreResult:
-        """Point an existing user template at a new source.
+    def update_template(
+        self, identifier: str, source: Path | None = None
+    ) -> TemplateStoreResult:
+        """Refresh WOMM's copy of a user template, from a new source if given.
 
         Args:
             identifier: Qualified or short identifier.
-            source: New directory holding ``copier.yml``.
+            source: New directory holding ``copier.yml``; ``None`` refreshes
+                from the directory the copy was made from.
 
         Returns:
             TemplateStoreResult: Typed outcome, never raises.
