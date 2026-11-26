@@ -3,7 +3,23 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
-## 5.3.0 — Unreleased
+## 5.4.0 — 2026-11-26
+
+### Fixed
+
+- A user template kept in a git repository is rendered from its current state,
+  uncommitted changes included and announced in a warning. It was rendered from
+  its latest tag, silently ignoring later commits.
+- `womm create --setup` works with user templates that declare
+  `_womm.setup.language`, and a user template named like an official one no
+  longer receives the official setup.
+- `womm template list` and `show` follow edits to a user template's
+  `copier.yml` without re-registering it, and `copier.yaml` is accepted.
+- `womm template init` writes the description you give into the skeleton's
+  catalog metadata, and the skeleton renders a README instead of a stray
+  `.gitkeep`.
+
+## 5.3.0 — 2026-11-26
 
 ### New
 
@@ -19,20 +35,6 @@ by commit, is in the [changelog](changelog.md).
   separate history; a failed installation restores files but may leave the
   environment needing synchronization. See
   [Update project tooling](tasks/configure-an-existing-project.md#update-an-official-projects-tooling).
-
-### Fixed
-
-- A user template kept in a git repository is rendered from its current state,
-  uncommitted changes included and announced in a warning. It was rendered from
-  its latest tag, silently ignoring later commits.
-- `womm create --setup` works with user templates that declare
-  `_womm.setup.language`, and a user template named like an official one no
-  longer receives the official setup.
-- `womm template list` and `show` follow edits to a user template's
-  `copier.yml` without re-registering it, and `copier.yaml` is accepted.
-- `womm template init` writes the description you give into the skeleton's
-  catalog metadata, and the skeleton renders a README instead of a stray
-  `.gitkeep`.
 
 ## 5.2.0 — 2026-11-26
 
