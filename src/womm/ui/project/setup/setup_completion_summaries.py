@@ -58,6 +58,7 @@ def print_setup_completion_summary(
     git_repository: bool = False,
     setup_git_hooks: bool = False,
     vscode: bool = False,
+    warning_count: int = 0,
 ) -> None:
     """
     Print a completion summary for project setup.
@@ -70,6 +71,7 @@ def print_setup_completion_summary(
         git_repository: Whether the Git repository was initialized
         setup_git_hooks: Whether Git hooks were installed
         vscode: Whether the VS Code configuration was written
+        warning_count: Number of warnings, each about a step that did not complete
     """
     completed = [
         label
@@ -86,6 +88,11 @@ def print_setup_completion_summary(
     if completed:
         content += "\n\n🔧 Configuration completed:\n"
         content += "\n".join(f"  • {label}" for label in completed)
+    if warning_count:
+        content += (
+            f"\n\n⚠️  Some steps did not complete ({warning_count} warning(s) "
+            "below): fix the cause, then run the setup again."
+        )
 
     content += "\n\n🚀 Next steps:\n"
     if (project_path / "README.md").is_file():
@@ -99,11 +106,13 @@ def print_setup_completion_summary(
         "react": "🔧 JavaScript Project Setup Completed!",
         "vue": "🔧 JavaScript Project Setup Completed!",
     }.get(project_type, "🔧 Project Setup Completed!")
+    border_style = "bright_blue"
+    if warning_count:
+        title = title.replace("Completed!", "Incomplete")
+        border_style = "yellow"
     ezconsole.print("")
     ezconsole.print(
-        Panel(
-            content, title=title, border_style="bright_blue", width=80, padding=(1, 1)
-        )
+        Panel(content, title=title, border_style=border_style, width=80, padding=(1, 1))
     )
 
 
@@ -122,6 +131,7 @@ def print_project_setup_result(result: ProjectSetupResult) -> None:
         git_repository="git" in configured_tools,
         setup_git_hooks="git_hooks" in configured_tools,
         vscode="vscode" in configured_tools,
+        warning_count=len(result.warnings or []),
     )
     for warning in result.warnings or []:
         ezprinter.warning(warning)

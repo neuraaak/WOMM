@@ -31,6 +31,8 @@ by commit, is in the [changelog](changelog.md).
   such as `My Project` used to break `uv sync` or `npm install` afterwards.
 - `womm template init` refuses a template name that `womm template add` would
   refuse, instead of writing a README with commands that fail.
+- `womm setup` titles its summary "Incomplete" when a step failed, instead of
+  "Completed!" above the failure warnings.
 
 ## 5.3.0 — 2026-11-26
 
