@@ -155,7 +155,7 @@ security = { help = "Run Bandit and audit locked dependencies", sequence = [
     "pip-audit",
 ], default_item_type = "cmd" }
 test = { cmd = "pytest", help = "Run the test suite" }
-test-ci = { cmd = "pytest --cov-fail-under=60", help = "Run the test suite with the coverage gate" }
+test-ci = { cmd = "pytest -n auto --cov-fail-under=60", help = "Run the test suite with the coverage gate" }
 test-fast = { cmd = "pytest -m 'not slow'", help = "Run tests excluding slow tests" }
 test-parallel = { cmd = "pytest -n auto", help = "Run tests in parallel" }
 pre-commit = { cmd = "pre-commit run --all-files", help = "Run every pre-commit hook" }
