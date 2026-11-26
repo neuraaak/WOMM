@@ -544,3 +544,18 @@ def test_check_dependencies_translates_probe_error(
     )
 
     assert error == "Error checking dependencies: probe unavailable"
+
+
+def test_vscode_config_survives_a_folder_name_the_template_refuses(
+    tmp_path: Path,
+) -> None:
+    from womm.services.project.setup_profile_resolver import resolve_setup_profile
+
+    project = tmp_path / "My Project"
+    project.mkdir()
+    profile = resolve_setup_profile("python")
+    assert profile is not None
+
+    ProjectSetupInterface()._copy_vscode_config(project, profile)
+
+    assert (project / ".vscode" / "settings.json").is_file()

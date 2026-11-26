@@ -26,6 +26,9 @@ by commit, is in the [changelog](changelog.md).
 - `womm template init` writes the description you give into the skeleton's
   catalog metadata, and the skeleton renders a README instead of a stray
   `.gitkeep`.
+- The official templates check the project name when you answer: Python
+  requires a valid distribution name and JavaScript a valid npm name. A name
+  such as `My Project` used to break `uv sync` or `npm install` afterwards.
 - `womm template init` refuses a template name that `womm template add` would
   refuse, instead of writing a README with commands that fail.
 

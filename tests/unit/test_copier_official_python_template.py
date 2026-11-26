@@ -347,3 +347,18 @@ def test_uv_setup_leaves_the_lockfile_the_generated_ci_requires(tmp_path: Path):
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("name", ["Super Project64", "-bad", "bad-", "a b"])
+def test_project_name_must_be_a_valid_distribution_name(tmp_path: Path, name: str):
+    from womm.exceptions.project import ProjectServiceError
+
+    with pytest.raises(ProjectServiceError, match="project_name"):
+        render(tmp_path / "out", project_name=name)
+
+
+def test_project_name_accepts_pep_508_names(tmp_path: Path):
+    out = render(tmp_path / "out", project_name="Acme.Tool_2")
+
+    pyproject = tomllib.loads((out / "pyproject.toml").read_text(encoding="utf-8"))
+    assert pyproject["project"]["name"] == "Acme.Tool_2"

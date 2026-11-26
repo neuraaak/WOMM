@@ -518,3 +518,18 @@ def test_vscode_recommends_eslint_and_prettier_for_vue(tmp_path: Path):
         (out / ".vscode" / "settings.json").read_text(encoding="utf-8")
     )
     assert settings["editor.defaultFormatter"] == "esbenp.prettier-vscode"
+
+
+@pytest.mark.parametrize("name", ["MyApp", "my app", "_private", ".hidden"])
+def test_project_name_must_be_a_valid_npm_name(tmp_path: Path, name: str):
+    from womm.exceptions.project import ProjectServiceError
+
+    with pytest.raises(ProjectServiceError, match="project_name"):
+        render(tmp_path / "out", project_name=name)
+
+
+def test_project_name_accepts_a_scoped_npm_name(tmp_path: Path):
+    out = render(tmp_path / "out", project_name="@acme/my-app")
+
+    package = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    assert package["name"] == "@acme/my-app"
