@@ -213,3 +213,70 @@ def test_user_template_without_setup_metadata_leaves_fields_empty(
     entry = store.add("my-service", user_template)
 
     assert entry.setup_language == ""
+
+
+def test_user_setup_language_survives_a_catalog_reload(user_template: Path):
+    (user_template / "copier.yml").write_text(
+        "_womm:\n  setup:\n    language: python\n", encoding="utf-8"
+    )
+    TemplateStoreService().add("my-service", user_template)
+
+    entry = TemplateStoreService().resolve("user/my-service")
+
+    assert entry.setup_language == "python"
+
+
+def test_user_metadata_follows_manifest_edits(user_template: Path):
+    store = TemplateStoreService()
+    store.add("my-service", user_template)
+    (user_template / "copier.yml").write_text(
+        '_womm:\n  version: "2.0.0"\n  description: "edited"\n', encoding="utf-8"
+    )
+
+    entry = store.resolve("my-service")
+
+    assert (entry.version, entry.description) == ("2.0.0", "edited")
+
+
+def test_user_entry_with_missing_source_keeps_stored_metadata(user_template: Path):
+    (user_template / "copier.yml").write_text(
+        '_womm:\n  version: "1.0.0"\n', encoding="utf-8"
+    )
+    store = TemplateStoreService()
+    store.add("my-service", user_template)
+    (user_template / "copier.yml").unlink()
+
+    assert store.resolve("my-service").version == "1.0.0"
+
+
+def test_add_accepts_a_copier_yaml_manifest(tmp_path: Path):
+    root = tmp_path / "yaml-template"
+    root.mkdir()
+    (root / "copier.yaml").write_text(
+        '_womm:\n  description: "yaml"\n', encoding="utf-8"
+    )
+
+    entry = TemplateStoreService().add("yaml", root)
+
+    assert entry.description == "yaml"
+
+
+def test_add_accepts_one_namespace_level(user_template: Path):
+    store = TemplateStoreService()
+
+    entry = store.add("neuraaak/my-service", user_template)
+
+    assert entry.qualified_id == "user/neuraaak/my-service"
+    assert store.resolve("neuraaak/my-service") == entry
+    assert store.resolve("user/neuraaak/my-service") == entry
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    ["user/x", "Official/x", "a/b/c", "ns/.x", "ns/", "/x", "a\\b"],
+)
+def test_add_refuses_reserved_or_malformed_namespaces(
+    user_template: Path, identifier: str
+):
+    with pytest.raises(ProjectServiceError):
+        TemplateStoreService().add(identifier, user_template)

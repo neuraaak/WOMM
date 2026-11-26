@@ -30,7 +30,13 @@ tool_versions:
 
 project_name:
   type: str
-  help: "Project name"
+  help: "Project name (distribution name, e.g. my-project)"
+  # It is the pyproject.toml name: uv and pip refuse anything else (PEP 508).
+  validator: >-
+    {% if not (project_name | regex_search('^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9])$')) %}
+    Use letters, digits, '-', '_' or '.', starting and ending with a letter or
+    digit (e.g. my-project).
+    {% endif %}
 
 package_name:
   type: str

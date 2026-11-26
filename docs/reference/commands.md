@@ -57,6 +57,10 @@ version transitions. See [Update an official project's tooling](../tasks/configu
 
 `womm template init` also takes `--data KEY=VALUE`, `--defaults` and `--force`.
 
+`add`, `init`, `update` and `remove` take `-I` / `--interactive`: WOMM asks for
+the arguments you leave out, shows what it is about to write and asks you to
+confirm. `init -I` then offers to register the new skeleton.
+
 ## Dependencies
 
 | Command            | What it does                                              |

@@ -21,6 +21,7 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import logging
+import re
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
@@ -189,7 +190,7 @@ class ProjectSetupInterface:
             else:
                 result = self._setup_javascript_project(
                     project_path,
-                    project_type,
+                    profile.language,
                     install_deps=install_deps,
                     setup_git_hooks=setup_git_hooks,
                 )
@@ -398,20 +399,32 @@ class ProjectSetupInterface:
             profile: Resolved setup profile with its Copier template and answers.
             template_answers: Optional answers from the project's initial render.
         """
+        # Official templates validate project_name as a package name; a folder
+        # named "My App" falls back to a valid form, unused by their .vscode/.
+        safe_name = (
+            re.sub(r"[^a-z0-9._-]+", "-", project_path.name.lower()).strip("-._")
+            or "project"
+        )
         with tempfile.TemporaryDirectory() as temp_dir:
             rendered_project = Path(temp_dir) / "project"
-            CopierProjectCreationService().create(
-                ProjectCreationRequest(
-                    template_source=profile.template_source,
-                    destination=rendered_project,
-                    answers={
-                        **profile.answers,
-                        **(template_answers or {}),
-                        "project_name": project_path.name,
-                    },
-                    defaults=True,
-                )
-            )
+            for name in dict.fromkeys((project_path.name, safe_name)):
+                try:
+                    CopierProjectCreationService().create(
+                        ProjectCreationRequest(
+                            template_source=profile.template_source,
+                            destination=rendered_project,
+                            answers={
+                                **profile.answers,
+                                **(template_answers or {}),
+                                "project_name": name,
+                            },
+                            defaults=True,
+                        )
+                    )
+                    break
+                except ProjectServiceError:
+                    if name == safe_name:
+                        raise
 
             source_dir = rendered_project / ".vscode"
             if not source_dir.is_dir():

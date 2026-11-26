@@ -6,8 +6,8 @@ one from scratch.
 ## 🔧 Prerequisites
 
 - WOMM installed — see [Get started](../get-started.md).
-- To register a template: a local directory holding a `copier.yml` file. Remote
-  sources (a git URL) are not supported yet.
+- To register a template: a local directory holding a `copier.yml` (or
+  `copier.yaml`) file. Remote sources (a git URL) are not supported yet.
 - To scaffold one: nothing more. `womm template init` writes the skeleton.
 
 ## 📝 Steps
@@ -29,9 +29,31 @@ womm template show official/python
 womm template add mytpl ./templates/my-template
 ```
 
-The identifier is a plain name — no slash, no path. WOMM files it under the
-`user/` namespace, so the entry above is listed as `user/mytpl`. The `official/`
-namespace is reserved.
+The identifier is a name, optionally prefixed by one namespace of your own:
+`mytpl` or `neuraaak/mytpl`. WOMM files it under the `user/` origin, so these
+are listed as `user/mytpl` and `user/neuraaak/mytpl`. `official` and `user` are
+reserved and cannot be used as a namespace.
+
+Prefer to be guided? `womm template add -I` asks for the identifier and the
+directory, shows the entry it read from `copier.yml`, and registers it only
+once you confirm. `update -I` and `remove -I` let you pick the entry from a
+list.
+
+`list` and `show` read the version and description from the template's
+`copier.yml` each time, so editing them needs no re-registration.
+
+If the directory is a git repository, WOMM renders what is in it now: the
+current commit plus any uncommitted changes, never an older tag. When
+uncommitted changes are included, `womm create` says so in a warning.
+
+To let `womm create --setup` prepare projects made from your template, declare
+their language in `copier.yml`:
+
+```yaml
+_womm:
+  setup:
+    language: python  # or javascript
+```
 
 ### Scaffold a new template
 
@@ -41,7 +63,9 @@ womm template init ./templates/my-template
 
 WOMM renders a Copier template skeleton: a `copier.yml`, a `template/` directory
 and the metadata the catalog needs. `--data KEY=VALUE`, `--defaults` and
-`--force` behave as in [Create a project](create-a-project.md).
+`--force` behave as in [Create a project](create-a-project.md). With `-I`, WOMM
+asks for the destination if you leave it out, then offers to register the
+skeleton in the catalog.
 
 ### Point an entry elsewhere, or drop it
 

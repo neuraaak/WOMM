@@ -81,7 +81,7 @@ class ProjectCreateInterface:
         """
         try:
             entry = self._store.resolve(template)
-            self._creator.create(
+            warnings = self._creator.create(
                 ProjectCreationRequest(
                     template_source=entry.source,
                     destination=destination,
@@ -99,9 +99,8 @@ class ProjectCreateInterface:
                 project_name=destination.name,
             )
 
-        warnings: list[str] = []
         if setup and not pretend:
-            warnings = self._run_setup(destination, entry.id, answers)
+            warnings += self._run_setup(destination, entry.qualified_id, answers)
 
         return ProjectCreationResult(
             success=True,
@@ -129,8 +128,8 @@ class ProjectCreateInterface:
 
         Args:
             destination: Path to the rendered project.
-            project_type: Template id, used to select the setup path
-                (e.g. "python").
+            project_type: Qualified template id, used to select the setup
+                path (e.g. "official/python").
             template_answers: Answers used to render the project.
 
         Returns:

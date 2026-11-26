@@ -36,7 +36,13 @@ tool_versions:
 
 project_name:
   type: str
-  help: "Project name"
+  help: "Project name (npm package name, e.g. my-app)"
+  # It is the package.json name: npm refuses capitals, spaces and most symbols.
+  validator: >-
+    {% if not (project_name | regex_search('^(@[a-z0-9~-][a-z0-9._~-]*/)?[a-z0-9~-][a-z0-9._~-]*$')) or project_name | length > 214 %}
+    Use lowercase letters, digits, '-', '.', '_' or '~', not starting with '.'
+    or '_', optionally scoped as @scope/name (e.g. my-app).
+    {% endif %}
 
 description:
   type: str
