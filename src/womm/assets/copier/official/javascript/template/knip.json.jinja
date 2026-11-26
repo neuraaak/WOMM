@@ -1,0 +1,5 @@
+{
+  "$schema": "https://unpkg.com/knip@{{ tool_versions.knip }}/schema.json"{% if framework == "none" %},
+  "entry": ["src/main.{js,ts}"],
+  "project": ["src/**/*.{js,ts}"]{% endif %}
+}

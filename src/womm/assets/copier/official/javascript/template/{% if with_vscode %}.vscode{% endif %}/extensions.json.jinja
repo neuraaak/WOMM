@@ -1,4 +1,4 @@
-{%- set use_biome = framework != "vue" -%}
+{%- set use_biome = tooling == "biome" -%}
 {%- set extensions = (["biomejs.biome"] if use_biome else ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]) + (["vue.volar"] if framework == "vue" else []) + (["vitest.explorer"] if with_tests else []) -%}
 {%- set inline = '  "recommendations": [' ~ (extensions | map("tojson") | join(", ")) ~ "]" -%}
 {

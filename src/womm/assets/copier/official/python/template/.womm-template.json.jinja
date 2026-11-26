@@ -1,0 +1,5 @@
+{% set choices = {} -%}
+{% for key, value in _copier_answers.items() if not key.startswith('_') -%}
+{% set _ = choices.update({key: value}) -%}
+{% endfor -%}
+{{ {'schema_version': 1, 'womm_version': _copier_conf.data.get('_womm_version', 'unknown'), 'template': 'official/python', 'template_version': template_version, 'choices': choices} | tojson(indent=2) }}

@@ -27,9 +27,15 @@ jobs:
       - name: Lint
         run: uv run --no-sync ruff check .
       - name: Format check
+{%- if tooling == "ruff" %}
         run: uv run --no-sync ruff format --check .
+{%- else %}
+        run: |
+          uv run --no-sync isort --check-only .
+          uv run --no-sync black --check .
+{%- endif %}
       - name: Type check
-        run: uv run --no-sync ty check .
+        run: uv run --no-sync {{ type_checker }}{% if type_checker == "ty" %} check .{% endif %}
 {%- if framework == "django" %}
       - name: Set Django secret key
         run: echo "DJANGO_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" >> "$GITHUB_ENV"
@@ -56,9 +62,15 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Format check
+{%- if tooling == "ruff" %}
         run: ruff format --check .
+{%- else %}
+        run: |
+          isort --check-only .
+          black --check .
+{%- endif %}
       - name: Type check
-        run: ty check .
+        run: {{ type_checker }}{% if type_checker == "ty" %} check .{% endif %}
 {%- if framework == "django" %}
       - name: Set Django secret key
         run: echo "DJANGO_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" >> "$GITHUB_ENV"

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "tools": {
+    "ruff": {"version_key": "ruff", "config": "ruff", "validate": "ruff"},
+    "black": {"version_key": "black", "config": "python", "validate": "black"},
+    "isort": {"version_key": "isort", "config": "python", "validate": "isort"},
+    "ty": {"version_key": "ty", "config": "python", "validate": "ty"},
+    "mypy": {"version_key": "mypy", "config": "python", "validate": "mypy"},
+    "pyright": {"version_key": "pyright", "config": "python", "validate": "pyright"},
+    "pre-commit": {"version_key": "pre_commit"},
+    "pytest": {"version_key": "pytest"},
+    "pytest-cov": {"version_key": "pytest_cov"},
+    "pytest-django": {"version_key": "pytest_django"},
+    "django-stubs": {"version_key": "django_stubs"},
+    "@biomejs/biome": {"version_key": "biome", "config": "biome", "validate": "biome"},
+    "eslint": {"version_key": "eslint", "config": "eslint", "validate": "eslint"},
+    "@eslint/js": {"version_key": "eslint_js"},
+    "eslint-config-prettier": {"version_key": "eslint_config_prettier"},
+    "eslint-plugin-vue": {"version_key": "eslint_plugin_vue"},
+    "eslint-plugin-react-hooks": {"version_key": "eslint_plugin_react_hooks"},
+    "vue-eslint-parser": {"version_key": "vue_eslint_parser"},
+    "globals": {"version_key": "globals"},
+    "prettier": {"version_key": "prettier", "config": "prettier", "validate": "prettier"},
+    "typescript": {"version_key": "typescript", "validate": "typescript"},
+    "typescript-eslint": {"version_key": "typescript_eslint"},
+    "vue-tsc": {"version_key": "vue_tsc"},
+    "vitest": {"version_key": "vitest"},
+    "@vitest/coverage-v8": {"version_key": "vitest"},
+    "knip": {"version_key": "knip"},
+    "vite": {"version_key": "vite"},
+    "@vitejs/plugin-react": {"version_key": "vite_plugin_react"},
+    "@vitejs/plugin-vue": {"version_key": "vite_plugin_vue"}
+  },
+  "transitions": [
+    {
+      "id": "biome-v1-to-v2",
+      "tool": "@biomejs/biome",
+      "source": ">=1,<2",
+      "target": ">=2.6.8,<2.7",
+      "operation": "biome-migrate",
+      "destructive": true,
+      "reference": "https://biomejs.dev/installation/upgrade-to-biome-v2/"
+    }
+  ],
+  "normalizations": [
+    {
+      "id": "ruff-lint-settings",
+      "tool": "ruff",
+      "target": ">=0.17.2,<0.18",
+      "operation": "move",
+      "source_prefix": [],
+      "destination_prefix": ["lint"],
+      "keys": ["dummy-variable-rgx", "explicit-preview-rules", "allowed-confusables", "extend-fixable", "extend-ignore", "extend-per-file-ignores", "extend-safe-fixes", "extend-select", "extend-unfixable", "extend-unsafe-fixes", "external", "fixable", "ignore", "isort", "logger-objects", "mccabe", "per-file-ignores", "pycodestyle", "pydocstyle", "pyflakes", "pylint", "pyupgrade", "select", "task-tags", "typing-modules", "unfixable"],
+      "reference": "https://github.com/astral-sh/ruff/blob/main/changelogs/0.2.x.md"
+    }
+  ]
+}

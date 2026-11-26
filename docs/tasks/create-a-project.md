@@ -22,7 +22,8 @@ questions, writes the files, and optionally prepares the environment.
 
 2. Answer the questions. Each template asks its own: project name, package
    name, minimum Python version, framework, license, and whether to include
-   tests, CI and shared editor settings.
+   tests, coverage, CI and shared editor settings. The official templates also
+   let you choose the linting, formatting and type-checking tools.
 
 3. To also prepare the environment after rendering, add `--setup`:
 
@@ -51,6 +52,30 @@ womm create official/javascript ./web --defaults \
   --data project_name=web --data framework=react --data typescript=true
 ```
 
+### Choose development tools
+
+| Template | Answer | Choices |
+| :------- | :----- | :------ |
+| Python | `tooling` | `ruff` (recommended), `black-isort` |
+| Python | `type_checker` | `ty` (recommended), `mypy`, `pyright` |
+| JavaScript/TypeScript | `tooling` | `biome` (recommended for plain JS/TS and React), `eslint-prettier` |
+| JavaScript/TypeScript | `with_knip` | `true` to check unused files, exports and dependencies; default `false` |
+| Both | `with_coverage` | Include coverage when tests are enabled; default `true` for Python, `false` for JS/TS |
+
+Vue uses ESLint + Prettier; the template refuses Biome for this profile.
+The Python `black-isort` profile keeps Ruff for linting and delegates formatting
+and import sorting to Black and isort. The generated configurations, CI, hooks,
+editor recommendations and README all follow your choices.
+
+```bash
+womm create official/python ./my-app --defaults \
+  --data project_name=my-app --data tooling=black-isort --data type_checker=mypy
+
+womm create official/javascript ./web --defaults \
+  --data project_name=web --data framework=react --data typescript=true \
+  --data tooling=eslint-prettier --data with_knip=true --data with_coverage=true
+```
+
 !!! warning "`--force` merges, it does not overwrite everything"
 
     `--force` allows rendering into a non-empty directory. Files the template
@@ -62,9 +87,34 @@ womm create official/javascript ./web --defaults \
 The destination holds the rendered project. With `--setup`, the environment is
 ready and git is initialized.
 
-The official templates do not keep an answers file in the project, so a
-creation is not replayable: to change an answer, create again into another
-destination.
+The official templates record the WOMM version, template identifier and version,
+and original choices in `.womm-template.json`. This file describes how the
+project was generated; it is not an inventory of the current environment or a
+Copier update file. To change an answer, create again into another destination.
+
+### Keep tools and configurations compatible
+
+Tools whose configurations are generated allow patches within the same minor,
+starting at the tested version. For example, Python's `ruff~=0.17.2` allows
+`>=0.17.2,<0.18.0`, and JavaScript's `~2.6.8` allows `>=2.6.8,<2.7.0`.
+Ruff's `required-version` enforces the same range. With coverage enabled,
+Vitest and its coverage provider keep matching exact versions.
+
+Biome uses the schema from its installed package. Yarn Plug'n'Play omits the
+`$schema` reference because there is no `node_modules` path; Biome still
+validates the configuration. Install the project's dependencies and run its
+local tools rather than global copies. Commit the lockfile and use it in CI:
+it records exact resolved versions, so frozen installs stay reproducible.
+
+Patch updates require an explicit lockfile update. Before moving to another
+minor, review the tool's release notes, update its dependency range and any
+matching schema or version guard, adapt the configuration, update the lockfile,
+then run the project's format, lint, type, test and build checks. The generated
+README gives commands for the chosen tools and package manager. Pip projects
+have no generated lockfile; their constraints alone do not lock dependencies.
+
+Upgrading WOMM changes the templates used for future projects. It does not
+migrate existing projects or update their configurations.
 
 If the command stops on a non-empty destination or on a missing runtime, see
 [Troubleshooting](../troubleshooting.md#the-destination-is-not-empty).

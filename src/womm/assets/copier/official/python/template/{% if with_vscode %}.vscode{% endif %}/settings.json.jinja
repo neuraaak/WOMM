@@ -2,13 +2,16 @@
   "[python]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.ruff": "explicit",
-      "source.organizeImports.ruff": "explicit"
+      "source.organizeImports.{% if tooling == 'ruff' %}ruff{% else %}isort{% endif %}": "explicit"
     },
-    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.defaultFormatter": "{% if tooling == 'ruff' %}charliermarsh.ruff{% else %}ms-python.black-formatter{% endif %}",
     "editor.formatOnSave": true,
     "editor.rulers": [88]
   },
   "files.exclude": {
+{%- if type_checker == "mypy" %}
+    "**/.mypy_cache": true,
+{%- endif %}
     "**/.pytest_cache": true,
     "**/.ruff_cache": true,
     "**/__pycache__": true,
@@ -21,7 +24,16 @@
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "python.analysis.typeCheckingMode": "off",
+  "ruff.importStrategy": "fromEnvironment",
+{%- if tooling == "black-isort" %}
+  "ruff.organizeImports": false,
+  "black-formatter.importStrategy": "fromEnvironment",
+  "isort.importStrategy": "fromEnvironment",
+{%- endif %}
+{%- if type_checker == "mypy" %}
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+{%- endif %}
+  "python.analysis.typeCheckingMode": "{{ 'strict' if type_checker == 'pyright' else 'off' }}",
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
   "python.testing.pytestEnabled": {{ "true" if with_tests else "false" }},
   "python.testing.unittestEnabled": false

@@ -51,13 +51,16 @@ jobs:
         run: {{ run }} format:check
       - name: Lint
         run: {{ run }} lint
+{%- if with_knip %}
+      - run: {{ run }} check:unused
+{%- endif %}
 {%- if typescript %}
       - name: Type check
         run: {{ run }} type-check
 {%- endif %}
 {%- if with_tests %}
       - name: Test
-        run: {{ run }} test
+        run: {{ run }} {% if with_coverage %}test:coverage{% else %}test{% endif %}
 {%- endif %}
       - name: Build
         run: {{ run }} build

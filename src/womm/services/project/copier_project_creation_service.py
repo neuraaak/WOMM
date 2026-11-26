@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from womm._version import __version__
 from womm.exceptions.project import ProjectServiceError
 
 from .destination_guard import check_destination
@@ -84,7 +85,7 @@ class CopierProjectCreationService:
             copier.run_copy(
                 src_path=str(request.template_source),
                 dst_path=str(request.destination),
-                data=dict(request.answers),
+                data={**request.answers, "_womm_version": __version__},
                 overwrite=request.force,
                 pretend=request.pretend,
                 defaults=request.defaults,

@@ -13,8 +13,22 @@
 
 On Windows, `~` is `C:\Users\<you>`.
 
-WOMM never writes code into this directory, and never writes into a project
-after it has been created.
+WOMM never writes code into this directory. Explicit setup and tooling-update
+commands can write into a project after creation.
+
+## Project update files
+
+| Path                         | Content                                                      |
+| :--------------------------- | :----------------------------------------------------------- |
+| `.womm-template.json`        | Original generation provenance; preserved by updates         |
+| `.womm-update.json`          | Successful tooling updates, versions and migrations          |
+| `.womm-backups/update/<id>/` | Previous files and a manifest naming files originally absent |
+| `.womm-update.lock`          | Exclusive apply lock; removed when the update finishes       |
+
+Ignore `.womm-backups/` and `.womm-update.lock` in Git. Backups are local to
+the project and can contain local configuration. A preview creates none of
+these files. See [Update tooling](../tasks/configure-an-existing-project.md#update-an-official-projects-tooling)
+for migration boundaries and recovery after a failed installation.
 
 ## Environment variables
 
