@@ -16,6 +16,7 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
+import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -59,41 +60,49 @@ class ProjectCreationRequest:
 class CopierProjectCreationService:
     """Render a project from a Copier template."""
 
-    def create(self, request: ProjectCreationRequest) -> Path:
+    def create(self, request: ProjectCreationRequest) -> list[str]:
         """Render a template into its destination.
 
         A simulation never touches the filesystem, so it bypasses the
         destination guard: simulating against an existing project must stay
         possible.
 
+        A template that is a local git repository is rendered from its working
+        copy (``HEAD`` plus uncommitted changes), never from its latest tag.
+
         Args:
             request: Immutable rendering request.
 
         Returns:
-            Path: The destination directory.
+            list[str]: Warnings to surface, empty when there are none.
 
         Raises:
             ProjectServiceError: If the destination is refused or Copier fails.
         """
         # Copier costs ~600 ms to import: only the command that renders pays it.
         import copier
+        from copier.errors import DirtyLocalWarning
 
         if not request.pretend:
             check_destination(request.destination, force=request.force)
 
         try:
-            copier.run_copy(
-                src_path=str(request.template_source),
-                dst_path=str(request.destination),
-                data={**request.answers, "_womm_version": __version__},
-                overwrite=request.force,
-                pretend=request.pretend,
-                defaults=request.defaults,
-                cleanup_on_error=True,
-                unsafe=False,
-                skip_tasks=True,
-                quiet=True,
-            )
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always", DirtyLocalWarning)
+                copier.run_copy(
+                    src_path=str(request.template_source),
+                    dst_path=str(request.destination),
+                    data={**request.answers, "_womm_version": __version__},
+                    # Without it, Copier renders a git template's latest tag.
+                    vcs_ref="HEAD",
+                    overwrite=request.force,
+                    pretend=request.pretend,
+                    defaults=request.defaults,
+                    cleanup_on_error=True,
+                    unsafe=False,
+                    skip_tasks=True,
+                    quiet=True,
+                )
         except ProjectServiceError:
             raise
         except Exception as exc:  # noqa: BLE001 - Copier raises many types
@@ -103,7 +112,21 @@ class CopierProjectCreationService:
                 details=str(exc),
             ) from exc
 
-        return request.destination
+        result: list[str] = []
+        for caught_warning in caught:
+            if issubclass(caught_warning.category, DirtyLocalWarning):
+                result.append(
+                    f"Uncommitted changes in {request.template_source} were "
+                    "included in the rendering"
+                )
+            else:
+                warnings.warn_explicit(
+                    caught_warning.message,
+                    caught_warning.category,
+                    caught_warning.filename,
+                    caught_warning.lineno,
+                )
+        return result
 
 
 # ///////////////////////////////////////////////////////////////

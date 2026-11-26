@@ -168,7 +168,7 @@ class TemplateStoreInterface:
             ProjectCreationResult: Typed outcome, never raises.
         """
         try:
-            self._creator.create(
+            warnings = self._creator.create(
                 ProjectCreationRequest(
                     template_source=Path(str(packaged_copier_meta())),
                     destination=destination,
@@ -186,6 +186,7 @@ class TemplateStoreInterface:
             message=f"Template skeleton created at {destination}",
             project_path=destination,
             project_name=destination.name,
+            warnings=warnings or None,
         )
 
 

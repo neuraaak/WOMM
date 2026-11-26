@@ -69,3 +69,33 @@ def test_init_command_scaffolds(tmp_path: Path):
 
     assert result.exit_code == 0
     assert (destination / "copier.yml").is_file()
+
+
+def test_skeleton_carries_catalog_metadata_and_renders_a_readme(tmp_path: Path):
+    from womm.services.project.copier_project_creation_service import (
+        CopierProjectCreationService,
+        ProjectCreationRequest,
+    )
+
+    destination = tmp_path / "my-template"
+    TemplateStoreInterface().init_template(
+        destination,
+        answers={"template_description": 'My "quoted" template'},
+        force=False,
+        defaults=True,
+    )
+    entry = TemplateStoreService().add("mine", destination)
+    project = tmp_path / "project"
+    CopierProjectCreationService().create(
+        ProjectCreationRequest(
+            template_source=entry.source,
+            destination=project,
+            answers={"project_name": "acme"},
+            defaults=True,
+        )
+    )
+
+    assert entry.description == 'My "quoted" template'
+    assert entry.version == "0.1.0"
+    assert (project / "README.md").read_text(encoding="utf-8").startswith("# acme")
+    assert not (project / ".gitkeep").exists()

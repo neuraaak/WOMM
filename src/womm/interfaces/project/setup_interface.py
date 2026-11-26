@@ -189,7 +189,7 @@ class ProjectSetupInterface:
             else:
                 result = self._setup_javascript_project(
                     project_path,
-                    project_type,
+                    profile.language,
                     install_deps=install_deps,
                     setup_git_hooks=setup_git_hooks,
                 )

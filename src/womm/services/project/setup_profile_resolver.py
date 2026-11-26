@@ -67,8 +67,8 @@ def resolve_setup_profile(
     """Resolve an identifier to a setup profile.
 
     Args:
-        identifier: Catalog id (e.g. "python") or legacy alias
-            (e.g. "react").
+        identifier: Catalog id, short or qualified (e.g. "python",
+            "user/mytpl"), or legacy alias (e.g. "react").
         store: Template store to query. Defaults to a fresh
             ``TemplateStoreService``.
 
@@ -80,7 +80,7 @@ def resolve_setup_profile(
     store = store or TemplateStoreService()
     entries = store.list_templates()
     for entry in entries:
-        if entry.id == identifier and entry.setup_language:
+        if identifier in (entry.id, entry.qualified_id) and entry.setup_language:
             return SetupProfile(
                 language=entry.setup_language,
                 template_source=entry.source,

@@ -36,8 +36,8 @@ from womm.shared.paths import (
 # CONSTANTS
 # ///////////////////////////////////////////////////////////////
 
-# Manifest a template root must expose to be considered valid.
-TEMPLATE_MANIFEST = "copier.yml"
+# Manifests a template root may expose, in Copier's lookup order.
+TEMPLATE_MANIFESTS = ("copier.yml", "copier.yaml")
 
 # Key carrying WOMM metadata inside a template manifest.
 WOMM_METADATA_KEY = "_womm"
@@ -122,7 +122,7 @@ class TemplateStoreService:
 
         Args:
             identifier: Short identifier, without any separator.
-            source: Directory holding ``copier.yml``.
+            source: Directory holding ``copier.yml`` or ``copier.yaml``.
 
         Returns:
             TemplateEntry: The registered entry.
@@ -171,7 +171,7 @@ class TemplateStoreService:
 
         Args:
             identifier: Qualified or short identifier.
-            source: New directory holding ``copier.yml``.
+            source: New directory holding ``copier.yml`` or ``copier.yaml``.
 
         Returns:
             TemplateEntry: The updated entry.
@@ -202,8 +202,8 @@ class TemplateStoreService:
             return []
         entries: list[TemplateEntry] = []
         for candidate in sorted(root.iterdir()):
-            manifest = candidate / TEMPLATE_MANIFEST
-            if not manifest.is_file():
+            manifest = _find_manifest(candidate)
+            if manifest is None:
                 continue
             metadata = self._read_metadata(manifest)
             setup = metadata.get("setup", {})
@@ -234,7 +234,11 @@ class TemplateStoreService:
     # ///////////////////////////////////////////////////////////
 
     def _load_user_entries(self) -> list[TemplateEntry]:
-        """Read the user catalog, treating absence as empty."""
+        """Read the user catalog, treating absence as empty.
+
+        Metadata is read from each template's manifest, so edits to it show
+        without re-registering; the stored copy only serves a missing source.
+        """
         catalog = template_catalog_file()
         if not catalog.is_file():
             return []
@@ -242,7 +246,9 @@ class TemplateStoreService:
             payload = json.loads(catalog.read_text(encoding="utf-8"))
             items = payload["templates"]
             return [
-                TemplateEntry(
+                self._build_user_entry(item["id"], Path(item["source"]))
+                if _find_manifest(Path(item["source"]))
+                else TemplateEntry(
                     id=item["id"],
                     origin=TemplateOrigin.USER,
                     source=Path(item["source"]),
@@ -313,18 +319,19 @@ class TemplateStoreService:
                 operation=operation,
                 reason=f"Remote template sources are not supported yet: {raw}",
             )
-        resolved = source.expanduser().resolve()
-        if not (resolved / TEMPLATE_MANIFEST).is_file():
+        if _find_manifest(source.expanduser().resolve()) is None:
             raise ProjectServiceError(
                 operation=operation,
                 reason=f"Not a Copier template: {source}",
-                details=f"Expected a {TEMPLATE_MANIFEST} file at the root.",
+                details=f"Expected a {' or '.join(TEMPLATE_MANIFESTS)} file "
+                "at the root.",
             )
 
     def _build_user_entry(self, identifier: str, source: Path) -> TemplateEntry:
         """Build a user entry, reading metadata from the manifest."""
         resolved = source.expanduser().resolve()
-        metadata = self._read_metadata(resolved / TEMPLATE_MANIFEST)
+        manifest = _find_manifest(resolved)
+        metadata = self._read_metadata(manifest) if manifest else {}
         setup = metadata.get("setup", {})
         setup = setup if isinstance(setup, dict) else {}
         return TemplateEntry(
@@ -335,6 +342,19 @@ class TemplateStoreService:
             description=str(metadata.get("description", "")),
             setup_language=str(setup.get("language", "")),
         )
+
+
+# ///////////////////////////////////////////////////////////////
+# FUNCTIONS
+# ///////////////////////////////////////////////////////////////
+
+
+def _find_manifest(root: Path) -> Path | None:
+    """Return the template manifest at ``root``, or ``None``."""
+    return next(
+        (root / name for name in TEMPLATE_MANIFESTS if (root / name).is_file()),
+        None,
+    )
 
 
 # ///////////////////////////////////////////////////////////////

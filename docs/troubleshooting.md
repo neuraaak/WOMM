@@ -68,12 +68,12 @@ womm setup javascript --type react
 
 **Symptom** — registering a directory fails with `Not a Copier template`.
 
-**Cause** — the source has no `copier.yml` at its root, or it is a remote URL,
-which is not supported yet.
+**Cause** — the source has no `copier.yml` or `copier.yaml` at its root, or it
+is a remote URL, which is not supported yet.
 
 **Fix**
 
-1. Check that the directory holds a `copier.yml`.
+1. Check that the directory holds a `copier.yml` or `copier.yaml`.
 2. For a remote template, clone it first, then register the clone.
 3. To start a template from scratch, let WOMM scaffold one:
 

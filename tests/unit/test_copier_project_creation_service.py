@@ -45,7 +45,7 @@ def test_create_renders_the_template(template: Path, tmp_path: Path):
         )
     )
 
-    assert result == destination
+    assert result == []
     assert (destination / "README.md").read_text(encoding="utf-8") == "# acme\n"
 
 
@@ -208,3 +208,65 @@ def test_render_error_raises_a_service_error(tmp_path: Path):
         )
 
     assert excinfo.value.operation == "create_project"
+
+
+def _git(repo: Path, *args: str) -> None:
+    import shutil
+    import subprocess
+
+    git = shutil.which("git")
+    assert git is not None
+    subprocess.run(
+        [git, "-c", "user.name=t", "-c", "user.email=t@t", *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_git_template_renders_head_not_latest_tag(template: Path, tmp_path: Path):
+    readme = template / "template" / "README.md.jinja"
+    _git(template, "init", "-q")
+    _git(template, "add", "-A")
+    _git(template, "commit", "-qm", "v1")
+    _git(template, "tag", "v1.0.0")
+    readme.write_text("# head {{ project_name }}\n", encoding="utf-8")
+    _git(template, "commit", "-qam", "v2")
+    destination = tmp_path / "out"
+
+    warnings = CopierProjectCreationService().create(
+        ProjectCreationRequest(
+            template_source=template,
+            destination=destination,
+            answers={"project_name": "acme"},
+            defaults=True,
+        )
+    )
+
+    assert (destination / "README.md").read_text(encoding="utf-8") == "# head acme\n"
+    assert warnings == []
+
+
+def test_dirty_git_template_is_rendered_with_a_warning(
+    template: Path, tmp_path: Path, recwarn: pytest.WarningsRecorder
+):
+    _git(template, "init", "-q")
+    _git(template, "add", "-A")
+    _git(template, "commit", "-qm", "v1")
+    (template / "template" / "README.md.jinja").write_text(
+        "# dirty {{ project_name }}\n", encoding="utf-8"
+    )
+    destination = tmp_path / "out"
+
+    warnings = CopierProjectCreationService().create(
+        ProjectCreationRequest(
+            template_source=template,
+            destination=destination,
+            answers={"project_name": "acme"},
+            defaults=True,
+        )
+    )
+
+    assert (destination / "README.md").read_text(encoding="utf-8") == "# dirty acme\n"
+    assert len(warnings) == 1 and "Uncommitted changes" in warnings[0]
+    assert not [w for w in recwarn if w.category.__name__ == "DirtyLocalWarning"]

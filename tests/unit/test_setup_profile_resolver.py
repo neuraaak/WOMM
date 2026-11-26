@@ -88,3 +88,18 @@ def test_resolve_setup_profile_reads_the_real_official_catalog():
     assert profile is not None
     assert profile.language == "javascript"
     assert profile.template_source.is_dir()
+
+
+def test_qualified_identifier_selects_the_user_entry():
+    user = TemplateEntry(
+        id="python",
+        origin=TemplateOrigin.USER,
+        source=Path("/user/python"),
+        setup_language="python",
+    )
+    store = FakeStore([_entry("python", "python"), user])
+
+    profile = resolve_setup_profile("user/python", store=store)
+
+    assert profile is not None
+    assert profile.template_source == Path("/user/python")

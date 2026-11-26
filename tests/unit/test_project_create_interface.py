@@ -117,7 +117,7 @@ def test_setup_flag_delegates_to_the_setup_interface(tmp_path: Path):
 def test_create_project_with_setup_resolves_through_the_catalog(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """entry.id ("python") must resolve via the catalog-backed resolver,
+    """The qualified id must resolve via the catalog-backed resolver,
     not a fixed SUPPORTED_PROJECT_TYPES list."""
     from womm.services.project import setup_profile_resolver
 
@@ -150,9 +150,11 @@ def test_create_project_with_setup_resolves_through_the_catalog(
     )
 
     assert result.success
-    assert captured["project_type"] == "javascript"
+    assert captured["project_type"] == "official/javascript"
     assert captured["template_answers"] == answers
-    assert setup_profile_resolver.resolve_setup_profile("javascript") is not None
+    assert (
+        setup_profile_resolver.resolve_setup_profile("official/javascript") is not None
+    )
 
 
 def test_pretend_reports_success_without_writing(tmp_path: Path):
