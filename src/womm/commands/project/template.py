@@ -24,13 +24,9 @@ from pathlib import Path
 import click
 
 # Local imports
-from ...interfaces.project.template_store_interface import TemplateStoreInterface
-from ...ui.project import (
-    render_project_creation_result,
-    render_template_list,
-    render_template_result,
-)
 from .create import parse_data_options
+
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # COMMAND GROUP
@@ -56,63 +52,78 @@ def template_group(ctx: click.Context) -> None:
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_list(verbose: bool) -> None:
     """List every known template."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_template_list
+
     result = TemplateStoreInterface().list_templates()
     render_template_list(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
 
 
-@template_group.command("show")
+@template_group.command("show", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("identifier")
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_show(identifier: str, verbose: bool) -> None:
     """Show a single catalog entry."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_template_result
+
     result = TemplateStoreInterface().show_template(identifier)
     render_template_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
 
 
-@template_group.command("add")
+@template_group.command("add", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("identifier")
 @click.argument("source", type=click.Path(path_type=Path))
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_add(identifier: str, source: Path, verbose: bool) -> None:
     """Register a local template under the user namespace."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_template_result
+
     result = TemplateStoreInterface().add_template(identifier, source)
     render_template_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
 
 
-@template_group.command("remove")
+@template_group.command("remove", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("identifier")
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_remove(identifier: str, verbose: bool) -> None:
     """Unregister a user template."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_template_result
+
     result = TemplateStoreInterface().remove_template(identifier)
     render_template_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
 
 
-@template_group.command("update")
+@template_group.command("update", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("identifier")
 @click.argument("source", type=click.Path(path_type=Path))
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_update(identifier: str, source: Path, verbose: bool) -> None:
     """Point an existing user template at a new source."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_template_result
+
     result = TemplateStoreInterface().update_template(identifier, source)
     render_template_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
 
 
-@template_group.command("init")
+@template_group.command("init", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("destination", type=click.Path(path_type=Path))
 @click.option(
@@ -141,6 +152,9 @@ def template_init(
     verbose: bool,
 ) -> None:
     """Scaffold a new Copier template skeleton."""
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.project import render_project_creation_result
+
     answers = parse_data_options(data)
     result = TemplateStoreInterface().init_template(
         destination,

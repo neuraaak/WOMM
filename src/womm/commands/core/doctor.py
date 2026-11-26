@@ -18,12 +18,8 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Third-party imports
 import click
-from ezplog import LogLevel
 
-# Local imports
-from ...interfaces import DoctorInterface
-from ...ui.common import ezpl, ezprinter
-from ...ui.system import render_doctor_result
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # COMMAND
@@ -40,6 +36,12 @@ from ...ui.system import render_doctor_result
 )
 def doctor_cmd(verbose: bool) -> None:
     """🩺 Report the installed runtime without changing user configuration."""
+    from ezplog import LogLevel
+
+    from ...interfaces import DoctorInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_doctor_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 

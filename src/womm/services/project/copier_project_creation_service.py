@@ -20,8 +20,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import copier
-
 from womm.exceptions.project import ProjectServiceError
 
 from .destination_guard import check_destination
@@ -76,6 +74,9 @@ class CopierProjectCreationService:
         Raises:
             ProjectServiceError: If the destination is refused or Copier fails.
         """
+        # Copier costs ~600 ms to import: only the command that renders pays it.
+        import copier
+
         if not request.pretend:
             check_destination(request.destination, force=request.force)
 

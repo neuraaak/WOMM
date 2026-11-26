@@ -3,6 +3,16 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.1.1 — 2026-11-26
+
+### Improved
+
+- WOMM starts faster. `womm --version`, `-h` and every command run without its
+  arguments answer in about 0.2 s instead of 1.4 s; the other commands save
+  about 0.7 s.
+- A command run without the arguments it requires, such as `womm create`,
+  shows its help instead of a `Missing argument` error.
+
 ## 5.1.0 — 2026-11-24
 
 !!! warning "Read before upgrading"

@@ -16,12 +16,15 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
+# Standard library imports
+from typing import TYPE_CHECKING
+
 # Third-party imports
 import click
 
-# Local imports
-from ....interfaces import ContextMenuInterface
-from ....ui.common import ezprinter
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
+if TYPE_CHECKING:
+    from ....interfaces import ContextMenuInterface
 
 # ///////////////////////////////////////////////////////////////
 # CONSTANTS
@@ -66,6 +69,8 @@ def _check_windows(manager: ContextMenuInterface) -> bool:
     Returns:
         True when running on Windows, False otherwise.
     """
+    from ....ui.common import ezprinter
+
     if manager.is_windows():
         return True
     ezprinter.info(_NON_WINDOWS_MESSAGE)
