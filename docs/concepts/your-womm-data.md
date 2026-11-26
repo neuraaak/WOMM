@@ -9,6 +9,7 @@ Everything WOMM keeps for you lives in one directory: `~/.womm` — that is
 | `templates/`        | The catalog of the templates you registered    |
 | `backups/path/`     | PATH snapshots, taken before every PATH change |
 | `backups/registry/` | Windows context menu snapshots                 |
+| `update-check.json` | The last WOMM release seen on PyPI             |
 
 Three consequences worth knowing:
 

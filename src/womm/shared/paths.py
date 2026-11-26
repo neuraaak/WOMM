@@ -53,6 +53,7 @@ BACKUPS_DIRNAME = "backups"
 PATH_BACKUPS_DIRNAME = "path"
 REGISTRY_BACKUPS_DIRNAME = "registry"
 CONFIG_FILENAME = "config.toml"
+UPDATE_CHECK_FILENAME = "update-check.json"
 
 # Package subdirectory holding the shipped, read-only assets.
 ASSETS_DIRNAME = "assets"
@@ -142,6 +143,11 @@ def config_file() -> Path:
     return womm_data_dir() / CONFIG_FILENAME
 
 
+def update_check_file() -> Path:
+    """Get the file caching the last PyPI release check (not created)."""
+    return womm_data_dir() / UPDATE_CHECK_FILENAME
+
+
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API - PACKAGED CODE AND ASSETS
 # ///////////////////////////////////////////////////////////////
@@ -186,6 +192,7 @@ __all__ = [
     "path_backups_dir",
     "registry_backups_dir",
     "template_catalog_file",
+    "update_check_file",
     "user_templates_dir",
     "womm_data_path",
     "womm_data_dir",
