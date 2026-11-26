@@ -8,8 +8,9 @@ both appear in `womm template list`.
 updated when you upgrade WOMM, never by you.
 
 **User templates** are directories on your machine that you register under the
-`user/` namespace. WOMM stores the registration, not the template: the entry
-points at your directory, and your files stay where they are.
+`user/` namespace. WOMM keeps its own copy of each one and renders from it, so
+your directory can move or be archived; `womm template update` refreshes the
+copy from it. Your files are never modified.
 
 Every template is a [Copier](https://copier.readthedocs.io/) template: a
 `copier.yml` declaring the questions, and a `template/` directory whose files

@@ -3,13 +3,13 @@
 WOMM's installation data lives in one directory: `~/.womm` — that is
 `C:\Users\<you>\.womm` on Windows. It holds data only, never code.
 
-| Inside `~/.womm`    | What it holds                                  |
-| :------------------ | :--------------------------------------------- |
-| `logs/`             | The log files of past runs                     |
-| `templates/`        | The catalog of the templates you registered    |
-| `backups/path/`     | PATH snapshots, taken before every PATH change |
-| `backups/registry/` | Windows context menu snapshots                 |
-| `update-check.json` | The last WOMM release seen on PyPI             |
+| Inside `~/.womm`    | What it holds                                            |
+| :------------------ | :------------------------------------------------------- |
+| `logs/`             | The log files of past runs                               |
+| `templates/`        | The catalog of your templates, and WOMM's copies of them |
+| `backups/path/`     | PATH snapshots, taken before every PATH change           |
+| `backups/registry/` | Windows context menu snapshots                           |
+| `update-check.json` | The last WOMM release seen on PyPI                       |
 
 Three consequences worth knowing:
 

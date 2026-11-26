@@ -46,14 +46,14 @@ version transitions. See [Update an official project's tooling](../tasks/configu
 
 ## Templates
 
-| Command                            | What it does                             |
-| :--------------------------------- | :--------------------------------------- |
-| `womm template list`               | List every catalog entry, official first |
-| `womm template show IDENTIFIER`    | Show one entry in detail                 |
-| `womm template add NAME SOURCE`    | Register a local template under `user/`  |
-| `womm template init DESTINATION`   | Scaffold a new Copier template skeleton  |
-| `womm template update NAME SOURCE` | Point a user entry at another source     |
-| `womm template remove NAME`        | Unregister a user entry                  |
+| Command                              | What it does                                        |
+| :----------------------------------- | :-------------------------------------------------- |
+| `womm template list`                 | List every catalog entry, official first            |
+| `womm template show IDENTIFIER`      | Show one entry in detail                            |
+| `womm template add NAME SOURCE`      | Copy a local template and register it under `user/` |
+| `womm template init DESTINATION`     | Scaffold a new Copier template skeleton             |
+| `womm template update NAME [SOURCE]` | Copy a user entry again, from `SOURCE` if given     |
+| `womm template remove NAME`          | Unregister a user entry and delete its copy         |
 
 `womm template init` also takes `--data KEY=VALUE`, `--defaults` and `--force`.
 

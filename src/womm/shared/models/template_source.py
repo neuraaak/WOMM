@@ -43,6 +43,8 @@ class TemplateEntry:
         description: One-line human description, empty when unknown.
         setup_language: Language family driving `womm setup` ("python" or
             "javascript"), empty when the manifest declares none.
+        copied_from: Directory a user template was copied from, ``None`` for
+            official templates and for entries registered by path.
     """
 
     id: str
@@ -51,6 +53,7 @@ class TemplateEntry:
     version: str = ""
     description: str = ""
     setup_language: str = ""
+    copied_from: Path | None = None
 
     @property
     def qualified_id(self) -> str:

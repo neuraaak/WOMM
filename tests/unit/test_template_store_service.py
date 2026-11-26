@@ -49,7 +49,10 @@ def test_add_registers_a_user_template(user_template: Path):
 
     assert entry.qualified_id == "user/my-service"
     assert entry.origin is TemplateOrigin.USER
-    assert store.resolve("my-service").source == user_template
+    resolved = store.resolve("my-service")
+    assert resolved.copied_from == user_template.resolve()
+    assert resolved.source != user_template.resolve()
+    assert (resolved.source / "copier.yml").is_file()
 
 
 def test_add_persists_only_user_entries(isolated_home: Path, user_template: Path):
@@ -156,8 +159,8 @@ def test_update_replaces_the_source(user_template: Path, tmp_path: Path):
 
     entry = store.update("my-service", moved)
 
-    assert entry.source == moved
-    assert store.resolve("user/my-service").source == moved
+    assert entry.copied_from == moved.resolve()
+    assert store.resolve("user/my-service").copied_from == moved.resolve()
 
 
 def test_corrupted_catalog_raises_a_service_error(isolated_home: Path):
@@ -226,16 +229,19 @@ def test_user_setup_language_survives_a_catalog_reload(user_template: Path):
     assert entry.setup_language == "python"
 
 
-def test_user_metadata_follows_manifest_edits(user_template: Path):
+def test_origin_edits_show_after_an_update_without_source(user_template: Path):
     store = TemplateStoreService()
     store.add("my-service", user_template)
     (user_template / "copier.yml").write_text(
         '_womm:\n  version: "2.0.0"\n  description: "edited"\n', encoding="utf-8"
     )
 
-    entry = store.resolve("my-service")
+    before = store.resolve("my-service")
+    after = store.update("my-service")
 
-    assert (entry.version, entry.description) == ("2.0.0", "edited")
+    assert (before.version, before.description) == ("", "")
+    assert (after.version, after.description) == ("2.0.0", "edited")
+    assert store.resolve("my-service").version == "2.0.0"
 
 
 def test_user_entry_with_missing_source_keeps_stored_metadata(user_template: Path):
@@ -243,8 +249,8 @@ def test_user_entry_with_missing_source_keeps_stored_metadata(user_template: Pat
         '_womm:\n  version: "1.0.0"\n', encoding="utf-8"
     )
     store = TemplateStoreService()
-    store.add("my-service", user_template)
-    (user_template / "copier.yml").unlink()
+    entry = store.add("my-service", user_template)
+    (entry.source / "copier.yml").unlink()
 
     assert store.resolve("my-service").version == "1.0.0"
 
