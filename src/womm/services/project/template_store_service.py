@@ -39,6 +39,9 @@ from womm.shared.paths import (
 # Manifests a template root may expose, in Copier's lookup order.
 TEMPLATE_MANIFESTS = ("copier.yml", "copier.yaml")
 
+# Namespaces a user identifier may not use: they would read as an origin.
+RESERVED_NAMESPACES = frozenset(origin.value for origin in TemplateOrigin)
+
 # Key carrying WOMM metadata inside a template manifest.
 WOMM_METADATA_KEY = "_womm"
 
@@ -309,18 +312,34 @@ class TemplateStoreService:
     # ///////////////////////////////////////////////////////////
 
     def _validate_identifier(self, identifier: str, *, operation: str) -> None:
-        """Reject namespaced, empty or path-like identifiers."""
+        """Accept ``name`` or ``namespace/name``; reject reserved namespaces."""
         if not identifier or identifier != identifier.strip():
             raise ProjectServiceError(
                 operation=operation,
                 reason="Template identifier must not be empty",
             )
-        if "/" in identifier or "\\" in identifier or identifier.startswith("."):
+        parts = identifier.split("/")
+        if (
+            len(parts) > 2
+            or "\\" in identifier
+            or any(
+                not part or part != part.strip() or part.startswith(".")
+                for part in parts
+            )
+        ):
             raise ProjectServiceError(
                 operation=operation,
-                reason=f"Template identifier must be a plain name: {identifier}",
-                details="The official/ namespace is reserved and separators "
-                "are not allowed.",
+                reason=f"Template identifier must be name or namespace/name: "
+                f"{identifier}",
+                details="One namespace level at most; no backslash, empty part "
+                "or part starting with a dot.",
+            )
+        if len(parts) == 2 and parts[0].lower() in RESERVED_NAMESPACES:
+            raise ProjectServiceError(
+                operation=operation,
+                reason=f"Template namespace is reserved: {parts[0]}",
+                details=f"{', '.join(sorted(RESERVED_NAMESPACES))} are reserved "
+                "by WOMM.",
             )
 
     def _validate_source(self, source: Path, *, operation: str) -> None:

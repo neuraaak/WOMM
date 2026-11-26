@@ -10,6 +10,8 @@ by commit, is in the [changelog](changelog.md).
 - `womm template add`, `init`, `update` and `remove` take `-I`. WOMM asks for
   missing arguments, shows what it is about to write and waits for your
   confirmation; `init -I` offers to register the new skeleton.
+- A user template identifier can carry one namespace, such as
+  `neuraaak/my-python-project`. `official` and `user` are reserved.
 
 ### Fixed
 
@@ -24,6 +26,8 @@ by commit, is in the [changelog](changelog.md).
 - `womm template init` writes the description you give into the skeleton's
   catalog metadata, and the skeleton renders a README instead of a stray
   `.gitkeep`.
+- `womm template init` refuses a template name that `womm template add` would
+  refuse, instead of writing a README with commands that fail.
 
 ## 5.3.0 — 2026-11-26
 

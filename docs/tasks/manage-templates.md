@@ -29,9 +29,10 @@ womm template show official/python
 womm template add mytpl ./templates/my-template
 ```
 
-The identifier is a plain name — no slash, no path. WOMM files it under the
-`user/` namespace, so the entry above is listed as `user/mytpl`. The `official/`
-namespace is reserved.
+The identifier is a name, optionally prefixed by one namespace of your own:
+`mytpl` or `neuraaak/mytpl`. WOMM files it under the `user/` origin, so these
+are listed as `user/mytpl` and `user/neuraaak/mytpl`. `official` and `user` are
+reserved and cannot be used as a namespace.
 
 Prefer to be guided? `womm template add -I` asks for the identifier and the
 directory, shows the entry it read from `copier.yml`, and registers it only

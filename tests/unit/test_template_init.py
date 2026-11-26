@@ -99,3 +99,24 @@ def test_skeleton_carries_catalog_metadata_and_renders_a_readme(tmp_path: Path):
     assert entry.version == "0.1.0"
     assert (project / "README.md").read_text(encoding="utf-8").startswith("# acme")
     assert not (project / ".gitkeep").exists()
+
+
+@pytest.mark.parametrize("name", ["official/x", "user/x", "a/b/c", "ns/.x", "a\\b"])
+def test_init_refuses_names_that_template_add_refuses(tmp_path: Path, name: str):
+    result = TemplateStoreInterface().init_template(
+        tmp_path / "t", answers={"template_name": name}, defaults=True
+    )
+
+    assert result.success is False
+    assert "template_name" in result.error
+
+
+def test_init_readme_uses_a_namespaced_identifier(tmp_path: Path):
+    destination = tmp_path / "t"
+    TemplateStoreInterface().init_template(
+        destination, answers={"template_name": "neuraaak/my-tpl"}, defaults=True
+    )
+
+    readme = (destination / "README.md").read_text(encoding="utf-8")
+    assert "womm template add neuraaak/my-tpl" in readme
+    assert "womm create user/neuraaak/my-tpl" in readme

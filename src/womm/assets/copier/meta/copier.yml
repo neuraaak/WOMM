@@ -6,8 +6,17 @@ _subdirectory: template
 
 template_name:
   type: str
-  help: "Template name"
+  help: "Template name (name or namespace/name)"
   default: "my-template"
+  # Same rule as `womm template add`, applied to the identifier the README uses.
+  validator: >-
+    {% set slug = template_name | replace(' ', '-') | lower %}
+    {% if slug.count('/') > 1 or '\\' in slug or slug.startswith(('.', '/'))
+       or slug.endswith('/') or '/.' in slug
+       or ('/' in slug and slug.split('/')[0] in ['official', 'user']) %}
+    Use name or namespace/name: one namespace level, no backslash, no part
+    starting with a dot; official and user are reserved.
+    {% endif %}
 
 template_description:
   type: str

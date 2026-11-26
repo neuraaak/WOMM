@@ -259,3 +259,24 @@ def test_add_accepts_a_copier_yaml_manifest(tmp_path: Path):
     entry = TemplateStoreService().add("yaml", root)
 
     assert entry.description == "yaml"
+
+
+def test_add_accepts_one_namespace_level(user_template: Path):
+    store = TemplateStoreService()
+
+    entry = store.add("neuraaak/my-service", user_template)
+
+    assert entry.qualified_id == "user/neuraaak/my-service"
+    assert store.resolve("neuraaak/my-service") == entry
+    assert store.resolve("user/neuraaak/my-service") == entry
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    ["user/x", "Official/x", "a/b/c", "ns/.x", "ns/", "/x", "a\\b"],
+)
+def test_add_refuses_reserved_or_malformed_namespaces(
+    user_template: Path, identifier: str
+):
+    with pytest.raises(ProjectServiceError):
+        TemplateStoreService().add(identifier, user_template)
