@@ -43,6 +43,9 @@ def execute(
     env["COREPACK_ENABLE_DOWNLOAD_PROMPT"] = "0"
     if staging:
         env["YARN_ENABLE_SCRIPTS"] = "false"
+        # Updating a disposable copy deliberately creates or changes its lockfile.
+        # Keep PR hardened mode enabled; only waive the CI immutability default.
+        env["YARN_ENABLE_IMMUTABLE_INSTALLS"] = "false"
     try:
         # Executable paths are resolved below; arguments never pass through a shell.
         result = subprocess.run(  # nosec B603
@@ -237,6 +240,8 @@ class ToolingEnvironment:
             install = (
                 ["install"]
                 if self.manager == "yarn"
+                else ["install", "--ignore-scripts", "--no-frozen-lockfile"]
+                if self.manager == "pnpm"
                 else ["install", "--ignore-scripts"]
             )
             execute([*self.prefix(), *install], stage, staging=True)

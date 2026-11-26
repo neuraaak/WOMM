@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -289,6 +290,31 @@ def test_installed_version_must_agree_with_native_lock(tmp_path, monkeypatch):
     )
     with pytest.raises(ProjectServiceError, match="differs from the lockfile"):
         ToolingEnvironment(tmp_path, "python").versions(tmp_path, ["ruff"])
+
+
+def test_staging_can_update_yarn_locks_without_weakening_final_ci_install(
+    tmp_path, monkeypatch
+):
+    from womm.services.project import tooling_environment
+
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setenv("YARN_ENABLE_IMMUTABLE_INSTALLS", "true")
+    monkeypatch.setenv("YARN_ENABLE_HARDENED_MODE", "true")
+    environments = []
+
+    def run(command, **kwargs):
+        environments.append(kwargs["env"])
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(tooling_environment.subprocess, "run", run)
+    execute(["yarn", "install"], tmp_path, staging=True)
+    execute(["yarn", "install", "--immutable"], tmp_path)
+    assert environments[0]["YARN_ENABLE_IMMUTABLE_INSTALLS"] == "false"
+    assert environments[1]["YARN_ENABLE_IMMUTABLE_INSTALLS"] == "true"
+    assert all(
+        env["CI"] == "true" and env["YARN_ENABLE_HARDENED_MODE"] == "true"
+        for env in environments
+    )
 
 
 def test_pip_update_keeps_declared_extras(tmp_path, monkeypatch):

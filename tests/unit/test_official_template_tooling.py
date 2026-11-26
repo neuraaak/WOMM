@@ -221,6 +221,8 @@ def test_vitest_allows_patches_without_a_coupled_coverage_provider(tmp_path: Pat
 def run(command: list[str], project: Path) -> None:
     """Execute a real generated-project check, isolated from WOMM's venv."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
+    # These projects have just been rendered and intentionally have no lockfile.
+    env["YARN_ENABLE_IMMUTABLE_INSTALLS"] = "false"
     env["DJANGO_SECRET_KEY"] = secrets.token_urlsafe(50)
     result = subprocess.run(
         command,
