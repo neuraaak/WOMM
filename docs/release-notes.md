@@ -3,7 +3,7 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
-## 5.5.0 — Unreleased
+## 5.5.0 — 2026-11-26
 
 ### Changed
 
