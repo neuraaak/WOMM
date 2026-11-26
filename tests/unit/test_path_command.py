@@ -41,7 +41,7 @@ from womm.shared.results import (
 def manager(monkeypatch):
     """Patch SystemPathInterface with a mock and hand it back."""
     instance = MagicMock()
-    monkeypatch.setattr("womm.commands.core.path.SystemPathInterface", lambda: instance)
+    monkeypatch.setattr("womm.interfaces.SystemPathInterface", lambda: instance)
     return instance
 
 

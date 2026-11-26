@@ -23,7 +23,6 @@ from ._version import __version__
 from .commands.core import doctor_cmd, path_group
 from .commands.project import create_command, setup_group, template_group
 from .commands.system import context_group, deps_group, system_group
-from .ui.common import ezprinter
 
 # ///////////////////////////////////////////////////////////////
 # CONSOLE CONFIGURATION
@@ -57,6 +56,9 @@ _configure_windows_console()
 def womm(ctx: click.Context) -> None:
     """🛠️ Works On My Machine - Universal development tools."""
     if ctx.invoked_subcommand is None:
+        # Imported here: the logger setup must not slow down `--version`/`-h`.
+        from .ui.common import ezprinter
+
         ezprinter.console.print(r"""
 ================================================================================
                     __      _____  __  __ __  __

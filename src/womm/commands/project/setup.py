@@ -19,24 +19,14 @@ from __future__ import annotations
 # Standard library imports
 import sys
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
-# Local imports
-from ...interfaces import ProjectManagerInterface
-from ...services.project.setup_profile_resolver import (
-    list_setup_identifiers,
-    resolve_setup_profile,
-)
-from ...ui.common import ezpl, ezprinter
-from ...ui.project import (
-    ProjectWizard,
-    print_project_setup_result,
-    print_setup_steps_hint,
-)
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
+if TYPE_CHECKING:
+    from ...interfaces import ProjectManagerInterface
 
 # ///////////////////////////////////////////////////////////////
 # COMMAND GROUPS
@@ -56,6 +46,10 @@ def setup_group(ctx: click.Context, verbose: bool) -> None:
     """🔧 Configure existing projects with development tools."""
     # Configure verbose mode if requested
     if verbose:
+        from ezplog import LogLevel
+
+        from ...ui.common import ezpl
+
         ezpl.set_level(LogLevel.DEBUG.label)
 
     if ctx.invoked_subcommand is None:
@@ -98,6 +92,12 @@ def setup_detect(
 
     Use -I to run the guided setup on the detected type.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import ProjectManagerInterface
+    from ...services.project.setup_profile_resolver import list_setup_identifiers
+    from ...ui.common import ezpl, ezprinter
+
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -214,6 +214,11 @@ def setup_python(
     Every step is opt-in: pass the flags of the steps to run. Without any,
     the project is only checked and nothing is written.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import ProjectManagerInterface
+    from ...ui.common import ezpl, ezprinter
+
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -309,6 +314,11 @@ def setup_javascript(
     Every step is opt-in: pass the flags of the steps to run. Without any,
     the project is only checked and nothing is written.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import ProjectManagerInterface
+    from ...ui.common import ezpl, ezprinter
+
     # Configure verbose mode if requested
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
@@ -373,6 +383,9 @@ def _run_interactive_setup(
     project_manager: ProjectManagerInterface, project_type: str, project_path: Path
 ) -> bool:
     """Run interactive project setup."""
+    from ...ui.common import ezprinter
+    from ...ui.project import ProjectWizard
+
     # Get setup configuration
     config = ProjectWizard.run_interactive_setup_for_existing_project(
         project_type, project_path
@@ -412,6 +425,9 @@ def _setup_and_report(
     options: dict[str, Any],
 ) -> bool:
     """Run the requested setup steps, or point to their flags when none is."""
+    from ...services.project.setup_profile_resolver import resolve_setup_profile
+    from ...ui.common import ezprinter
+    from ...ui.project import print_project_setup_result, print_setup_steps_hint
 
     def _coerce_bool(value: object) -> bool:
         if isinstance(value, str):

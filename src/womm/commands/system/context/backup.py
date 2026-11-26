@@ -21,28 +21,17 @@ from __future__ import annotations
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
 # Local imports
-from ....interfaces import ContextMenuInterface
-from ....shared.results.context_results import (
-    BackupDataResult,
-    BackupFileInfo,
-    ContextCherryPickResult,
-)
-from ....ui.common import ezpl, ezprinter, ezwizard
-from ....ui.context import ContextMenuUI
-from ....ui.context.display import (
-    render_context_backup_content_result,
-    render_context_backup_list_result,
-    render_context_backup_result,
-    render_context_cherry_pick_result,
-    render_context_restore_result,
-)
 from . import _check_windows, context_backup_group
+
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
+if TYPE_CHECKING:
+    from ....shared.results.context_results import BackupDataResult, BackupFileInfo
 
 # ///////////////////////////////////////////////////////////////
 # BACKUP CREATION
@@ -64,6 +53,12 @@ from . import _check_windows, context_backup_group
 )
 def context_backup_create(output: str | None, verbose: bool) -> None:
     """💾 Create backup of current context menu entries."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context.display import render_context_backup_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -108,6 +103,12 @@ def context_backup_create(output: str | None, verbose: bool) -> None:
 )
 def context_backup_list(verbose: bool) -> None:
     """📋 List available context menu backup files."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter
+    from ....ui.context.display import render_context_backup_list_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -124,7 +125,7 @@ def context_backup_list(verbose: bool) -> None:
     sys.exit(0 if result.success else 1)
 
 
-@context_backup_group.command("show")
+@context_backup_group.command("show", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("name")
 @click.option(
@@ -138,6 +139,12 @@ def context_backup_show(name: str, verbose: bool) -> None:
 
     NAME is a bare backup file name, as listed by 'backup list'.
     """
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter
+    from ....ui.context.display import render_context_backup_content_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -175,6 +182,8 @@ def _describe_resolved_backup(
     Returns:
         The metadata record expected by the restore confirmation prompt.
     """
+    from ....shared.results.context_results import BackupFileInfo
+
     try:
         stat = resolved.stat()
         size_bytes = stat.st_size
@@ -207,6 +216,13 @@ def context_backup_restore(name: str | None, verbose: bool) -> None:
     NAME is a bare backup file name, as listed by 'backup list'. Without
     NAME, a backup is chosen interactively.
     """
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context import ContextMenuUI
+    from ....ui.context.display import render_context_restore_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -274,6 +290,14 @@ def context_backup_restore(name: str | None, verbose: bool) -> None:
 )
 def context_cherry_pick(verbose: bool) -> None:
     """🍒 Cherry-pick specific context menu entries from backups."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....shared.results.context_results import ContextCherryPickResult
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context import ContextMenuUI
+    from ....ui.context.display import render_context_cherry_pick_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 

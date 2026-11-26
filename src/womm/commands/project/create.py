@@ -23,9 +23,7 @@ from pathlib import Path
 # Third-party imports
 import click
 
-# Local imports
-from ...interfaces.project.create_interface import ProjectCreateInterface
-from ...ui.project import render_project_creation_result
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # HELPERS
@@ -63,7 +61,7 @@ def parse_data_options(values: tuple[str, ...]) -> dict[str, str]:
 # ///////////////////////////////////////////////////////////////
 
 
-@click.command("create")
+@click.command("create", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("template")
 @click.argument("destination", type=click.Path(path_type=Path))
@@ -106,6 +104,9 @@ def create_command(
     verbose: bool,
 ) -> None:
     """Create a project from a catalog template."""
+    from ...interfaces.project.create_interface import ProjectCreateInterface
+    from ...ui.project import render_project_creation_result
+
     answers = parse_data_options(data)
     result = ProjectCreateInterface().create_project(
         template=template,

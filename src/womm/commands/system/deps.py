@@ -26,16 +26,8 @@ import sys
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
-# Local imports
-from ...interfaces import DepsInterface
-from ...ui.common import ezpl, ezprinter
-from ...ui.system import (
-    render_deps_check_result,
-    render_deps_inventory_result,
-    render_deps_status_result,
-)
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # MAIN DEPS GROUP
@@ -88,6 +80,12 @@ def deps_check(verbose: bool) -> None:
         womm deps check
         womm deps check -v
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import DepsInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_deps_check_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -120,6 +118,12 @@ def deps_status(verbose: bool) -> None:
         womm deps status
         womm deps status -v
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import DepsInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_deps_status_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -149,6 +153,12 @@ def deps_list(verbose: bool) -> None:
     Example:
         womm deps list
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import DepsInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_deps_inventory_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 

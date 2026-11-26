@@ -22,16 +22,8 @@ import sys
 
 # Third-party imports
 import click
-from ezplog import LogLevel
-from rich.progress import TaskID
 
-# Local imports
-from ...interfaces import SystemDetectorInterface, SystemEnvironmentInterface
-from ...ui.common import ezpl, ezprinter, ezwizard
-from ...ui.system import (
-    render_environment_refresh_result,
-    render_system_detection_result,
-)
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # COMMAND GROUPS
@@ -62,6 +54,13 @@ def system_group(ctx: click.Context) -> None:
 )
 def system_detect(verbose: bool) -> None:
     """🔍 Detect system information and available tools."""
+    from ezplog import LogLevel
+    from rich.progress import TaskID
+
+    from ...interfaces import SystemDetectorInterface
+    from ...ui.common import ezpl, ezprinter, ezwizard
+    from ...ui.system import render_system_detection_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -100,6 +99,13 @@ def system_detect(verbose: bool) -> None:
 )
 def system_refresh_env(verbose: bool) -> None:
     """🔄 Refresh environment variables (Windows only)."""
+    from ezplog import LogLevel
+    from rich.progress import TaskID
+
+    from ...interfaces import SystemEnvironmentInterface
+    from ...ui.common import ezpl, ezprinter, ezwizard
+    from ...ui.system import render_environment_refresh_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 

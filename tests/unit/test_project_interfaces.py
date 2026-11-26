@@ -268,9 +268,7 @@ def test_setup_python_command_renders_a_successful_result(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
     _FakeProjectManager.instances.clear()
-    monkeypatch.setattr(
-        "womm.commands.project.setup.ProjectManagerInterface", _FakeProjectManager
-    )
+    monkeypatch.setattr("womm.interfaces.ProjectManagerInterface", _FakeProjectManager)
 
     result = CliRunner().invoke(setup_group, ["python", "--path", str(tmp_path)])
 
@@ -287,13 +285,13 @@ def test_setup_detect_lists_types_from_the_catalog(
 
     messages: list[str] = []
     monkeypatch.setattr(
-        "womm.commands.project.setup.ProjectManagerInterface", UnknownProjectManager
+        "womm.interfaces.ProjectManagerInterface", UnknownProjectManager
     )
     monkeypatch.setattr(
-        "womm.commands.project.setup.list_setup_identifiers",
+        "womm.services.project.setup_profile_resolver.list_setup_identifiers",
         lambda: [("custom", "Custom project"), ("react", "React project")],
     )
-    monkeypatch.setattr("womm.commands.project.setup.ezprinter.info", messages.append)
+    monkeypatch.setattr("womm.ui.common.ezprinter.info", messages.append)
 
     result = CliRunner().invoke(setup_group, ["detect", "--path", str(tmp_path)])
 

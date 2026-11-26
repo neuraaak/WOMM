@@ -18,21 +18,17 @@ from __future__ import annotations
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
 import sys
+from typing import TYPE_CHECKING
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
 # Local imports
-from ....interfaces import ContextMenuInterface
-from ....services.context import ContextParameters
-from ....ui.common import ezpl, ezprinter, ezwizard
-from ....ui.context import ContextMenuWizard
-from ....ui.context.display import (
-    render_script_registration_result,
-    render_script_unregistration_result,
-)
 from . import _check_windows, context_group
+
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
+if TYPE_CHECKING:
+    from ....services.context import ContextParameters
 
 # ///////////////////////////////////////////////////////////////
 # FUNCTIONS
@@ -59,6 +55,10 @@ def _resolve_registration_target(
         The resolved tuple, or None if the user cancelled (interactive) or a
         required option is missing (non-interactive).
     """
+    from ....services.context import ContextParameters
+    from ....ui.common import ezprinter
+    from ....ui.context import ContextMenuWizard
+
     if interactive:
         wizard_target, wizard_label, wizard_icon, context_params = (
             ContextMenuWizard.run_setup()
@@ -96,7 +96,7 @@ def _resolve_registration_target(
 # ///////////////////////////////////////////////////////////////
 
 
-@context_group.command("register")
+@context_group.command("register", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.option(
     "--target",
@@ -172,6 +172,12 @@ def context_register(
     verbose: bool,
 ) -> None:
     """📝 Register scripts in Windows context menu."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context.display import render_script_registration_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -243,7 +249,7 @@ def context_register(
 # ///////////////////////////////////////////////////////////////
 
 
-@context_group.command("unregister")
+@context_group.command("unregister", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.option(
     "--remove",
@@ -259,6 +265,12 @@ def context_register(
 )
 def context_unregister(remove_key: str, verbose: bool) -> None:
     """🗑️ Unregister scripts from Windows context menu."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context.display import render_script_unregistration_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 

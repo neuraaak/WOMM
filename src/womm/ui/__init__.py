@@ -13,11 +13,8 @@ Provides console utilities, interactive components, and display functions.
 
 from __future__ import annotations
 
-# ///////////////////////////////////////////////////////////////
-# IMPORTS
-# ///////////////////////////////////////////////////////////////
-# Local imports
-from . import common, context, project, system
+# Subpackages are not imported here: loading them all would make every
+# `womm.ui.common` import (the CLI banner included) pay for the whole UI.
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API

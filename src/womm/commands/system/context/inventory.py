@@ -21,16 +21,11 @@ import sys
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
 # Local imports
-from ....interfaces import ContextMenuInterface
-from ....ui.common import ezpl, ezprinter, ezwizard
-from ....ui.context.display import (
-    render_context_entries_result,
-    render_context_setup_result,
-)
 from . import _check_windows, context_group
+
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
 
 # ///////////////////////////////////////////////////////////////
 # LISTING COMMANDS
@@ -47,6 +42,12 @@ from . import _check_windows, context_group
 )
 def context_list(verbose: bool) -> None:
     """📋 List registered context menu entries."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context.display import render_context_entries_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -83,6 +84,12 @@ def context_list(verbose: bool) -> None:
 )
 def context_quick_setup(verbose: bool) -> None:
     """⚡ Quick setup common WOMM tools in context menu."""
+    from ezplog import LogLevel
+
+    from ....interfaces import ContextMenuInterface
+    from ....ui.common import ezpl, ezprinter, ezwizard
+    from ....ui.context.display import render_context_setup_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
