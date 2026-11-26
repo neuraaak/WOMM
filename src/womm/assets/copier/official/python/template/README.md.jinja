@@ -90,21 +90,28 @@ pre-commit install
 
 ## Tool versions and updates
 
-The development tools are pinned in `pyproject.toml` to versions tested with
-these configurations. Run them from this project's environment. Ruff's
-`required-version` rejects a different version. Editor extensions may ship
-their own tools; use the project environment where supported and run the
-pinned command-line checks before committing.
+Development tools use `~=` constraints in `pyproject.toml`: the tested patch
+is the minimum, later patches in the same minor are allowed. Run tools from
+this project's environment. Ruff's `required-version` enforces the same range.
+Editor extensions may ship their own tools; use the project environment where
+supported and run the project command-line checks before committing.
 
 `.womm-template.json` records the generator, template version and original
 choices. It is provenance, not a list of the tools currently installed.
 
-To upgrade a tool, change its dependency pin and any matching version guard,
-review its release notes, and update its configuration if needed.
-{% if use_uv %}Run `uv lock` and `uv sync --locked --group dev`, then run all quality,
-test and build checks before committing the updated configuration and lockfile.
+{% if use_uv %}The committed `uv.lock` records exact resolved versions, so `uv sync --locked`
+keeps installs reproducible. To update a tool within its allowed range, run
+`uv lock --upgrade-package TOOL`, then `uv sync --locked --group dev`.
+{% else %}To update a tool within its allowed range, run
+`python -m pip install --upgrade --group dev`.
+{% endif %}Before moving to another minor version, change the dependency constraint and
+any matching version guard, review the release notes, and update the
+configuration if needed. Black's exact version guard is omitted because it
+cannot express a minor range; its dependency constraint sets the bounds.
+{% if use_uv %}Run all quality, test and build checks before committing the updated
+configuration and lockfile.
 {% else %}Reinstall with `python -m pip install -e . --group dev`, then run all
-quality, test and build checks. Exact tool pins do not lock transitive
+quality, test and build checks. Dependency constraints do not lock transitive
 dependencies; use a separate constraints workflow if you need a fully locked
 pip environment.
 {% endif %}Upgrading WOMM does not update this project's files.

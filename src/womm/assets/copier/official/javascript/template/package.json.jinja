@@ -91,7 +91,7 @@
   }{% else %}{}{% endif %},
   "devDependencies": {
 {%- for name, version in dev_deps | dictsort %}
-    {{ name | tojson }}: {{ version | tojson }}{% if not loop.last %},{% endif %}
+    {{ name | tojson }}: {{ (version if (with_coverage and name in ('vitest', '@vitest/coverage-v8')) or name.startswith('@types/') else '~' ~ version) | tojson }}{% if not loop.last %},{% endif %}
 {%- endfor %}
   },
   "engines": {

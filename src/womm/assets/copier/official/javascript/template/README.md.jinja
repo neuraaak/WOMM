@@ -83,18 +83,26 @@ This project uses Vue{% if typescript %} with TypeScript{% endif %}.
 
 ## Tool versions and updates
 
-Development tools are pinned in `package.json` to versions tested with these
-configurations. Run them through the project scripts so local and CI checks
-use the same tools.
+Development tools use `~` ranges in `package.json`: the tested patch is the
+minimum, later patches in the same minor are allowed. With coverage enabled,
+Vitest and its coverage provider stay at the same exact version because the
+provider requires a matching Vitest version. The committed lockfile records
+exact resolved versions; frozen CI installs do not pick up newer patches.
+Run tools through the project scripts so local and CI checks use the same tools.
 
 `.womm-template.json` records the generator, template version and original
 choices. It is provenance, not a list of the tools currently installed.
 
-To upgrade a tool, change its dependency pin and review its release notes for
-configuration changes. Run `{{ package_manager }} install` to update the lockfile.
-{% if tooling == "biome" %}Update the `$schema` version in `biome.json` along with the Biome dependency.
-Run the installed Biome's `migrate` command to preview required migrations
-before applying them with `--write`.
+To update within a range, run `{% if package_manager == 'npm' %}npm update TOOL{% elif package_manager == 'pnpm' %}pnpm update TOOL{% elif package_manager == 'yarn' %}yarn up -R TOOL{% else %}bun update TOOL{% endif %}` and review the lockfile changes.
+Before moving to another minor, change the dependency range and review the
+release notes for configuration changes. Update Vitest and its coverage
+provider together when coverage is enabled.
+{% if tooling == "biome" %}{% if package_manager == "yarn" %}Yarn Plug'n'Play has no `node_modules` schema path. This configuration omits
+`$schema`; Biome still validates it using the installed tool's own schema.
+{% else %}The Biome `$schema` points at the installed package, so it follows patch
+updates automatically.
+{% endif %}For configuration migrations, run the installed Biome's `migrate` command
+to preview changes before applying them with `--write`.
 {% endif %}Run all quality, test and build checks before committing the updated
 configuration and lockfile. Upgrading WOMM does not update this project's files.
 

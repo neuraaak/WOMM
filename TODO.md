@@ -19,8 +19,10 @@
 - [x] Rendre la couverture de tests optionnelle dans les deux templates.
 - [x] Aligner dépendances, configurations, CI, hooks éventuels, VS Code
   et README sur les choix effectués, sans responsabilités en doublon.
-- [x] Centraliser et épingler les versions des outils dont WOMM génère
-  la configuration ; synchroniser contraintes, schémas et garde de version.
+- [x] Centraliser les versions minimales des outils dont WOMM génère la
+  configuration ; autoriser les patchs dans une même mineure et synchroniser
+  les gardes et schémas. Le lockfile fixe les versions résolues ; Vitest et
+  son module de couverture restent couplés à une même version exacte.
 - [x] Enregistrer la provenance du projet : version WOMM, identifiant et
   version du template, choix de génération. Les versions résolues restent
   dans les lockfiles ; la provenance n'est pas un inventaire installé.
@@ -42,9 +44,10 @@
 - [ ] Définir les migrations entre générations de configurations, en
   utilisant les outils natifs lorsqu'ils existent (ex. `biome migrate`).
 - [ ] Décider d'une éventuelle politique de support de plusieurs versions
-  d'un même outil ; aucune compatibilité universelle n'est promise.
-- [ ] Cadrer un éventuel verrouillage complet des projets pip : les versions
-  exactes des outils ne verrouillent pas leurs dépendances transitives.
+  mineures d'un même outil ; les patchs d'une même mineure sont autorisés,
+  aucune compatibilité universelle n'est promise.
+- [ ] Cadrer un éventuel verrouillage complet des projets pip : les
+  contraintes des outils ne verrouillent pas leurs dépendances transitives.
 - [ ] Étudier l'automatisation des mises à jour des versions centralisées :
   proposition de changement, exécution des profils générés, validation avant
   release ; aucune mise à jour silencieuse des projets utilisateurs.

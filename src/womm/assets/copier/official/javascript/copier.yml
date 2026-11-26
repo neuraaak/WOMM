@@ -11,7 +11,7 @@ template_version:
   default: *template_version
   when: false
 
-# Keep tool dependencies and their configuration schemas in sync.
+# Minimum tested versions; patches stay within the same minor, except coupled tools.
 tool_versions:
   type: yaml
   when: false

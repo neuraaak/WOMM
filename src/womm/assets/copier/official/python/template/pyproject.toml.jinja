@@ -29,24 +29,24 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff=={{ tool_versions.ruff }}",
+    "ruff~={{ tool_versions.ruff }}",
 {%- if tooling == "black-isort" %}
-    "black=={{ tool_versions.black }}",
-    "isort=={{ tool_versions.isort }}",
+    "black~={{ tool_versions.black }}",
+    "isort~={{ tool_versions.isort }}",
 {%- endif %}
-    "{{ type_checker }}=={{ tool_versions[type_checker] }}",
-    "pre-commit=={{ tool_versions.pre_commit }}",
+    "{{ type_checker }}~={{ tool_versions[type_checker] }}",
+    "pre-commit~={{ tool_versions.pre_commit }}",
 {%- if with_tests %}
-    "pytest=={{ tool_versions.pytest }}",
+    "pytest~={{ tool_versions.pytest }}",
 {%- if with_coverage %}
-    "pytest-cov=={{ tool_versions.pytest_cov }}",
+    "pytest-cov~={{ tool_versions.pytest_cov }}",
 {%- endif %}
 {%- endif %}
 {%- if with_tests and framework == "django" %}
-    "pytest-django=={{ tool_versions.pytest_django }}",
+    "pytest-django~={{ tool_versions.pytest_django }}",
 {%- endif %}
 {%- if framework == "django" %}
-    "django-stubs=={{ tool_versions.django_stubs }}",
+    "django-stubs~={{ tool_versions.django_stubs }}",
 {%- endif %}
 ]
 
@@ -71,7 +71,7 @@ package = true
 {%- endif %}
 
 [tool.ruff]
-required-version = "=={{ tool_versions.ruff }}"
+required-version = "~={{ tool_versions.ruff }}"
 target-version = "py{{ python_version | replace('.', '') }}"
 line-length = 88
 
@@ -87,7 +87,6 @@ docstring-code-format = true
 {%- else %}
 
 [tool.black]
-required-version = "{{ tool_versions.black }}"
 target-version = ["py{{ python_version | replace('.', '') }}"]
 line-length = 88
 

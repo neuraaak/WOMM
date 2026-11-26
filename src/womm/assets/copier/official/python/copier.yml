@@ -11,7 +11,7 @@ template_version:
   default: *template_version
   when: false
 
-# These versions and the generated configurations are validated together.
+# Minimum tested versions; generated constraints allow patches in the same minor.
 tool_versions:
   type: yaml
   when: false

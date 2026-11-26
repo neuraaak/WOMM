@@ -1,5 +1,7 @@
 {
-  "$schema": "https://biomejs.dev/schemas/{{ tool_versions.biome }}/schema.json",
+{%- if package_manager != "yarn" %}
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+{%- endif %}
   "vcs": {
     "enabled": true,
     "clientKind": "git",

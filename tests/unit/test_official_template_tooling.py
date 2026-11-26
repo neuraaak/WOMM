@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from packaging.requirements import Requirement
+from packaging.specifiers import SpecifierSet
 
 from womm._version import __version__
 from womm.exceptions.project import ProjectServiceError
@@ -59,15 +61,29 @@ def test_python_choices_reach_every_consumer(
         with_coverage=False,
     )
     config = tomllib.loads((out / "pyproject.toml").read_text(encoding="utf-8"))
-    pins = dict(dep.split("==") for dep in config["dependency-groups"]["dev"])
-    assert pins["ruff"] == config["tool"]["ruff"]["required-version"].removeprefix("==")
-    assert {"ty", "mypy", "pyright"} & pins.keys() == {type_checker}
-    assert "pytest-cov" not in pins
+    requirements = {
+        requirement.name: requirement
+        for requirement in map(Requirement, config["dependency-groups"]["dev"])
+    }
+    assert requirements["ruff"].specifier == SpecifierSet(
+        config["tool"]["ruff"]["required-version"]
+    )
+    for requirement in requirements.values():
+        constraint = str(requirement.specifier)
+        assert constraint.startswith("~=")
+        major, minor, patch = map(int, constraint.removeprefix("~=").split("."))
+        assert f"{major}.{minor}.{patch}" in requirement.specifier
+        assert f"{major}.{minor}.{patch + 1}" in requirement.specifier
+        assert f"{major}.{minor + 1}.0" not in requirement.specifier
+        if patch:
+            assert f"{major}.{minor}.{patch - 1}" not in requirement.specifier
+    assert {"ty", "mypy", "pyright"} & requirements.keys() == {type_checker}
+    assert "pytest-cov" not in requirements
     assert "coverage" not in config["tool"]
     assert ("I" in config["tool"]["ruff"]["lint"]["select"]) is (tooling == "ruff")
-    assert ("black" in pins) is (tooling == "black-isort")
+    assert ("black" in requirements) is (tooling == "black-isort")
     if tooling == "black-isort":
-        assert config["tool"]["black"]["required-version"] == pins["black"]
+        assert "required-version" not in config["tool"]["black"]
         assert config["tool"]["isort"]["profile"] == "black"
         assert "format" not in config["tool"]["ruff"]
     settings = json.loads((out / ".vscode/settings.json").read_text(encoding="utf-8"))
@@ -114,21 +130,22 @@ def test_javascript_choices_reach_every_consumer(
     package = json.loads((out / "package.json").read_text(encoding="utf-8"))
     deps = package["devDependencies"]
     assert all(
-        not value.startswith(("^", "~", ">"))
+        value.startswith("~")
         for name, value in deps.items()
         if not name.startswith("@types/")
+        and name not in ("vitest", "@vitest/coverage-v8")
     )
     assert ("@biomejs/biome" in deps) is (tooling == "biome")
     assert (out / "biome.json").exists() is (tooling == "biome")
     assert (out / "eslint.config.mjs").exists() is (tooling == "eslint-prettier")
     if tooling == "biome":
         schema = json.loads((out / "biome.json").read_text(encoding="utf-8"))["$schema"]
-        assert f"/{deps['@biomejs/biome']}/" in schema
+        assert schema == "./node_modules/@biomejs/biome/configuration_schema.json"
     assert deps["vitest"] == deps["@vitest/coverage-v8"]
     assert package["scripts"]["test:coverage"] == "vitest run --coverage"
     assert "knip" in deps
     assert (
-        f"@{deps['knip']}/"
+        f"@{deps['knip'].removeprefix('~')}/"
         in json.loads((out / "knip.json").read_text(encoding="utf-8"))["$schema"]
     )
     workflow = yaml.safe_load((out / ".github/workflows/ci.yml").read_text("utf-8"))
@@ -182,6 +199,25 @@ def test_vue_refuses_an_unsupported_toolchain(tmp_path: Path):
         render(tmp_path / "project", "javascript", framework="vue", tooling="biome")
 
 
+@pytest.mark.parametrize("manager", ["npm", "pnpm", "yarn", "bun"])
+def test_biome_schema_follows_the_package_layout(tmp_path: Path, manager: str):
+    out = render(tmp_path / "project", "javascript", package_manager=manager)
+    config = json.loads((out / "biome.json").read_text(encoding="utf-8"))
+    if manager == "yarn":
+        assert "$schema" not in config
+    else:
+        assert config["$schema"] == (
+            "./node_modules/@biomejs/biome/configuration_schema.json"
+        )
+
+
+def test_vitest_allows_patches_without_a_coupled_coverage_provider(tmp_path: Path):
+    out = render(tmp_path / "project", "javascript", with_coverage=False)
+    package = json.loads((out / "package.json").read_text(encoding="utf-8"))
+    assert package["devDependencies"]["vitest"].startswith("~")
+    assert "@vitest/coverage-v8" not in package["devDependencies"]
+
+
 def run(command: list[str], project: Path) -> None:
     """Execute a real generated-project check, isolated from WOMM's venv."""
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
@@ -198,6 +234,28 @@ def run(command: list[str], project: Path) -> None:
         check=False,
     )
     assert result.returncode == 0, f"{command}:\n{result.stdout}\n{result.stderr}"
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("manager", ["npm", "yarn"])
+def test_biome_patch_range_executes_with_its_package_layout(
+    tmp_path: Path, manager: str
+):
+    executable = shutil.which("corepack" if manager == "yarn" else "npm")
+    if executable is None:
+        pytest.skip(f"{'Corepack' if manager == 'yarn' else 'npm'} is not installed")
+    prefix = [executable, "yarn"] if manager == "yarn" else [executable]
+    out = render(
+        tmp_path / "project", "javascript", package_manager=manager, with_tests=False
+    )
+    run([*prefix, "install"], out)
+    if manager == "yarn":
+        assert (out / ".pnp.cjs").is_file()
+    else:
+        config = json.loads((out / "biome.json").read_text(encoding="utf-8"))
+        assert (out / config["$schema"]).is_file()
+    run([*prefix, "run", "format:check"], out)
+    run([*prefix, "run", "lint"], out)
 
 
 @pytest.mark.slow
