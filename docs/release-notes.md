@@ -3,6 +3,23 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.3.0 — Unreleased
+
+### New
+
+- Official Python templates offer Ruff or Black + isort, and ty, mypy or
+  Pyright. JavaScript templates offer Biome or ESLint + Prettier where
+  supported, with optional Knip. Test coverage is optional in both templates.
+- Generated projects record their template provenance and allow tool patches
+  within the tested minor version. Lockfiles retain the exact resolved versions.
+- `womm setup --update` updates declared tooling and reviewed configurations
+  in official projects. Preview with `--dry-run`; block moves and destructive
+  migrations require `--allow-destructive-actions`. Unknown transitions and
+  conflicting values require manual review. Updates retain backups and a
+  separate history; a failed installation restores files but may leave the
+  environment needing synchronization. See
+  [Update project tooling](tasks/configure-an-existing-project.md#update-an-official-projects-tooling).
+
 ## 5.2.0 — 2026-11-26
 
 ### New
