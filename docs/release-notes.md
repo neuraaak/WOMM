@@ -3,6 +3,17 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.2.0 — 2026-11-26
+
+### New
+
+- WOMM tells you when a newer version is published. A command run in a
+  terminal ends with a line naming the new version and the command that
+  upgrades your installation, and `womm` run alone shows whether you are up to
+  date under its welcome panel. PyPI is checked at most once a day; set
+  `WOMM_NO_UPDATE_CHECK` to turn the check off. See
+  [Files and variables](reference/files-and-variables.md#new-release-notice).
+
 ## 5.1.1 — 2026-11-26
 
 ### Improved
