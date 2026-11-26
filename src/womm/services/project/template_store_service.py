@@ -117,6 +117,28 @@ class TemplateStoreService:
             reason=f"Unknown template: {identifier}",
         )
 
+    def preview(self, identifier: str, source: Path) -> TemplateEntry:
+        """Build the entry ``add`` would register, without registering it.
+
+        Args:
+            identifier: Short identifier, without any separator.
+            source: Directory holding ``copier.yml`` or ``copier.yaml``.
+
+        Returns:
+            TemplateEntry: The entry, metadata read from the manifest.
+
+        Raises:
+            ProjectServiceError: If the identifier or source is refused.
+        """
+        self._validate_identifier(identifier, operation="add_template")
+        self._validate_source(source, operation="add_template")
+        if any(entry.id == identifier for entry in self._load_user_entries()):
+            raise ProjectServiceError(
+                operation="add_template",
+                reason=f"Template already registered: {identifier}",
+            )
+        return self._build_user_entry(identifier, source)
+
     def add(self, identifier: str, source: Path) -> TemplateEntry:
         """Register a local template under the user namespace.
 
@@ -130,18 +152,8 @@ class TemplateStoreService:
         Raises:
             ProjectServiceError: If the identifier or source is refused.
         """
-        self._validate_identifier(identifier, operation="add_template")
-        self._validate_source(source, operation="add_template")
-
-        existing = self._load_user_entries()
-        if any(entry.id == identifier for entry in existing):
-            raise ProjectServiceError(
-                operation="add_template",
-                reason=f"Template already registered: {identifier}",
-            )
-
-        entry = self._build_user_entry(identifier, source)
-        self._save_user_entries([*existing, entry])
+        entry = self.preview(identifier, source)
+        self._save_user_entries([*self._load_user_entries(), entry])
         return entry
 
     def remove(self, identifier: str) -> TemplateEntry:

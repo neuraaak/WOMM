@@ -28,6 +28,7 @@ from .templates.template_store_display import (
     render_template_list,
     render_template_result,
 )
+from .templates.template_wizard import ask_text, choose_template, confirm_action
 
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
@@ -35,6 +36,9 @@ from .templates.template_store_display import (
 
 __all__ = [
     "ProjectWizard",
+    "ask_text",
+    "choose_template",
+    "confirm_action",
     "print_project_setup_result",
     "print_setup_completion_summary",
     "print_setup_steps_hint",

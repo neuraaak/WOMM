@@ -85,6 +85,26 @@ class TemplateStoreInterface:
             entry=entry,
         )
 
+    def preview_template(self, identifier: str, source: Path) -> TemplateStoreResult:
+        """Show the entry ``add_template`` would register, without writing.
+
+        Args:
+            identifier: Short identifier, without any separator.
+            source: Directory holding ``copier.yml`` or ``copier.yaml``.
+
+        Returns:
+            TemplateStoreResult: Typed outcome, never raises.
+        """
+        try:
+            entry = self._store.preview(identifier, source)
+        except ProjectServiceError as exc:
+            return TemplateStoreResult(success=False, error=str(exc))
+        return TemplateStoreResult(
+            success=True,
+            message=f"Template to register: {entry.qualified_id}",
+            entry=entry,
+        )
+
     def add_template(self, identifier: str, source: Path) -> TemplateStoreResult:
         """Register a local template under the user namespace.
 

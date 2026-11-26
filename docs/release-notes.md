@@ -5,6 +5,12 @@ by commit, is in the [changelog](changelog.md).
 
 ## 5.4.0 — 2026-11-26
 
+### New
+
+- `womm template add`, `init`, `update` and `remove` take `-I`. WOMM asks for
+  missing arguments, shows what it is about to write and waits for your
+  confirmation; `init -I` offers to register the new skeleton.
+
 ### Fixed
 
 - A user template kept in a git repository is rendered from its current state,

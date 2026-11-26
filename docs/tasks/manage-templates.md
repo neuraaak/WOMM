@@ -33,6 +33,11 @@ The identifier is a plain name — no slash, no path. WOMM files it under the
 `user/` namespace, so the entry above is listed as `user/mytpl`. The `official/`
 namespace is reserved.
 
+Prefer to be guided? `womm template add -I` asks for the identifier and the
+directory, shows the entry it read from `copier.yml`, and registers it only
+once you confirm. `update -I` and `remove -I` let you pick the entry from a
+list.
+
 `list` and `show` read the version and description from the template's
 `copier.yml` each time, so editing them needs no re-registration.
 
@@ -57,7 +62,9 @@ womm template init ./templates/my-template
 
 WOMM renders a Copier template skeleton: a `copier.yml`, a `template/` directory
 and the metadata the catalog needs. `--data KEY=VALUE`, `--defaults` and
-`--force` behave as in [Create a project](create-a-project.md).
+`--force` behave as in [Create a project](create-a-project.md). With `-I`, WOMM
+asks for the destination if you leave it out, then offers to register the
+skeleton in the catalog.
 
 ### Point an entry elsewhere, or drop it
 
