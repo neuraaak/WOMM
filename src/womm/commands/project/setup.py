@@ -36,13 +36,43 @@ if TYPE_CHECKING:
 @click.group(invoke_without_command=True)
 @click.help_option("-h", "--help")
 @click.option(
+    "--update",
+    "update_tools",
+    is_flag=True,
+    help="Update official template tooling and reviewed configurations",
+)
+@click.option(
+    "--path",
+    "update_path",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=".",
+    help="Project to update",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Resolve and validate an update without changing the project",
+)
+@click.option(
+    "--allow-destructive-actions",
+    is_flag=True,
+    help="Allow reviewed block moves and destructive configuration migrations",
+)
+@click.option(
     "-v",
     "--verbose",
     is_flag=True,
     help="Enable verbose output (DEBUG level)",
 )
 @click.pass_context
-def setup_group(ctx: click.Context, verbose: bool) -> None:
+def setup_group(
+    ctx: click.Context,
+    verbose: bool,
+    update_tools: bool,
+    update_path: Path,
+    dry_run: bool,
+    allow_destructive_actions: bool,
+) -> None:
     """🔧 Configure existing projects with development tools."""
     # Configure verbose mode if requested
     if verbose:
@@ -52,7 +82,41 @@ def setup_group(ctx: click.Context, verbose: bool) -> None:
 
         ezpl.set_level(LogLevel.DEBUG.label)
 
-    if ctx.invoked_subcommand is None:
+    update_options = (
+        dry_run
+        or allow_destructive_actions
+        or ctx.get_parameter_source("update_path")
+        == click.core.ParameterSource.COMMANDLINE
+    )
+    if ctx.invoked_subcommand is not None and (update_tools or update_options):
+        raise click.UsageError(
+            "Update options cannot be combined with a setup subcommand"
+        )
+    if update_options and not update_tools:
+        raise click.UsageError("These options require --update")
+    if update_tools:
+        from ...interfaces.project.tooling_update_interface import update_tooling
+        from ...ui.common import ezprinter
+        from ...ui.project.setup.tooling_update_display import print_tooling_update_plan
+
+        def approve(result: Any) -> bool:
+            print_tooling_update_plan(result)
+            return click.confirm("Apply this tooling update?", default=False)
+
+        result = update_tooling(
+            update_path,
+            dry_run=dry_run,
+            allow_destructive_actions=allow_destructive_actions,
+            approve=approve,
+        )
+        if not result.success:
+            raise click.ClickException(result.error)
+        if dry_run:
+            print_tooling_update_plan(result)
+        ezprinter.info(result.message)
+        if result.backup_path:
+            ezprinter.info(f"Backup: {result.backup_path}")
+    elif ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
 
