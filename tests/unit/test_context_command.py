@@ -143,7 +143,6 @@ def test_restore_never_reaches_the_registry_with_an_unsafe_name(
     that the refusal comes from ``resolve_backup_path`` rather than from an
     accidentally empty listing.
     """
-    from womm.commands.system.context import backup as backup_module
 
     manager = MagicMock()
     manager.is_windows.return_value = True
@@ -151,7 +150,7 @@ def test_restore_never_reaches_the_registry_with_an_unsafe_name(
     manager.read_backup.return_value = _readable_backup()
     manager.resolve_backup_path.return_value = None
     monkeypatch.setattr(
-        backup_module, "ContextMenuInterface", MagicMock(return_value=manager)
+        "womm.interfaces.ContextMenuInterface", MagicMock(return_value=manager)
     )
 
     result = CliRunner().invoke(context_group, ["backup", "restore", hostile_name])
@@ -167,7 +166,6 @@ def test_restore_reaches_the_registry_with_a_resolved_name(monkeypatch):
     Paired with the hostile-name test, this proves the containment lets a
     resolved name through to the registry write.
     """
-    from womm.commands.system.context import backup as backup_module
 
     manager = MagicMock()
     manager.is_windows.return_value = True
@@ -178,11 +176,10 @@ def test_restore_reaches_the_registry_with_a_resolved_name(monkeypatch):
         success=True, backup_file=_SAFE_PATH, entry_count=1
     )
     monkeypatch.setattr(
-        backup_module, "ContextMenuInterface", MagicMock(return_value=manager)
+        "womm.interfaces.ContextMenuInterface", MagicMock(return_value=manager)
     )
     monkeypatch.setattr(
-        backup_module.ContextMenuUI,
-        "confirm_restore_operation",
+        "womm.ui.context.ContextMenuUI.confirm_restore_operation",
         staticmethod(lambda _backup: True),
     )
 
@@ -200,7 +197,6 @@ def test_restore_accepts_a_readable_backup_absent_from_the_listing(monkeypatch):
     ``context_menu_backup_*`` listing glob. Resolution and reading both
     succeed, so restore must reach the registry.
     """
-    from womm.commands.system.context import backup as backup_module
 
     custom_name = "mon_backup.json"
     custom_path = f"C:/backups/{custom_name}"
@@ -219,11 +215,10 @@ def test_restore_accepts_a_readable_backup_absent_from_the_listing(monkeypatch):
         success=True, backup_file=custom_path, entry_count=3
     )
     monkeypatch.setattr(
-        backup_module, "ContextMenuInterface", MagicMock(return_value=manager)
+        "womm.interfaces.ContextMenuInterface", MagicMock(return_value=manager)
     )
     monkeypatch.setattr(
-        backup_module.ContextMenuUI,
-        "confirm_restore_operation",
+        "womm.ui.context.ContextMenuUI.confirm_restore_operation",
         staticmethod(lambda _backup: True),
     )
 
@@ -235,7 +230,6 @@ def test_restore_accepts_a_readable_backup_absent_from_the_listing(monkeypatch):
 
 def test_restore_refuses_an_unreadable_backup(monkeypatch):
     """An unparsable backup must stop before the registry write."""
-    from womm.commands.system.context import backup as backup_module
 
     manager = MagicMock()
     manager.is_windows.return_value = True
@@ -244,7 +238,7 @@ def test_restore_refuses_an_unreadable_backup(monkeypatch):
     )
     manager.resolve_backup_path.return_value = Path(_SAFE_PATH)
     monkeypatch.setattr(
-        backup_module, "ContextMenuInterface", MagicMock(return_value=manager)
+        "womm.interfaces.ContextMenuInterface", MagicMock(return_value=manager)
     )
 
     result = CliRunner().invoke(context_group, ["backup", "restore", _SAFE_NAME])
@@ -255,7 +249,6 @@ def test_restore_refuses_an_unreadable_backup(monkeypatch):
 
 
 def test_show_rejects_an_unsafe_name(monkeypatch):
-    from womm.commands.system.context import backup as backup_module
     from womm.shared.results import BackupDataResult
 
     manager = MagicMock()
@@ -264,7 +257,7 @@ def test_show_rejects_an_unsafe_name(monkeypatch):
         success=False, error="No readable backup named '../evil.json'"
     )
     monkeypatch.setattr(
-        backup_module, "ContextMenuInterface", MagicMock(return_value=manager)
+        "womm.interfaces.ContextMenuInterface", MagicMock(return_value=manager)
     )
 
     result = CliRunner().invoke(context_group, ["backup", "show", "../evil.json"])

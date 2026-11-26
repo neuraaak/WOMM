@@ -17,8 +17,7 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Third-party imports
-from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
-from InquirerPy.base.control import Choice
+# InquirerPy pulls prompt_toolkit (~200 ms): it is imported where a prompt runs.
 from rich.prompt import Confirm, Prompt
 
 # ///////////////////////////////////////////////////////////////
@@ -72,6 +71,9 @@ def prompt_choice(message: str, choices: list[str], **kwargs) -> str:
     """
     if not choices:
         raise ValueError("Choices list cannot be empty")
+
+    from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
+    from InquirerPy.base.control import Choice
 
     choice_objects = [Choice(value=choice, name=choice) for choice in choices]
     result = inquirer.select(  # pyright: ignore[reportPrivateImportUsage]

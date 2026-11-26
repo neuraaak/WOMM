@@ -106,7 +106,10 @@ def test_doctor_reports_runtime_without_creating_data_directory(
     result = CliRunner().invoke(womm, ["doctor"])
 
     assert result.exit_code == 0
-    assert not data_dir.exists()
+    # The logger, loaded by the command itself, owns logs/; doctor writes
+    # nothing else under the data directory.
+    written = {path.name for path in data_dir.iterdir()} if data_dir.exists() else set()
+    assert written <= {"logs"}
 
 
 def test_doctor_diagnose_reports_the_data_directory(tmp_path, monkeypatch) -> None:
@@ -168,3 +171,54 @@ def test_version_option_reports_the_public_package_version() -> None:
 
     assert result.exit_code == 0
     assert womm_package.__version__ in result.output
+
+
+# Help, usage and `--version` must not pay for these: each costs 100-600 ms.
+_HEAVY_MODULES = (
+    "copier",
+    "InquirerPy",
+    "prompt_toolkit",
+    "ezplog",
+    "loguru",
+    "womm.interfaces",
+    "womm.services",
+)
+
+
+def _modules_loaded_by(code: str) -> set[str]:
+    """Run ``code`` in a fresh interpreter and return the heavy modules it loaded."""
+    probe = (
+        f"{code}\n"
+        "import sys\n"
+        f"print(','.join(m for m in {_HEAVY_MODULES!r} if m in sys.modules))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return set(filter(None, result.stdout.splitlines()[-1].split(",")))
+
+
+def test_importing_the_cli_loads_no_heavy_module() -> None:
+    assert _modules_loaded_by("import womm.cli") == set()
+
+
+def test_bare_group_help_loads_no_heavy_module() -> None:
+    code = (
+        "from click.testing import CliRunner\n"
+        "from womm.cli import womm\n"
+        "for args in (['--version'], ['-h'], ['create'], ['context'], ['path']):\n"
+        "    CliRunner().invoke(womm, args)"
+    )
+
+    assert _modules_loaded_by(code) == set()
+
+
+def test_create_without_arguments_shows_its_help() -> None:
+    result = CliRunner().invoke(womm, ["create"])
+
+    assert "Usage:" in result.output
+    assert "TEMPLATE" in result.output
+    assert "Missing argument" not in result.output

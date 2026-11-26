@@ -14,26 +14,14 @@ from __future__ import annotations
 # Standard library imports
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Third-party imports
 import click
-from ezplog import LogLevel
 
-# Local imports
-from ...interfaces import SystemPathInterface
-from ...ui.common import (
-    InteractiveMenu,
-    ezpl,
-    ezprinter,
-    format_backup_item,
-)
-from ...ui.system import (
-    render_path_backup_content_result,
-    render_path_backup_list_result,
-    render_path_backup_result,
-    render_path_entries_result,
-    render_path_operation_result,
-)
+# Heavy imports stay in the callbacks: `womm -h` must not load them.
+if TYPE_CHECKING:
+    from ...interfaces import SystemPathInterface
 
 # ///////////////////////////////////////////////////////////////
 # CONSTANTS
@@ -76,6 +64,12 @@ def path_backup_group() -> None:
 )
 def path_list(verbose: bool) -> None:
     """📋 List the entries of your current PATH."""
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_entries_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -91,7 +85,7 @@ def path_list(verbose: bool) -> None:
 # ///////////////////////////////////////////////////////////////
 
 
-@path_group.command("add")
+@path_group.command("add", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("directory", type=click.Path(path_type=Path))
 @click.option(
@@ -106,6 +100,12 @@ def path_add(directory: Path, verbose: bool) -> None:
     DIRECTORY must exist and hold at least one executable. The current PATH
     is backed up before the change, so 'backup restore' undoes it.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_operation_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -116,7 +116,7 @@ def path_add(directory: Path, verbose: bool) -> None:
         sys.exit(1)
 
 
-@path_group.command("remove")
+@path_group.command("remove", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("directory", type=click.Path(path_type=Path))
 @click.option(
@@ -132,6 +132,12 @@ def path_remove(directory: Path, verbose: bool) -> None:
     tool is the usual reason to run this. The current PATH is backed up
     before the change.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_operation_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -157,6 +163,12 @@ def path_remove(directory: Path, verbose: bool) -> None:
 )
 def path_backup_create(verbose: bool) -> None:
     """💾 Create a backup of your current PATH."""
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_backup_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -177,6 +189,12 @@ def path_backup_create(verbose: bool) -> None:
 )
 def path_backup_list(verbose: bool) -> None:
     """📋 List available PATH backups."""
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_backup_list_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -187,7 +205,7 @@ def path_backup_list(verbose: bool) -> None:
         sys.exit(1)
 
 
-@path_backup_group.command("show")
+@path_backup_group.command("show", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("name")
 @click.option(
@@ -198,6 +216,12 @@ def path_backup_list(verbose: bool) -> None:
 )
 def path_backup_show(name: str, verbose: bool) -> None:
     """🔍 Show the content of a PATH backup (file name, not a path)."""
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+    from ...ui.system import render_path_backup_content_result
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -223,6 +247,11 @@ def path_backup_restore(name: str | None, verbose: bool) -> None:
     NAME is a bare backup file name, as listed by 'backup list'. Without
     NAME, a backup is chosen interactively.
     """
+    from ezplog import LogLevel
+
+    from ...interfaces import SystemPathInterface
+    from ...ui.common import ezpl, ezprinter
+
     if verbose:
         ezpl.set_level(LogLevel.DEBUG.label)
 
@@ -241,6 +270,8 @@ def path_backup_restore(name: str | None, verbose: bool) -> None:
 
 def _confirm_restore() -> bool:
     """Ask for an explicit confirmation before writing the user's PATH."""
+    from ...ui.common import InteractiveMenu
+
     confirm_menu = InteractiveMenu(title="Confirm Restoration", border_style="yellow")
     return confirm_menu.confirm_action("Proceed with restoration?", default_yes=True)
 
@@ -253,6 +284,12 @@ def _restore_named_backup(manager: SystemPathInterface, name: str) -> None:
     the readability check runs first so an unusable name stops before the
     confirmation prompt.
     """
+    from ...ui.common import ezprinter
+    from ...ui.system import (
+        render_path_backup_content_result,
+        render_path_operation_result,
+    )
+
     content = manager.read_backup(name)
     if not content.success:
         render_path_backup_content_result(content)
@@ -273,6 +310,12 @@ def _restore_named_backup(manager: SystemPathInterface, name: str) -> None:
 
 def _run_path_restore(manager: SystemPathInterface) -> None:
     """Interactively select a PATH backup and restore it."""
+    from ...ui.common import InteractiveMenu, ezprinter, format_backup_item
+    from ...ui.system import (
+        render_path_backup_list_result,
+        render_path_operation_result,
+    )
+
     list_result = manager.list_backups()
     if not list_result.success:
         render_path_backup_list_result(list_result)

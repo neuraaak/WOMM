@@ -17,12 +17,12 @@ from __future__ import annotations
 # Standard library imports
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 # Third-party imports
-from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
-from InquirerPy.base.control import Choice
-from prompt_toolkit.styles import Style
+# InquirerPy pulls prompt_toolkit (~200 ms): it is imported where a prompt runs.
+if TYPE_CHECKING:
+    from prompt_toolkit.styles import Style
 
 # ///////////////////////////////////////////////////////////////
 # MAIN CLASS
@@ -87,6 +87,9 @@ class InteractiveMenu:
             display_text = display_func(item) if display_func else str(item)
             choices.append(display_text)
 
+        from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
+        from InquirerPy.base.control import Choice
+
         try:
             # Use InquirerPy for selection
             choices_objects: list[Choice] = [
@@ -144,6 +147,9 @@ class InteractiveMenu:
         if not items:
             return []
 
+        from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
+        from InquirerPy.base.control import Choice
+
         # Format choices for InquirerPy with checkbox logic
         choices = []
         for item in items:
@@ -199,6 +205,8 @@ class InteractiveMenu:
         Returns:
             True if confirmed, False if cancelled or denied
         """
+        from InquirerPy import inquirer  # pyright: ignore[reportPrivateImportUsage]
+
         try:
             # Use InquirerPy for confirmation
             result = inquirer.confirm(
