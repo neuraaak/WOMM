@@ -30,6 +30,10 @@
   de rendu, pour valider les combinaisons proposées.
 - [x] Documenter la procédure de mise à jour explicite des outils et
   configurations, avec validation et mise à jour du lockfile.
+- [x] Ajouter `setup --update` : résolution isolée, registre de migrations
+  versionnées, aperçu, confirmation, sauvegarde et historique distinct.
+  Refuser les blocs sans `--allow-destructive-actions`, les conflits et
+  les transitions inconnues même avec ce flag.
 
 ### Hors périmètre — à cadrer ultérieurement
 
@@ -37,12 +41,14 @@
   `setup` : la matrice complète n'a pas été validée, contrairement aux 22
   profils exécutés directement. Prévoir un délai adapté par opération sans
   allonger les diagnostics rapides.
-- [ ] Décider si WOMM doit mettre à jour les projets déjà générés : commande
-  dédiée, aperçu du diff, gestion des personnalisations et des conflits.
+- [ ] Étendre les transitions mineures du registre au fil des releases,
+  avec fixtures historiques et validation native pour chaque nouvel intervalle.
+  Cadrer l'adoption des projets sans provenance et les monorepos/workspaces.
 - [ ] Étudier l'usage de `copier update` : accès aux versions historiques
   des templates embarqués, réponses persistées et stratégie de distribution.
-- [ ] Définir les migrations entre générations de configurations, en
-  utilisant les outils natifs lorsqu'ils existent (ex. `biome migrate`).
+- [ ] Étudier une restauration automatique de l'environnement après échec
+  d'installation ; les fichiers sont restaurés, l'environnement peut rester
+  partiellement mis à jour. Ajouter un aperçu textuel du diff des fichiers.
 - [ ] Décider d'une éventuelle politique de support de plusieurs versions
   mineures d'un même outil ; les patchs d'une même mineure sont autorisés,
   aucune compatibilité universelle n'est promise.

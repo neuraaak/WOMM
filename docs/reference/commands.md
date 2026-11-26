@@ -5,12 +5,13 @@ Every command, as `womm --help` reports it. `-h, --help` works on each one, and
 
 ## Projects
 
-| Command                     | What it does                               |
-| :-------------------------- | :----------------------------------------- |
-| `womm create TEMPLATE DEST` | Render a catalog template into `DEST`      |
-| `womm setup detect`         | Detect the project type, list its steps    |
-| `womm setup python`         | Configure an existing Python project       |
-| `womm setup javascript`     | Configure an existing JavaScript project   |
+| Command                     | What it does                                       |
+| :-------------------------- | :------------------------------------------------- |
+| `womm create TEMPLATE DEST` | Render a catalog template into `DEST`              |
+| `womm setup detect`         | Detect the project type, list its steps            |
+| `womm setup python`         | Configure an existing Python project               |
+| `womm setup javascript`     | Configure an existing JavaScript project           |
+| `womm setup --update`       | Update official project tooling after confirmation |
 
 ### `womm create` options
 
@@ -35,6 +36,13 @@ Every command, as `womm --help` reports it. `-h, --help` works on each one, and
 | `--setup-vscode`       | no       | yes      | yes          |     |     |
 | `--virtual-env`        | no       | yes      | no           |     |     |
 | `-t, --type TYPE`      | no       | no       | yes          |     |     |
+
+The update mode takes `--path DIRECTORY`, `--dry-run` and
+`--allow-destructive-actions`. These options belong directly after `setup` and
+cannot be combined with its subcommands. `--dry-run` resolves dependencies in a
+temporary copy without applying the update. `--allow-destructive-actions`
+permits reviewed structural migrations, never ambiguous conflicts or unknown
+version transitions. See [Update an official project's tooling](../tasks/configure-an-existing-project.md#update-an-official-projects-tooling).
 
 ## Templates
 

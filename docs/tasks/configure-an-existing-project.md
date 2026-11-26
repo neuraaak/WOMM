@@ -79,6 +79,54 @@ If detection picks the wrong language, name it explicitly with `womm setup
 python` or `womm setup javascript` — see
 [Troubleshooting](../troubleshooting.md#womm-setup-detect-picks-the-wrong-language).
 
+## Update an official project's tooling
+
+For a project generated from an official template with a `.womm-template.json`
+file, upgrade WOMM, then preview the tools and configurations it can update:
+
+```bash
+womm setup --update --path ./my-project --dry-run
+womm setup --update --path ./my-project
+```
+
+WOMM reads the project's installed or locked versions, resolves the target
+versions in a temporary copy, applies its migration registry and validates the
+configuration with the target tools. The preview may download dependencies and
+use package-manager caches; it leaves the original project and environment
+unchanged. Applying shows the plan and asks for confirmation.
+
+Only development tools still declared in the project are managed. Removed tools
+are not added back. Application code, generation choices and the original
+`.womm-template.json` are preserved. Tool constraints follow the current WOMM
+template; the native lockfile records the resolved versions. Python supports uv
+and project-local pip environments; JavaScript supports npm, pnpm, modern Yarn
+and Bun. Yarn Classic requires manual review.
+Workspaces, conditional Python tooling requirements and URL requirements need
+manual review.
+
+By default, reviewed scalar key moves preserve their value. Moving a list or
+table, removing a key or changing a configuration value requires explicit consent:
+
+```bash
+womm setup --update --dry-run --allow-destructive-actions
+womm setup --update --allow-destructive-actions
+```
+
+The flag permits only known migrations. Conflicting destination values and
+unregistered version transitions still block the entire update. Same-minor
+patch updates are supported; crossing a minor boundary needs a reviewed registry
+entry. The initial registry includes Ruff's legacy lint settings and Biome's
+native v1-to-v2 migrator for the shipped target range. This is not a universal
+configuration migrator. Run your project's lint, tests and build after updating.
+
+Before applying, WOMM stores the previous files in
+`.womm-backups/update/<id>/`. Add `.womm-backups/` and `.womm-update.lock` to
+your project's `.gitignore`; backups can contain your local configuration.
+`.womm-update.json` records successful updates separately from generation
+provenance. If installation fails, WOMM restores the files and retains the
+backup. The environment may be partially updated: synchronize it using the
+restored manifest and lockfile. Pip has no persistent full dependency lock.
+
 ## ➡️ Next steps
 
 - [Check what WOMM needs](check-dependencies.md) — when a step fails for a

@@ -1,6 +1,6 @@
 # Your WOMM data
 
-Everything WOMM keeps for you lives in one directory: `~/.womm` — that is
+WOMM's installation data lives in one directory: `~/.womm` — that is
 `C:\Users\<you>\.womm` on Windows. It holds data only, never code.
 
 | Inside `~/.womm`    | What it holds                                  |
@@ -24,6 +24,11 @@ Three consequences worth knowing:
 
 There is no settings file: WOMM has no persistent configuration of its own.
 Behaviour is decided by the command and its options, every time.
+
+Explicit `womm setup --update` operations keep project-specific history in
+`.womm-update.json` and backups in `.womm-backups/update/` inside that project.
+These stay with the project and are separate from the installation data above.
+The original `.womm-template.json` remains the record of how it was generated.
 
 ## ➡️ Next steps
 

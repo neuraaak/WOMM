@@ -116,6 +116,16 @@ dependencies; use a separate constraints workflow if you need a fully locked
 pip environment.
 {% endif %}Upgrading WOMM does not update this project's files.
 
+To explicitly update the tooling supported by your installed WOMM release,
+run `womm setup --update --dry-run`, then `womm setup --update` and confirm
+the plan. Reviewed scalar moves are automatic; block moves and destructive
+config migrations need `--allow-destructive-actions`. Unknown version
+transitions and conflicting values require manual review, even with that flag.
+WOMM validates the target configuration in a temporary copy, backs up changed
+files under `.womm-backups/update/` and records successful operations in
+`.womm-update.json`. Run the project checks after applying. A failed install
+restores the files, but the environment may need to be synchronized again.
+
 ## License
 
 {{ license }}
