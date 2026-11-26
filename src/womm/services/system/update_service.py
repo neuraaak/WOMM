@@ -25,7 +25,6 @@ import re
 import sys
 import time
 from dataclasses import dataclass
-from pathlib import Path
 
 # Local imports
 from ...shared.paths import update_check_file
@@ -81,7 +80,8 @@ def is_newer(candidate: str, current: str) -> bool:
 
 def upgrade_command() -> str:
     """Return the command that upgrades the running installation."""
-    parts = {part.lower() for part in Path(sys.prefix).parts}
+    # Split on both separators: Path() keeps a Windows path whole on POSIX.
+    parts = set(re.split(r"[\\/]", sys.prefix.lower()))
     if "uv" in parts and "tools" in parts:
         return f"uv tool upgrade {PACKAGE_NAME}"
     if "pipx" in parts:
