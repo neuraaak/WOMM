@@ -3,6 +3,17 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## Unreleased
+
+### Added
+
+- `womm template init DESTINATION --from PROJECT` builds the template from an
+  existing git project instead of an empty skeleton. Every tracked file is
+  kept, and the project's names (`Flash-Excel`, `flash-excel`, `flash_excel`)
+  become the `project_name`, `project_slug` and `package_name` questions.
+  `--exclude PATTERN` leaves files out. Files likely to hold secrets are never
+  taken. A report lists what was copied, changed and excluded.
+
 ## 5.5.0 — 2026-11-26
 
 ### Changed

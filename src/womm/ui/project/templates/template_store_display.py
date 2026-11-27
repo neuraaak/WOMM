@@ -23,7 +23,11 @@ from rich.panel import Panel
 
 # Local imports
 from ....shared.models.template_source import TemplateEntry
-from ....shared.results.template_results import TemplateListResult, TemplateStoreResult
+from ....shared.results.template_results import (
+    TemplateExtractionReport,
+    TemplateListResult,
+    TemplateStoreResult,
+)
 from ...common.logging import ezconsole, ezprinter
 
 # ///////////////////////////////////////////////////////////////
@@ -123,8 +127,68 @@ def render_template_result(
         ezconsole.print(_entry_panel(result.entry, verbose=verbose))
 
 
+def render_extraction_report(
+    report: TemplateExtractionReport, *, verbose: bool = False
+) -> None:
+    """Render what ``template init --from`` took from the project.
+
+    Args:
+        report: Report carried by the ``template init`` result.
+        verbose: Whether to also list every file and residual occurrence.
+    """
+    lines = [
+        f"[b]Copied as is:[/b] {len(report.copied)} file(s)",
+        f"[b]With names replaced:[/b] {len(report.transformed)} file(s)",
+        f"[b]Excluded:[/b] {len(report.excluded)} file(s)",
+    ]
+    for variable, name in report.variables.items():
+        count = report.replacements.get(variable, 0)
+        lines.append(f"[b]{name}[/b] -> {variable} ({count} occurrence(s))")
+    if not report.variables:
+        lines.append("No project name replaced")
+    ezconsole.print("")
+    ezconsole.print(
+        Panel(
+            "\n".join(lines),
+            title="Extracted from the project",
+            border_style="blue",
+            padding=(1, 1),
+        )
+    )
+
+    reasons: dict[str, int] = {}
+    for _path, reason in report.excluded:
+        reasons[reason] = reasons.get(reason, 0) + 1
+    for reason, count in sorted(reasons.items()):
+        ezprinter.info(f"Excluded ({reason}): {count}")
+    if verbose:
+        for path in report.transformed:
+            ezprinter.info(f"Names replaced: {path}")
+        for path, reason in report.excluded:
+            ezprinter.info(f"Excluded: {path} ({reason})")
+    if report.residuals:
+        count = len(report.residuals)
+        shown = f"At least {count}" if report.residuals_truncated else str(count)
+        ezprinter.warning(
+            f"{shown} line(s) still mention the project name"
+            " in another form: review them"
+        )
+        if verbose:
+            for location in report.residuals:
+                ezprinter.info(f"Residual: {location}")
+    for warning in report.warnings:
+        ezprinter.warning(warning)
+    ezprinter.warning(
+        "Name replacement is heuristic: review the template before sharing it"
+    )
+
+
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
-__all__ = ["render_template_list", "render_template_result"]
+__all__ = [
+    "render_extraction_report",
+    "render_template_list",
+    "render_template_result",
+]

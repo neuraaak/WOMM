@@ -56,6 +56,8 @@ version transitions. See [Update an official project's tooling](../tasks/configu
 | `womm template remove NAME`          | Unregister a user entry and delete its copy         |
 
 `womm template init` also takes `--data KEY=VALUE`, `--defaults` and `--force`.
+`--from PROJECT` builds the template from a git project's tracked files, and
+`--exclude PATTERN` (repeatable) leaves files out of it.
 
 `add`, `init`, `update` and `remove` take `-I` / `--interactive`: WOMM asks for
 the arguments you leave out, shows what it is about to write and asks you to

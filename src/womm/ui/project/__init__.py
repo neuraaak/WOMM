@@ -25,6 +25,7 @@ from .setup.setup_completion_summaries import (
     print_setup_steps_hint,
 )
 from .templates.template_store_display import (
+    render_extraction_report,
     render_template_list,
     render_template_result,
 )
@@ -42,6 +43,7 @@ __all__ = [
     "print_project_setup_result",
     "print_setup_completion_summary",
     "print_setup_steps_hint",
+    "render_extraction_report",
     "render_project_creation_result",
     "render_template_list",
     "render_template_result",

@@ -203,6 +203,19 @@ def template_update(
     help="Scaffold into a non-empty destination.",
 )
 @click.option(
+    "--from",
+    "source",
+    type=click.Path(path_type=Path, exists=True, file_okay=False),
+    help="Build the template from this git project's tracked files.",
+)
+@click.option(
+    "--exclude",
+    "excludes",
+    multiple=True,
+    metavar="PATTERN",
+    help="With --from, leave out matching files (a trailing / targets a folder). Repeatable.",
+)
+@click.option(
     "-I",
     "--interactive",
     is_flag=True,
@@ -214,18 +227,23 @@ def template_init(
     data: tuple[str, ...],
     defaults: bool,
     force: bool,
+    source: Path | None,
+    excludes: tuple[str, ...],
     interactive: bool,
     verbose: bool,
 ) -> None:
-    """Scaffold a new Copier template skeleton."""
+    """Scaffold a new Copier template skeleton, or extract one with --from."""
     from ...interfaces.project.template_store_interface import TemplateStoreInterface
     from ...ui.project import (
         ask_text,
         confirm_action,
+        render_extraction_report,
         render_project_creation_result,
         render_template_result,
     )
 
+    if excludes and source is None:
+        raise click.UsageError("--exclude needs --from.")
     answers = parse_data_options(data)
     if interactive and destination is None:
         destination = Path(ask_text("Template destination"))
@@ -237,10 +255,14 @@ def template_init(
         answers=answers,
         force=force,
         defaults=defaults,
+        source=source,
+        excludes=excludes,
     )
     render_project_creation_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
+    if result.extraction is not None:
+        render_extraction_report(result.extraction, verbose=verbose)
 
     if interactive and confirm_action("Register this template in the catalog?"):
         identifier = ask_text("Template identifier", default=destination.name)

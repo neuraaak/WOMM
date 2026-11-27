@@ -9,6 +9,8 @@ one from scratch.
 - To register a template: a local directory holding a `copier.yml` (or
   `copier.yaml`) file. Remote sources (a git URL) are not supported yet.
 - To scaffold one: nothing more. `womm template init` writes the skeleton.
+- To build one from a project: the project must be the root of a git
+  repository. Only its tracked files are read.
 
 ## 📝 Steps
 
@@ -69,6 +71,48 @@ and the metadata the catalog needs. `--data KEY=VALUE`, `--defaults` and
 `--force` behave as in [Create a project](create-a-project.md). With `-I`, WOMM
 asks for the destination if you leave it out, then offers to register the
 skeleton in the catalog.
+
+### Build a template from an existing project
+
+```bash
+womm template init ./templates/webview --from ../flash-excel --exclude docs/
+```
+
+The template holds a copy of every file git tracks in the project, so its
+configuration, CI and scripts come along. WOMM reads the project's name in
+`pyproject.toml` (or `package.json`) and replaces it with questions:
+
+| In the project | In the template | Asked                                 |
+| :------------- | :-------------- | :------------------------------------ |
+| `Flash-Excel`  | `project_name`  | Yes                                   |
+| `flash-excel`  | `project_slug`  | No, derived from `project_name`       |
+| `flash_excel`  | `package_name`  | Yes, defaults to the derived name     |
+
+What to expect:
+
+- A name is replaced only where it stands alone: `flash-excel-ui` or
+  `FlashExcelAPI` stay as they are. The same rule applies to file names, so
+  `flash-excel.spec` is renamed. The report counts the lines that still
+  mention the name; review them with `-v`.
+- When two forms are the same text, as for a project named `foo`, the
+  strictest variable available wins: `package_name` drives all of them, or
+  `project_slug` when no Python package was found.
+- Version, dependencies, authors, URLs, license and publishing settings stay
+  as in the project, except where the name appears. Lockfiles are kept too:
+  regenerate them before any `--frozen` install.
+- Files where a name was replaced are rendered with LF line endings. The other
+  files are copied byte for byte.
+- `--exclude` takes a pattern on the path relative to the project; end it with
+  `/` to leave out a whole folder. WOMM warns about a pattern that matched
+  nothing.
+- `.env` files (except `.env.example`), keys, certificates, credentials and
+  `.tufup` files are always left out, even when tracked. This does not prove
+  that no secret remains: read the template before sharing it.
+- Symbolic links and git submodules are left out. WOMM refuses the extraction
+  when the project has unmerged files, or when two paths differ only by the
+  project's name and could render to the same file. Other clashes remain
+  possible: a file named `new-app.txt` and a renamed `flash-excel.txt` collide
+  if you answer `new-app`.
 
 ### Refresh an entry, move it, or drop it
 

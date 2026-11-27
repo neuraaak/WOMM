@@ -19,7 +19,8 @@ from __future__ import annotations
 # IMPORTS
 # ///////////////////////////////////////////////////////////////
 # Standard library imports
-from collections.abc import Mapping
+import shutil
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 # Local imports
@@ -28,10 +29,19 @@ from ...services.project.copier_project_creation_service import (
     CopierProjectCreationService,
     ProjectCreationRequest,
 )
+from ...services.project.template_extraction_service import (
+    TemplateExtractionService,
+)
 from ...services.project.template_store_service import TemplateStoreService
 from ...shared.paths import packaged_copier_meta
-from ...shared.results.project_results import ProjectCreationResult
-from ...shared.results.template_results import TemplateListResult, TemplateStoreResult
+from ...shared.results.template_results import (
+    TemplateInitResult,
+    TemplateListResult,
+    TemplateStoreResult,
+)
+
+# Meta-template questions reserved to ``init_template(source=...)``.
+EXTRACTION_FLAGS = ("extracted", "has_identity", "has_package")
 
 # ///////////////////////////////////////////////////////////////
 # MAIN CLASS
@@ -45,6 +55,7 @@ class TemplateStoreInterface:
         """Initialize the template store interface."""
         self._store = TemplateStoreService()
         self._creator = CopierProjectCreationService()
+        self._extractor = TemplateExtractionService()
 
     # ///////////////////////////////////////////////////////////////
     # PUBLIC METHODS
@@ -174,23 +185,36 @@ class TemplateStoreInterface:
         answers: Mapping[str, str],
         force: bool = False,
         defaults: bool = False,
-    ) -> ProjectCreationResult:
+        source: Path | None = None,
+        excludes: Sequence[str] = (),
+    ) -> TemplateInitResult:
         """Scaffold a new Copier template skeleton.
 
         The skeleton is rendered by the same service as projects: WOMM has no
-        second rendering engine. It carries no inference — questions, conditions
-        and structure are the template author's responsibility.
+        second rendering engine. Without ``source`` it carries no inference.
+        With ``source``, the template content is a snapshot of that git
+        project whose own names become variables; the whole extraction is
+        checked before anything is written.
 
         Args:
             destination: Directory to scaffold into.
             answers: Pre-filled meta-template answers.
             force: Allow a non-empty destination.
             defaults: Use defaults instead of prompting.
+            source: Root of a git project to extract the template from.
+            excludes: Patterns of tracked files to leave out of the snapshot.
 
         Returns:
-            ProjectCreationResult: Typed outcome, never raises.
+            TemplateInitResult: Typed outcome, never raises.
         """
+        existed = destination.exists()
+        # Only an extraction may set the internal meta-template flags.
+        answers = {**answers, **dict.fromkeys(EXTRACTION_FLAGS, "false")}
         try:
+            plan = None
+            if source is not None:
+                plan = self._extractor.plan(source, destination, excludes)
+                answers = {**answers, "extracted": "true", **plan.meta_answers}
             warnings = self._creator.create(
                 ProjectCreationRequest(
                     template_source=Path(str(packaged_copier_meta())),
@@ -200,16 +224,25 @@ class TemplateStoreInterface:
                     defaults=defaults,
                 )
             )
-        except ProjectServiceError as exc:
-            return ProjectCreationResult(
+            if plan is not None:
+                try:
+                    self._extractor.write(plan, destination / "template")
+                except OSError:
+                    # Never leave a half-written template where there was none.
+                    if not existed:
+                        shutil.rmtree(destination, ignore_errors=True)
+                    raise
+        except (ProjectServiceError, OSError) as exc:
+            return TemplateInitResult(
                 success=False, error=str(exc), project_path=destination
             )
-        return ProjectCreationResult(
+        return TemplateInitResult(
             success=True,
             message=f"Template skeleton created at {destination}",
             project_path=destination,
             project_name=destination.name,
             warnings=warnings or None,
+            extraction=plan.report if plan is not None else None,
         )
 
 
