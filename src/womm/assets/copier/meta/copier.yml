@@ -22,3 +22,20 @@ template_description:
   type: str
   help: "One-line template description"
   default: "A Copier template"
+
+# Set by `womm template init --from`, never asked: the project snapshot
+# decides which variables the generated template declares.
+extracted:
+  type: bool
+  default: false
+  when: false
+
+has_identity:
+  type: bool
+  default: false
+  when: false
+
+has_package:
+  type: bool
+  default: false
+  when: false

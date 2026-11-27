@@ -3,6 +3,26 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## 5.6.0 — 2026-11-27
+
+### Added
+
+- `womm template init DESTINATION --from PROJECT` builds the template from an
+  existing git project instead of an empty skeleton. Every tracked file is
+  kept, and the project's names (`Flash-Excel`, `flash-excel`, `flash_excel`)
+  become the `project_name`, `project_slug` and `package_name` questions.
+  `--exclude PATTERN` leaves files out. Files likely to hold secrets are never
+  taken. A report lists what was copied, changed and excluded. The template
+  remembers its project in a `.womm-extract.json` file, which `update` needs.
+- `womm template update` brings a template built with `--from` up to date
+  with its project. Changes made only in the project are applied, your own
+  edits are kept, and new files, deleted files and conflicts are asked with
+  `-I`. `_womm.version` is raised by one patch when a file changed. TARGET can
+  be a template directory as well as a registered template.
+- WOMM keeps every version of a registered template's copy (`v1`, `v2`…)
+  and renders from the latest. `womm template rollback NAME [VERSION]` renders
+  from an older one, and `womm create NAME@vN` renders a version once.
+
 ## 5.5.0 — 2026-11-26
 
 ### Changed

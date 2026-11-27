@@ -3,6 +3,48 @@ _womm:
   version: "0.1.0"
 
 _subdirectory: template
+{% if extracted %}
+# Extracted from a project: only files ending with .womm are rendered, with
+# delimiters the project's own files never use. GitHub expressions and Jinja
+# sources elsewhere stay plain text. Rendered files get LF line endings.
+_templates_suffix: ".womm"
+_envops:
+  variable_start_string: "[[@"
+  variable_end_string: "@]]"
+  block_start_string: "[%@"
+  block_end_string: "@%]"
+  comment_start_string: "[#@"
+  comment_end_string: "@#]"
+{% if has_identity %}
+
+project_name:
+  type: str
+  help: "Project name (distribution name, e.g. my-project)"
+  default: "my-project"
+  validator: >-
+    [%@ if not (project_name | regex_search('^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9])$')) @%]
+    Use letters, digits, '-', '_' or '.', starting and ending with a letter or
+    digit (e.g. my-project).
+    [%@ endif @%]
+
+# Normalized name (PEP 503), used where the project wrote it in lowercase.
+project_slug:
+  type: str
+  default: "[[@ project_name | regex_replace('[-_.]+', '-') | lower @]]"
+  when: false
+{% if has_package %}
+
+package_name:
+  type: str
+  help: "Importable package name"
+  default: "[[@ project_slug | replace('-', '_') @]]"
+  validator: >-
+    [%@ if not (package_name | regex_search('^[A-Za-z_][A-Za-z0-9_]*$')) @%]
+    Use letters, digits and '_', not starting with a digit (e.g. my_project).
+    [%@ endif @%]
+{% endif %}
+{% endif %}
+{% else %}
 
 project_name:
   type: str
@@ -15,3 +57,4 @@ project_description:
   help: "One-line project description"
   default: "A project created with {{ project_name }}"
 {% endraw %}
+{% endif %}

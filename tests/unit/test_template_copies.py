@@ -59,7 +59,9 @@ def test_template_keeps_working_after_its_original_is_gone(
 
     entry = TemplateStoreService().resolve("user/neuraaak/mine")
 
-    assert entry.source == isolated_home / "templates" / "copies" / "neuraaak" / "mine"
+    root = isolated_home / "templates" / "copies" / "neuraaak" / "mine"
+    assert entry.storage == root
+    assert entry.source == root / "v1"
     assert _render(entry.source, tmp_path / "out") == "# acme\n"
 
 
@@ -90,7 +92,14 @@ def test_update_replaces_the_copy_with_the_new_content(original: Path, tmp_path:
     entry = store.update("mine")
 
     assert _render(entry.source, tmp_path / "out") == "# v2 acme\n"
-    assert [p.name for p in entry.source.parent.iterdir()] == ["mine"]
+    assert entry.storage is not None
+    assert [p.name for p in entry.storage.parent.iterdir()] == ["mine"]
+    assert sorted(p.name for p in entry.storage.iterdir()) == [
+        "manifest.json",
+        "v1",
+        "v2",
+    ]
+    assert (entry.store_version, entry.store_versions) == (2, 2)
 
 
 def test_remove_deletes_the_copy_and_keeps_the_original(original: Path):

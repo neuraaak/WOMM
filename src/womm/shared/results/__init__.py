@@ -74,6 +74,8 @@ from .system_results import (
     SystemInfoResult,
 )
 from .template_results import (
+    TemplateExtractionReport,
+    TemplateInitResult,
     TemplateListResult,
     TemplateStoreResult,
 )
@@ -132,6 +134,8 @@ __all__ = [
     "SetupResult",
     "SystemDetectionResult",
     "SystemInfoResult",
+    "TemplateExtractionReport",
+    "TemplateInitResult",
     "TemplateListResult",
     "TemplateStoreResult",
     "ValidationResult",

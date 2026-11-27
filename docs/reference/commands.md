@@ -46,16 +46,24 @@ version transitions. See [Update an official project's tooling](../tasks/configu
 
 ## Templates
 
-| Command                              | What it does                                        |
-| :----------------------------------- | :-------------------------------------------------- |
-| `womm template list`                 | List every catalog entry, official first            |
-| `womm template show IDENTIFIER`      | Show one entry in detail                            |
-| `womm template add NAME SOURCE`      | Copy a local template and register it under `user/` |
-| `womm template init DESTINATION`     | Scaffold a new Copier template skeleton             |
-| `womm template update NAME [SOURCE]` | Copy a user entry again, from `SOURCE` if given     |
-| `womm template remove NAME`          | Unregister a user entry and delete its copy         |
+| Command                                 | What it does                                        |
+| :-------------------------------------- | :-------------------------------------------------- |
+| `womm template list`                    | List every catalog entry, official first            |
+| `womm template show IDENTIFIER`         | Show one entry in detail                            |
+| `womm template add NAME SOURCE`         | Copy a local template and register it under `user/` |
+| `womm template init DESTINATION`        | Scaffold a new Copier template skeleton             |
+| `womm template update TARGET [SOURCE]`  | Update a template from its project, then its copy   |
+| `womm template rollback NAME [VERSION]` | Render a user entry from a kept version             |
+| `womm template remove NAME`             | Unregister a user entry and delete its copy         |
 
 `womm template init` also takes `--data KEY=VALUE`, `--defaults` and `--force`.
+`--from PROJECT` builds the template from a git project's tracked files, and
+`--exclude PATTERN` (repeatable) leaves files out of it.
+
+`womm template update` takes a registered template or a template directory.
+On a template built with `--from`, it brings in the project's changes first;
+`--from PROJECT` points at another copy of the project. WOMM's copy is then
+refreshed, from `SOURCE` if given, and every version of it is kept.
 
 `add`, `init`, `update` and `remove` take `-I` / `--interactive`: WOMM asks for
 the arguments you leave out, shows what it is about to write and asks you to
