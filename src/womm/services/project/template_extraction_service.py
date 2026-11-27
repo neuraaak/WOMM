@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import stat
 import tomllib
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -33,6 +34,13 @@ from womm.exceptions.project import ProjectServiceError
 from womm.shared.results.template_results import TemplateExtractionReport
 
 from ..common.command_runner_service import CommandRunnerService
+from .template_extraction_trace import (
+    ExtractionTrace,
+    TracedFile,
+    digest,
+    relative_origin,
+    write_trace,
+)
 
 # ///////////////////////////////////////////////////////////////
 # CONSTANTS
@@ -40,6 +48,9 @@ from ..common.command_runner_service import CommandRunnerService
 
 # Suffix of the files Copier renders; files without it are copied verbatim.
 TEMPLATE_SUFFIX = ".womm"
+
+# Copier ``_subdirectory`` of the template, as the meta-template writes it.
+TEMPLATE_SUBDIRECTORY = "template"
 
 # Copier ``_envops``: rare enough to never meet in a project's own files.
 DELIMITERS = {
@@ -49,6 +60,13 @@ DELIMITERS = {
     "block_end_string": "@%]",
     "comment_start_string": "[#@",
     "comment_end_string": "@#]",
+}
+
+# What the generated copier.yml must keep for the trace to stay valid.
+CONTRACT: dict[str, object] = {
+    "subdirectory": TEMPLATE_SUBDIRECTORY,
+    "suffix": TEMPLATE_SUFFIX,
+    "delimiters": DELIMITERS,
 }
 
 # Directories never taken, whatever ``--exclude`` says.
@@ -122,7 +140,10 @@ class ExtractedFile:
 
     source: PurePosixPath
     target: PurePosixPath
-    content: bytes | None = None  # None: copied from the source as is
+    # Read once at planning time: what is written is what was checked.
+    content: bytes
+    rendered: bool = False  # True: names replaced, Copier renders it
+    mode: int = 0  # permission bits of the project file
 
 
 @dataclass
@@ -130,6 +151,8 @@ class ExtractionPlan:
     """Everything the extraction will write, computed without writing."""
 
     source: Path
+    destination: Path
+    excludes: list[str] = field(default_factory=list)
     files: list[ExtractedFile] = field(default_factory=list)
     report: TemplateExtractionReport = field(default_factory=TemplateExtractionReport)
 
@@ -183,7 +206,9 @@ class TemplateExtractionService:
         self._require_repository_root(source)
         entries = self._tracked_entries(source)
 
-        plan = ExtractionPlan(source=source)
+        plan = ExtractionPlan(
+            source=source, destination=destination, excludes=list(excludes)
+        )
         report = plan.report
         matched: set[str] = set()
         kept: list[PurePosixPath] = []
@@ -209,7 +234,10 @@ class TemplateExtractionService:
             target = PurePosixPath(
                 *(_replace(part, pattern, variants, report) for part in rel.parts)
             )
-            content = self._transform(source / rel, rel, pattern, variants, report)
+            # shortcut: the whole snapshot is held in memory, fine for the
+            # few MB of a project's tracked files; stream it if that grows.
+            data = (source / rel).read_bytes()
+            content = self._transform(data, rel, pattern, variants, report)
             if content is not None:
                 # Copier renders every path, but only suffixed contents.
                 target = target.with_name(target.name + TEMPLATE_SUFFIX)
@@ -217,7 +245,15 @@ class TemplateExtractionService:
                 report.transformed.append(rel.as_posix())
             else:
                 report.copied.append(rel.as_posix())
-            plan.files.append(ExtractedFile(source=rel, target=target, content=content))
+            plan.files.append(
+                ExtractedFile(
+                    source=rel,
+                    target=target,
+                    content=data if content is None else content,
+                    rendered=content is not None,
+                    mode=stat.S_IMODE((source / rel).stat().st_mode),
+                )
+            )
         _check_render_collisions(plan.files)
 
         if report.transformed:
@@ -234,22 +270,33 @@ class TemplateExtractionService:
             )
         return plan
 
-    def write(self, plan: ExtractionPlan, template_dir: Path) -> None:
-        """Write the planned files under ``template_dir``.
+    def write(self, plan: ExtractionPlan) -> None:
+        """Write the snapshot under the template's ``_subdirectory``, then its trace.
 
         Args:
             plan: Result of :meth:`plan`.
-            template_dir: Copier ``_subdirectory`` of the new template.
         """
+        template_dir = plan.destination / TEMPLATE_SUBDIRECTORY
         for item in plan.files:
-            origin = plan.source / item.source
             target = template_dir / item.target
             target.parent.mkdir(parents=True, exist_ok=True)
-            if item.content is None:
-                shutil.copy2(origin, target)
-            else:
-                target.write_bytes(item.content)
-                shutil.copymode(origin, target)
+            target.write_bytes(item.content)
+            shutil.copystat(plan.source / item.source, target)
+        origin = relative_origin(plan.destination, plan.source)
+        write_trace(plan.destination, self.trace(plan, origin))
+
+    def trace(self, plan: ExtractionPlan, origin: str | None) -> ExtractionTrace:
+        """The trace recording ``plan`` as the template's baseline."""
+        return ExtractionTrace(
+            origin=origin,
+            excludes=list(plan.excludes),
+            variables=dict(plan.report.variables),
+            contract=dict(CONTRACT),
+            files={
+                item.source: TracedFile(target=item.target, sha256=digest(item.content))
+                for item in plan.files
+            },
+        )
 
     # ///////////////////////////////////////////////////////////
     # PRIVATE METHODS - LISTING
@@ -389,7 +436,7 @@ class TemplateExtractionService:
 
     def _transform(
         self,
-        path: Path,
+        data: bytes,
         rel: PurePosixPath,
         pattern: re.Pattern[str] | None,
         variants: dict[str, str],
@@ -398,7 +445,6 @@ class TemplateExtractionService:
         """Return the rendered-to-be content, or None to copy the file as is."""
         if pattern is None:
             return None
-        data = path.read_bytes()
         if b"\0" in data:
             return None
         try:
@@ -521,6 +567,19 @@ def _record_residuals(
             report.residuals.append(f"{rel}:{number}")
 
 
+_VARIABLE = re.compile(
+    re.escape(DELIMITERS["variable_start_string"])
+    + r" \w+ "
+    + re.escape(DELIMITERS["variable_end_string"])
+)
+
+
+def canonical(path: PurePosixPath) -> str:
+    """Key shared by every template path that some answers render alike."""
+    posix = path.as_posix().removesuffix(TEMPLATE_SUFFIX)
+    return _VARIABLE.sub("<variable>", posix).casefold()
+
+
 def _check_render_collisions(files: list[ExtractedFile]) -> None:
     """Refuse paths that some answers would render to the same path.
 
@@ -529,16 +588,6 @@ def _check_render_collisions(files: list[ExtractedFile]) -> None:
     by the template suffix are one path for Copier: the last would overwrite
     the first.
     """
-    variable = re.compile(
-        re.escape(DELIMITERS["variable_start_string"])
-        + r" \w+ "
-        + re.escape(DELIMITERS["variable_end_string"])
-    )
-
-    def canonical(path: PurePosixPath) -> str:
-        posix = path.as_posix().removesuffix(TEMPLATE_SUFFIX)
-        return variable.sub("<variable>", posix).casefold()
-
     files_by_path: dict[str, PurePosixPath] = {}
     for item in files:
         key = canonical(item.target)
@@ -568,6 +617,7 @@ def _has_delimiter(text: str) -> bool:
 
 __all__ = [
     "DELIMITERS",
+    "canonical",
     "TEMPLATE_SUFFIX",
     "ExtractedFile",
     "ExtractionPlan",

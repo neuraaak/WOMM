@@ -24,9 +24,12 @@ from rich.panel import Panel
 # Local imports
 from ....shared.models.template_source import TemplateEntry
 from ....shared.results.template_results import (
+    ChangeKind,
     TemplateExtractionReport,
     TemplateListResult,
     TemplateStoreResult,
+    TemplateUpdatePreview,
+    TemplateUpdateResult,
 )
 from ...common.logging import ezconsole, ezprinter
 
@@ -55,6 +58,11 @@ def _entry_panel(entry: TemplateEntry, *, verbose: bool) -> Panel:
         lines.append(f"[b]Source:[/b] {entry.source}")
         if entry.copied_from is not None:
             lines.append(f"[b]Copied from:[/b] {entry.copied_from}")
+        if entry.store_version:
+            lines.append(
+                f"[b]Stored version:[/b] v{entry.store_version}"
+                f" ({entry.store_versions} kept)"
+            )
 
     return Panel(
         "\n".join(lines),
@@ -183,6 +191,98 @@ def render_extraction_report(
     )
 
 
+CHANGE_LABELS = {
+    ChangeKind.UPDATED: "Updated from the project",
+    ChangeKind.NEW: "New in the project",
+    ChangeKind.REMOVABLE: "Gone from the project",
+    ChangeKind.CONFLICT: "Conflicts",
+}
+
+
+def render_update_preview(
+    preview: TemplateUpdatePreview, *, verbose: bool = False
+) -> None:
+    """Render what ``template update`` is about to do.
+
+    Args:
+        preview: Successful result of ``plan_update``.
+        verbose: Whether to list every file of each category.
+    """
+    lines = [f"[b]Template:[/b] {preview.template or '-'}"]
+    if preview.entry is not None:
+        lines.append(f"[b]Store entry:[/b] {preview.entry.qualified_id}")
+    if preview.report is not None:
+        lines.append(f"[b]Already up to date:[/b] {preview.unchanged} file(s)")
+        lines.append(f"[b]Your edits kept:[/b] {preview.kept} file(s)")
+        for kind, label in CHANGE_LABELS.items():
+            count = sum(1 for c in preview.changes if c.kind is kind)
+            lines.append(f"[b]{label}:[/b] {count} file(s)")
+    else:
+        lines.append("No extraction trace: only the store copy is refreshed")
+    ezconsole.print("")
+    ezconsole.print(
+        Panel(
+            "\n".join(lines),
+            title="Template update",
+            border_style="blue",
+            padding=(1, 1),
+        )
+    )
+    if verbose:
+        for change in preview.changes:
+            ezprinter.info(f"{CHANGE_LABELS[change.kind]}: {change.source}")
+    if preview.other_ids:
+        ezprinter.warning(
+            "Several store entries come from this template: "
+            + ", ".join(preview.other_ids)
+            + ". Refresh them with womm template update ID."
+        )
+
+
+def render_update_result(
+    result: TemplateUpdateResult, *, verbose: bool = False
+) -> None:
+    """Render the outcome of ``apply_update``.
+
+    Args:
+        result: Outcome returned by ``apply_update``.
+        verbose: Whether to list every written and removed file.
+    """
+    if not result.success:
+        ezprinter.error(result.error or "Template update failed")
+        return
+    outcome = result.outcome
+    if outcome is not None:
+        if outcome.version is not None:
+            before, after = outcome.version
+            ezprinter.success(f"Template updated: version {before} -> {after}")
+        else:
+            ezprinter.success("Template already up to date: nothing was changed")
+        ezprinter.info(
+            f"Written: {len(outcome.written)}, removed: {len(outcome.removed)}"
+        )
+        if verbose:
+            for path in outcome.written:
+                ezprinter.info(f"Written: {path}")
+            for path in outcome.removed:
+                ezprinter.info(f"Removed: {path}")
+        if outcome.pending:
+            ezprinter.warning(
+                f"{len(outcome.pending)} question(s) left for later:"
+                " run womm template update -I to decide"
+            )
+            for path in outcome.pending:
+                ezprinter.info(f"Pending: {path}")
+    if result.store_error:
+        ezprinter.error(f"Template updated, store not updated: {result.store_error}")
+        ezprinter.info("Run womm template update ID again to refresh the store")
+    elif result.entry is not None:
+        ezprinter.success(
+            f"Store refreshed: {result.entry.qualified_id}"
+            f" (v{result.entry.store_version})"
+        )
+
+
 # ///////////////////////////////////////////////////////////////
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
@@ -191,4 +291,6 @@ __all__ = [
     "render_extraction_report",
     "render_template_list",
     "render_template_result",
+    "render_update_preview",
+    "render_update_result",
 ]

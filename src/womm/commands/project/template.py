@@ -147,39 +147,92 @@ def template_remove(identifier: str | None, interactive: bool, verbose: bool) ->
 
 @template_group.command("update", no_args_is_help=True)
 @click.help_option("-h", "--help")
-@click.argument("identifier", required=False)
+@click.argument("target", required=False)
 @click.argument("source", type=click.Path(path_type=Path), required=False)
+@click.option(
+    "--from",
+    "project",
+    type=click.Path(path_type=Path, exists=True, file_okay=False),
+    help="Project to update the template from, instead of the one it was extracted from.",
+)
 @click.option("-I", "--interactive", is_flag=True, help=INTERACTIVE_HELP)
 @click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
 def template_update(
-    identifier: str | None, source: Path | None, interactive: bool, verbose: bool
+    target: str | None,
+    source: Path | None,
+    project: Path | None,
+    interactive: bool,
+    verbose: bool,
 ) -> None:
-    """Refresh WOMM's copy of a user template, or copy it from SOURCE.
+    """Update a template from its project, then WOMM's copy of it.
 
-    Without SOURCE, the copy is refreshed from the directory it was made from.
+    TARGET is a registered template or a template directory (write it ./dir
+    when a template has the same name). A template made with init --from is
+    compared with its project: changes made only in the project are applied,
+    your own edits are kept, and new files, removed files and conflicts are
+    asked with -I, left pending without it. WOMM's copy is then refreshed,
+    from SOURCE if given.
     """
     from ...interfaces.project.template_store_interface import TemplateStoreInterface
     from ...ui.common import ezprinter
-    from ...ui.project import ask_text, confirm_action, render_template_result
+    from ...ui.project import (
+        ask_text,
+        ask_update_question,
+        confirm_action,
+        render_update_preview,
+        render_update_result,
+    )
 
     store = TemplateStoreInterface()
-    if interactive:
-        identifier = identifier or _pick_user_template(store, "Template to update")
-        current = store.show_template(identifier)
-        if not current.success or current.entry is None:
-            render_template_result(current)
+    if interactive and target is None:
+        target = _pick_user_template(store, "Template to update")
+    target = _require(target, "TARGET")
+
+    preview = store.plan_update(target, source, project)
+    if not preview.success:
+        _report_update_error(preview.error)
+        raise SystemExit(1)
+    store_only = preview.report is None
+    if interactive and store_only and preview.entry is not None and source is None:
+        origin = preview.template or preview.entry.copied_from or preview.entry.source
+        source = Path(ask_text("Copy it from", default=str(origin)))
+        preview = store.plan_update(target, source, project)
+        if not preview.success:
+            _report_update_error(preview.error)
             raise SystemExit(1)
-        origin = current.entry.copied_from or current.entry.source
-        source = source or Path(ask_text("Copy it from", default=str(origin)))
-        if not confirm_action(f"Copy {current.entry.qualified_id} from {source}?"):
+    render_update_preview(preview, verbose=verbose)
+
+    decisions = {}
+    publish = True
+    if interactive:
+        for change in preview.questions():
+            decisions[change.source] = ask_update_question(change)
+        if store_only:
+            assert preview.entry is not None
+            question = (
+                f"Copy {preview.entry.qualified_id} from {source or preview.template}?"
+            )
+        else:
+            if preview.entry is not None:
+                publish = confirm_action(
+                    f"Then refresh {preview.entry.qualified_id} in WOMM's store?"
+                )
+            question = "Apply this update?"
+        if not confirm_action(question):
             ezprinter.info("Cancelled, nothing was updated")
             return
-    identifier = _require(identifier, "IDENTIFIER")
 
-    result = store.update_template(identifier, source)
-    render_template_result(result, verbose=verbose)
+    result = store.apply_update(preview, decisions, publish=publish)
+    render_update_result(result, verbose=verbose)
     if not result.success:
         raise SystemExit(1)
+
+
+def _report_update_error(error: str) -> None:
+    """Report a refused update before anything was planned."""
+    from ...ui.common import ezprinter
+
+    ezprinter.error(error or "Template update failed")
 
 
 @template_group.command("init", no_args_is_help=True)

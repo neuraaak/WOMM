@@ -3,6 +3,23 @@
 What changed for you, newest version first. The full technical history, commit
 by commit, is in the [changelog](changelog.md).
 
+## Unreleased
+
+### Added
+
+- `womm template update` brings a template built with `--from` up to date
+  with its project. Changes made only in the project are applied, your own
+  edits are kept, and new files, deleted files and conflicts are asked with
+  `-I`. `_womm.version` is raised by one patch when a file changed. TARGET can
+  be a template directory as well as a registered template.
+- WOMM keeps every version of a registered template's copy (`v1`, `v2`…)
+  and renders from the latest.
+
+### Changed
+
+- `womm template init --from` writes a `.womm-extract.json` file at the root
+  of the template, which `update` needs.
+
 ## 5.6.0 — 2026-11-27
 
 ### Added

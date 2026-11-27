@@ -171,3 +171,14 @@ def test_extraction_flags_cannot_be_set_without_from(tmp_path: Path):
     assert result.success is True
     assert "_envops" not in (template / "copier.yml").read_text("utf-8")
     assert (template / "template" / "README.md.jinja").is_file()
+
+
+def test_init_from_leaves_a_trace_outside_the_rendered_files(
+    project: Path, tmp_path: Path
+):
+    template = tmp_path / "tpl"
+    _extract(project, template)
+
+    assert (template / ".womm-extract.json").is_file()
+    out = _render(template, tmp_path / "out", "New-App")
+    assert not (out / ".womm-extract.json").exists()

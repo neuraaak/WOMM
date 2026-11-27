@@ -1,14 +1,19 @@
 """Tests for the extraction of a Copier template from a git project."""
 
+import hashlib
 import shutil
 import subprocess
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
 from womm.exceptions.project import ProjectServiceError
 from womm.services.project.template_extraction_service import (
     TemplateExtractionService,
+)
+from womm.services.project.template_extraction_trace import (
+    TRACE_FILENAME,
+    read_trace,
 )
 
 PYPROJECT = b"""\
@@ -89,9 +94,9 @@ def _plan(source: Path, destination: Path, excludes: tuple[str, ...] = ()):
 def test_names_become_variables_and_everything_else_is_kept(
     project: Path, tmp_path: Path
 ):
-    out = tmp_path / "tpl"
-    plan = _plan(project, out)
-    TemplateExtractionService().write(plan, out)
+    plan = _plan(project, tmp_path / "tpl")
+    TemplateExtractionService().write(plan)
+    out = tmp_path / "tpl" / "template"
 
     report = plan.report
     assert report.variables == {
@@ -130,9 +135,9 @@ def test_names_become_variables_and_everything_else_is_kept(
 
 
 def test_risky_and_internal_files_are_excluded(project: Path, tmp_path: Path):
-    out = tmp_path / "tpl"
-    plan = _plan(project, out)
-    TemplateExtractionService().write(plan, out)
+    plan = _plan(project, tmp_path / "tpl")
+    TemplateExtractionService().write(plan)
+    out = tmp_path / "tpl" / "template"
 
     excluded = dict(plan.report.excluded)
     assert excluded[".env"] == "file at risk of holding secrets"
@@ -324,3 +329,64 @@ def test_an_excluded_manifest_is_never_read(tmp_path: Path):
     plan = _plan(source, tmp_path / "tpl", ("pyproject.toml",))
 
     assert plan.report.copied == ["a.txt"]
+
+
+def test_the_trace_records_provenance_and_baseline(project: Path, tmp_path: Path):
+    destination = tmp_path / "tpl"
+    plan = _plan(project, destination, ("docs/",))
+    TemplateExtractionService().write(plan)
+
+    trace = read_trace(destination)
+
+    assert trace is not None
+    assert trace.origin == "../flash-excel"
+    assert trace.excludes == ["docs/"]
+    assert trace.variables["package_name"] == "flash_excel"
+    assert trace.contract["suffix"] == ".womm"
+    item = trace.files[PurePosixPath("src/flash_excel/core.py")]
+    assert item.target == PurePosixPath("src/[[@ package_name @]]/core.py.womm")
+    written = destination / "template" / item.target
+    assert item.sha256 == hashlib.sha256(written.read_bytes()).hexdigest()
+    assert PurePosixPath("docs/index.md") not in trace.files
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "{",
+        "[]",
+        '{"schema_version": 2}',
+        '{"schema_version": 1, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {"../x": {"target": "x", "sha256": "'
+        + "a" * 64
+        + '"}}}',
+        '{"schema_version": 1, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {"x": {"target": "C:/x", "sha256": "'
+        + "a" * 64
+        + '"}}}',
+        '{"schema_version": 1, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {"x": {"target": "x", "sha256": "nothex"}}}',
+        '{"schema_version": true, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {}}',
+        '{"schema_version": 1, "from": "C:/elsewhere", "excludes": [],'
+        ' "variables": {}, "contract": {}, "files": {}}',
+        '{"schema_version": 1, "from": "/elsewhere", "excludes": [],'
+        ' "variables": {}, "contract": {}, "files": {}}',
+        '{"schema_version": 1, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {"a": {"target": "X", "sha256": "HASH"},'
+        ' "b": {"target": "x", "sha256": "HASH"}}}',
+        '{"schema_version": 1, "from": "..", "excludes": [], "variables": {},'
+        ' "contract": {}, "files": {"a": {"target": "d", "sha256": "HASH"},'
+        ' "b": {"target": "d/e", "sha256": "HASH"}}}',
+    ],
+)
+def test_an_invalid_trace_is_an_error(tmp_path: Path, payload: str):
+    payload = payload.replace("HASH", "a" * 64)
+    (tmp_path / TRACE_FILENAME).write_text(payload, encoding="utf-8")
+
+    with pytest.raises(ProjectServiceError, match="trace is invalid"):
+        read_trace(tmp_path)
+
+
+def test_no_trace_is_none(tmp_path: Path):
+    assert read_trace(tmp_path) is None

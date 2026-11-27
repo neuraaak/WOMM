@@ -82,11 +82,11 @@ The template holds a copy of every file git tracks in the project, so its
 configuration, CI and scripts come along. WOMM reads the project's name in
 `pyproject.toml` (or `package.json`) and replaces it with questions:
 
-| In the project | In the template | Asked                                 |
-| :------------- | :-------------- | :------------------------------------ |
-| `Flash-Excel`  | `project_name`  | Yes                                   |
-| `flash-excel`  | `project_slug`  | No, derived from `project_name`       |
-| `flash_excel`  | `package_name`  | Yes, defaults to the derived name     |
+| In the project | In the template | Asked                             |
+| :------------- | :-------------- | :-------------------------------- |
+| `Flash-Excel`  | `project_name`  | Yes                               |
+| `flash-excel`  | `project_slug`  | No, derived from `project_name`   |
+| `flash_excel`  | `package_name`  | Yes, defaults to the derived name |
 
 What to expect:
 
@@ -130,6 +130,54 @@ official ones ship inside WOMM.
 An entry registered before WOMM 5.5.0 still points at your directory and is
 rendered from it directly: if it is a git repository, from its current commit
 plus uncommitted changes. `womm template update` turns it into a copy.
+
+WOMM keeps every copy it makes. Each `update` that changes something adds a
+version (`v1`, `v2`…) and renders from the latest; `show -v` tells which one
+is current. An update that changes nothing adds no version.
+
+### Update a template from its project
+
+A template built with `--from` remembers its project, in a
+`.womm-extract.json` file next to `copier.yml`. Keep that file: without it,
+the template can no longer be updated from the project.
+
+```bash
+womm template update ./.womm-tpl -I        # a template directory
+womm template update neuraaak/webview -I   # a registered template
+```
+
+WOMM extracts the project again and compares each file with the template:
+
+| The file changed…        | WOMM                                   |
+| :----------------------- | :------------------------------------- |
+| in the project only      | updates the template                   |
+| in the template only     | keeps your version                     |
+| on both sides            | asks: keep yours or take the project's |
+| is new in the project    | asks whether to add it                 |
+| is gone from the project | asks whether to delete it              |
+
+With `-I`, WOMM shows a summary, asks each question, then asks once more
+before writing anything. Without `-I`, it only applies the changes made in the
+project alone, and leaves the questions for a later `update -I`. A file you
+deleted from the template is never brought back without asking.
+
+When a file changed, WOMM raises the patch number of `_womm.version` in
+`copier.yml`, leaving the rest of the file as you wrote it. Then it refreshes
+the store copy of the registered template (`-I` asks first). A template
+directory registered under several identifiers is only updated in place:
+refresh each entry with `womm template update ID`.
+
+The update refuses, and writes nothing, when:
+
+- the template changed while you answered the questions;
+- the project's name or package changed: create a new template in an empty
+  folder and carry your questions over;
+- `_subdirectory`, `_templates_suffix` or `_envops` were edited in
+  `copier.yml`.
+
+`--from PROJECT` updates from another copy of the project. A name that is
+both a registered template and a folder means the template: write the folder
+as `./name`.
 
 ## ✅ Result
 
