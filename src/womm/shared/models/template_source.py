@@ -45,6 +45,11 @@ class TemplateEntry:
             "javascript"), empty when the manifest declares none.
         copied_from: Directory a user template was copied from, ``None`` for
             official templates and for entries registered by path.
+        storage: Stable directory of WOMM's copy, holding every version;
+            ``None`` when WOMM keeps no copy.
+        store_version: Version of the copy ``source`` renders from; 0 for a
+            copy made before versioning.
+        store_versions: Number of versions kept in ``storage``.
     """
 
     id: str
@@ -54,6 +59,9 @@ class TemplateEntry:
     description: str = ""
     setup_language: str = ""
     copied_from: Path | None = None
+    storage: Path | None = None
+    store_version: int = 0
+    store_versions: int = 0
 
     @property
     def qualified_id(self) -> str:

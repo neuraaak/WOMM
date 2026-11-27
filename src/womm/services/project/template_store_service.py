@@ -20,8 +20,9 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 import tempfile
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,7 @@ from typing import Any
 import yaml
 
 from womm.exceptions.project import ProjectServiceError
+from womm.services.project import template_store_versions as versions
 from womm.shared.models.template_source import TemplateEntry, TemplateOrigin
 from womm.shared.paths import (
     packaged_copier_official,
@@ -170,13 +172,16 @@ class TemplateStoreService:
             ProjectServiceError: If the identifier or source is refused, or the
                 copy cannot be written.
         """
-        entry = self.preview(identifier, source)
-        stored = self._store_copy(identifier, entry.source)
-        try:
-            self._save_user_entries([*self._load_user_entries(), stored])
-        except ProjectServiceError:
-            shutil.rmtree(stored.source, ignore_errors=True)
-            raise
+        with self._catalog_locked():
+            entry = self.preview(identifier, source)
+            with versions.locked(self._copy_root(identifier)):
+                stored = self._store_copy(identifier, entry.source)
+                try:
+                    self._save_user_entries([*self._load_user_entries(), stored])
+                except ProjectServiceError:
+                    if stored.storage is not None:
+                        versions.remove(stored.storage)
+                    raise
         return stored
 
     def remove(self, identifier: str) -> TemplateEntry:
@@ -193,16 +198,29 @@ class TemplateStoreService:
         Raises:
             ProjectServiceError: If unknown or not user-owned.
         """
-        entry = self.resolve(identifier)
-        if entry.origin is not TemplateOrigin.USER:
-            raise ProjectServiceError(
-                operation="remove_template",
-                reason=f"Official templates cannot be removed: {identifier}",
-            )
-        remaining = [item for item in self._load_user_entries() if item.id != entry.id]
-        self._save_user_entries(remaining)
-        if self._is_copy(entry.source):
-            shutil.rmtree(entry.source, ignore_errors=True)
+        with self._catalog_locked():
+            entry = self.resolve(identifier)
+            if entry.origin is not TemplateOrigin.USER:
+                raise ProjectServiceError(
+                    operation="remove_template",
+                    reason=f"Official templates cannot be removed: {identifier}",
+                )
+            # Locked first: a busy template stays registered and untouched.
+            with versions.locked(self._copy_root(entry.id)):
+                trash = None
+                if entry.storage is not None and self._is_copy(entry.storage):
+                    trash = versions.discard(entry.storage)
+                remaining = [
+                    item for item in self._load_user_entries() if item.id != entry.id
+                ]
+                try:
+                    self._save_user_entries(remaining)
+                except ProjectServiceError:
+                    if trash is not None and entry.storage is not None:
+                        (trash / entry.storage.name).rename(entry.storage)
+                        trash.rmdir()
+                    raise
+                versions.purge(trash)
         return entry
 
     def update(self, identifier: str, source: Path | None = None) -> TemplateEntry:
@@ -223,6 +241,10 @@ class TemplateStoreService:
             ProjectServiceError: If unknown, not user-owned, or the origin is
                 gone or invalid.
         """
+        with self._catalog_locked():
+            return self._update(identifier, source)
+
+    def _update(self, identifier: str, source: Path | None) -> TemplateEntry:
         entry = self.resolve(identifier)
         if entry.origin is not TemplateOrigin.USER:
             raise ProjectServiceError(
@@ -230,6 +252,13 @@ class TemplateStoreService:
                 reason=f"Official templates cannot be updated: {identifier}",
             )
         origin = source or entry.copied_from or entry.source
+        if self._is_copy(origin):
+            raise ProjectServiceError(
+                operation="update_template",
+                reason="A template cannot be updated from WOMM's own copy",
+                details=f"Pass its original directory: womm template update "
+                f"{entry.id} SOURCE",
+            )
         if source is None and not origin.is_dir():
             raise ProjectServiceError(
                 operation="update_template",
@@ -238,9 +267,12 @@ class TemplateStoreService:
                 f"{entry.id} SOURCE",
             )
         self._validate_source(origin, operation="update_template")
-        updated = self._store_copy(entry.id, origin.expanduser().resolve())
-        remaining = [item for item in self._load_user_entries() if item.id != entry.id]
-        self._save_user_entries([*remaining, updated])
+        with versions.locked(self._copy_root(entry.id)):
+            updated = self._store_copy(entry.id, origin.expanduser().resolve())
+            remaining = [
+                item for item in self._load_user_entries() if item.id != entry.id
+            ]
+            self._save_user_entries([*remaining, updated])
         return updated
 
     # ///////////////////////////////////////////////////////////
@@ -297,23 +329,7 @@ class TemplateStoreService:
         try:
             payload = json.loads(catalog.read_text(encoding="utf-8"))
             items = payload["templates"]
-            return [
-                replace(
-                    self._build_user_entry(item["id"], Path(item["source"]))
-                    if _find_manifest(Path(item["source"]))
-                    else TemplateEntry(
-                        id=item["id"],
-                        origin=TemplateOrigin.USER,
-                        source=Path(item["source"]),
-                        version=item.get("version", ""),
-                        description=item.get("description", ""),
-                    ),
-                    copied_from=Path(item["copied_from"])
-                    if item.get("copied_from")
-                    else None,
-                )
-                for item in items
-            ]
+            return [self._load_item(item) for item in items]
         except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
             raise ProjectServiceError(
                 operation="load_catalog",
@@ -329,7 +345,8 @@ class TemplateStoreService:
             "templates": [
                 {
                     "id": entry.id,
-                    "source": str(entry.source),
+                    # The stable directory, never the version it renders from.
+                    "source": str(entry.storage or entry.source),
                     "copied_from": str(entry.copied_from)
                     if entry.copied_from
                     else None,
@@ -409,35 +426,72 @@ class TemplateStoreService:
     # ///////////////////////////////////////////////////////////
 
     def _store_copy(self, identifier: str, origin: Path) -> TemplateEntry:
-        """Copy ``origin`` into WOMM, replacing any previous copy only once
-        the new one is complete.
+        """Publish ``origin`` as the next version of WOMM's copy.
+
+        Every version is kept; the copy renders from the current one. A copy
+        identical to the current version creates no version.
 
         Returns:
-            TemplateEntry: The entry rendered from the copy.
+            TemplateEntry: The entry rendered from the current version.
         """
-        target = user_templates_dir() / COPIES_DIRNAME / Path(*identifier.split("/"))
-        target.parent.mkdir(parents=True, exist_ok=True)
-        staging = Path(tempfile.mkdtemp(dir=target.parent, prefix=f".{target.name}-"))
-        fresh, previous = staging / "fresh", staging / "previous"
-        try:
-            # A template's history is not part of it; symlinks stay links.
-            shutil.copytree(
-                origin, fresh, symlinks=True, ignore=shutil.ignore_patterns(".git")
+        root = self._copy_root(identifier)
+        manifest = _find_manifest(origin)
+        metadata = self._read_metadata(manifest) if manifest else {}
+        publication = versions.publish(
+            root, origin, _has_manifest, str(metadata.get("version", ""))
+        )
+        entry = self._build_user_entry(identifier, publication.state.source)
+        return replace(
+            self._with_state(entry, root, publication.state), copied_from=origin
+        )
+
+    def is_stored(self, path: Path) -> bool:
+        """Tell whether ``path`` lies inside WOMM's copies of templates."""
+        return self._is_copy(path)
+
+    def _copy_root(self, identifier: str) -> Path:
+        """Stable directory of WOMM's copy of a template, holding its versions."""
+        return user_templates_dir() / COPIES_DIRNAME / Path(*identifier.split("/"))
+
+    @contextmanager
+    def _catalog_locked(self) -> Generator[None]:
+        """Serialize every read-modify-write of the catalog."""
+        with versions.locked(template_catalog_file()):
+            yield
+
+    def _load_item(self, item: dict[str, Any]) -> TemplateEntry:
+        """Build one catalog entry, from the current version of its copy."""
+        root = Path(item["source"])
+        state = None
+        if self._is_copy(root) and root.is_dir():
+            state = versions.read_state(root)
+        source = state.source if state is not None else root
+        entry = (
+            self._build_user_entry(item["id"], source)
+            if _find_manifest(source)
+            # The stored metadata only serves a missing source.
+            else TemplateEntry(
+                id=item["id"],
+                origin=TemplateOrigin.USER,
+                source=source,
+                version=item.get("version", ""),
+                description=item.get("description", ""),
             )
-            if target.exists():
-                target.rename(previous)
-            fresh.rename(target)
-        except OSError as exc:
-            if previous.exists() and not target.exists():
-                previous.rename(target)
-            raise ProjectServiceError(
-                operation="copy_template",
-                reason=f"Template could not be copied into WOMM: {origin}",
-                details=str(exc),
-            ) from exc
-        finally:
-            shutil.rmtree(staging, ignore_errors=True)
-        return replace(self._build_user_entry(identifier, target), copied_from=origin)
+        )
+        if state is not None:
+            entry = self._with_state(entry, root, state)
+        copied_from = item.get("copied_from")
+        return replace(entry, copied_from=Path(copied_from) if copied_from else None)
+
+    def _with_state(
+        self, entry: TemplateEntry, root: Path, state: versions.StoreState
+    ) -> TemplateEntry:
+        return replace(
+            entry,
+            storage=root.expanduser().resolve(),
+            store_version=state.current,
+            store_versions=state.count,
+        )
 
     def _is_copy(self, path: Path) -> bool:
         """Tell whether ``path`` is a copy WOMM owns, safe to delete."""
@@ -465,6 +519,10 @@ class TemplateStoreService:
 # ///////////////////////////////////////////////////////////////
 # FUNCTIONS
 # ///////////////////////////////////////////////////////////////
+
+
+def _has_manifest(root: Path) -> bool:
+    return _find_manifest(root) is not None
 
 
 def _find_manifest(root: Path) -> Path | None:
