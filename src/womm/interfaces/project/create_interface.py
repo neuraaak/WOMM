@@ -68,7 +68,8 @@ class ProjectCreateInterface:
         """Create a project from a catalog template.
 
         Args:
-            template: Qualified or short template identifier.
+            template: Qualified or short template identifier; ``ID@vN``
+                renders a kept version of a user template.
             destination: Directory to render into.
             answers: Pre-filled Copier answers, values as raw strings.
             force: Allow a non-empty destination.
@@ -80,7 +81,7 @@ class ProjectCreateInterface:
             ProjectCreationResult: Typed outcome, never raises.
         """
         try:
-            entry = self._store.resolve(template)
+            entry = self._store.resolve_version(template)
             warnings = self._creator.create(
                 ProjectCreationRequest(
                     template_source=entry.source,
@@ -104,7 +105,8 @@ class ProjectCreateInterface:
 
         return ProjectCreationResult(
             success=True,
-            message=f"Project created from {entry.qualified_id}",
+            message=f"Project created from {entry.qualified_id}"
+            + (f"@v{entry.store_version}" if "@" in template else ""),
             project_path=destination,
             project_name=destination.name,
             project_type=entry.qualified_id,

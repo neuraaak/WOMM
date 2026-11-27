@@ -34,6 +34,7 @@ from .templates.template_store_display import (
 from .templates.template_wizard import (
     ask_text,
     ask_update_question,
+    choose_stored_version,
     choose_template,
     confirm_action,
 )
@@ -46,6 +47,7 @@ __all__ = [
     "ProjectWizard",
     "ask_text",
     "ask_update_question",
+    "choose_stored_version",
     "choose_template",
     "confirm_action",
     "print_project_setup_result",

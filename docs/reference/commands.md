@@ -46,14 +46,15 @@ version transitions. See [Update an official project's tooling](../tasks/configu
 
 ## Templates
 
-| Command                                | What it does                                        |
-| :------------------------------------- | :-------------------------------------------------- |
-| `womm template list`                   | List every catalog entry, official first            |
-| `womm template show IDENTIFIER`        | Show one entry in detail                            |
-| `womm template add NAME SOURCE`        | Copy a local template and register it under `user/` |
-| `womm template init DESTINATION`       | Scaffold a new Copier template skeleton             |
-| `womm template update TARGET [SOURCE]` | Update a template from its project, then its copy   |
-| `womm template remove NAME`            | Unregister a user entry and delete its copy         |
+| Command                                 | What it does                                        |
+| :-------------------------------------- | :-------------------------------------------------- |
+| `womm template list`                    | List every catalog entry, official first            |
+| `womm template show IDENTIFIER`         | Show one entry in detail                            |
+| `womm template add NAME SOURCE`         | Copy a local template and register it under `user/` |
+| `womm template init DESTINATION`        | Scaffold a new Copier template skeleton             |
+| `womm template update TARGET [SOURCE]`  | Update a template from its project, then its copy   |
+| `womm template rollback NAME [VERSION]` | Render a user entry from a kept version             |
+| `womm template remove NAME`             | Unregister a user entry and delete its copy         |
 
 `womm template init` also takes `--data KEY=VALUE`, `--defaults` and `--force`.
 `--from PROJECT` builds the template from a git project's tracked files, and

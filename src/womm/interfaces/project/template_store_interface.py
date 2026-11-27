@@ -103,6 +103,28 @@ class TemplateStoreInterface:
             entry=entry,
         )
 
+    def rollback_template(
+        self, identifier: str, version: str | None = None
+    ) -> TemplateStoreResult:
+        """Render a user template from an older version of WOMM's copy.
+
+        Args:
+            identifier: Qualified or short identifier.
+            version: ``vN`` or ``N``; None for the version before the current.
+
+        Returns:
+            TemplateStoreResult: Typed outcome, never raises.
+        """
+        try:
+            entry = self._store.rollback(identifier, version)
+        except (ProjectServiceError, OSError) as exc:
+            return TemplateStoreResult(success=False, error=str(exc))
+        return TemplateStoreResult(
+            success=True,
+            message=f"{entry.qualified_id} now renders from v{entry.store_version}",
+            entry=entry,
+        )
+
     def preview_template(self, identifier: str, source: Path) -> TemplateStoreResult:
         """Show the entry ``add_template`` would register, without writing.
 

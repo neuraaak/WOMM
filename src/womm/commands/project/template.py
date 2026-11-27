@@ -145,6 +145,54 @@ def template_remove(identifier: str | None, interactive: bool, verbose: bool) ->
         raise SystemExit(1)
 
 
+@template_group.command("rollback", no_args_is_help=True)
+@click.help_option("-h", "--help")
+@click.argument("identifier", required=False)
+@click.argument("version", required=False)
+@click.option("-I", "--interactive", is_flag=True, help=INTERACTIVE_HELP)
+@click.option("-v", "--verbose", is_flag=True, help="Show detailed output.")
+def template_rollback(
+    identifier: str | None, version: str | None, interactive: bool, verbose: bool
+) -> None:
+    """Render a user template from an older version of WOMM's copy.
+
+    VERSION is vN or N; without it, the version before the current one. No
+    version is deleted: name a newer one to move forward again. Use ID@vN
+    with womm create to render a version once, without changing the current.
+    """
+    from ...interfaces.project.template_store_interface import TemplateStoreInterface
+    from ...ui.common import ezprinter
+    from ...ui.project import (
+        choose_stored_version,
+        confirm_action,
+        render_template_result,
+    )
+
+    store = TemplateStoreInterface()
+    if interactive:
+        identifier = identifier or _pick_user_template(store, "Template to roll back")
+        current = store.show_template(identifier)
+        if not current.success or current.entry is None:
+            render_template_result(current)
+            raise SystemExit(1)
+        if version is None:
+            if len(current.entry.store_history) < 2:
+                ezprinter.error("This template has a single version")
+                raise SystemExit(1)
+            version = choose_stored_version(current.entry, "Version to render from")
+        if not confirm_action(
+            f"Render {current.entry.qualified_id} from {version} from now on?"
+        ):
+            ezprinter.info("Cancelled, nothing was changed")
+            return
+    identifier = _require(identifier, "IDENTIFIER")
+
+    result = store.rollback_template(identifier, version)
+    render_template_result(result, verbose=verbose)
+    if not result.success:
+        raise SystemExit(1)
+
+
 @template_group.command("update", no_args_is_help=True)
 @click.help_option("-h", "--help")
 @click.argument("target", required=False)

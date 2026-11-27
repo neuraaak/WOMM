@@ -63,6 +63,12 @@ def _entry_panel(entry: TemplateEntry, *, verbose: bool) -> Panel:
                 f"[b]Stored version:[/b] v{entry.store_version}"
                 f" ({entry.store_versions} kept)"
             )
+            for item in entry.store_history:
+                mark = "*" if item.number == entry.store_version else " "
+                details = " ".join(
+                    part for part in (item.template_version, item.created) if part
+                )
+                lines.append(f"  {mark} v{item.number}  {details}".rstrip())
 
     return Panel(
         "\n".join(lines),

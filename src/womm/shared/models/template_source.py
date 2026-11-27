@@ -32,6 +32,21 @@ class TemplateOrigin(StrEnum):
 
 
 @dataclass(frozen=True)
+class StoredVersion:
+    """One version of WOMM's copy of a user template.
+
+    Attributes:
+        number: Version number, the N of the ``vN`` directory.
+        created: When WOMM made it, ISO 8601 in UTC.
+        template_version: ``_womm.version`` the template declared then.
+    """
+
+    number: int
+    created: str = ""
+    template_version: str = ""
+
+
+@dataclass(frozen=True)
 class TemplateEntry:
     """A Copier template known to WOMM.
 
@@ -50,6 +65,7 @@ class TemplateEntry:
         store_version: Version of the copy ``source`` renders from; 0 for a
             copy made before versioning.
         store_versions: Number of versions kept in ``storage``.
+        store_history: Every version kept, oldest first.
     """
 
     id: str
@@ -62,6 +78,7 @@ class TemplateEntry:
     storage: Path | None = None
     store_version: int = 0
     store_versions: int = 0
+    store_history: tuple[StoredVersion, ...] = ()
 
     @property
     def qualified_id(self) -> str:
@@ -73,4 +90,4 @@ class TemplateEntry:
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
-__all__ = ["TemplateEntry", "TemplateOrigin"]
+__all__ = ["StoredVersion", "TemplateEntry", "TemplateOrigin"]

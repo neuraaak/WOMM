@@ -20,7 +20,8 @@ by commit, is in the [changelog](changelog.md).
   `-I`. `_womm.version` is raised by one patch when a file changed. TARGET can
   be a template directory as well as a registered template.
 - WOMM keeps every version of a registered template's copy (`v1`, `v2`…)
-  and renders from the latest.
+  and renders from the latest. `womm template rollback NAME [VERSION]` renders
+  from an older one, and `womm create NAME@vN` renders a version once.
 
 ## 5.5.0 — 2026-11-26
 

@@ -136,6 +136,66 @@ class TemplateStoreService:
             reason=f"Unknown template: {identifier}",
         )
 
+    def resolve_version(self, identifier: str) -> TemplateEntry:
+        """Resolve ``name`` or ``name@vN``: a template, at one kept version.
+
+        Without ``@vN`` this is :meth:`resolve`. With it, the entry renders
+        from that version of WOMM's copy, the current one being unchanged.
+
+        Raises:
+            ProjectServiceError: If unknown, ambiguous, or not such a version.
+        """
+        name, sep, version = identifier.rpartition("@")
+        if not sep:
+            return self.resolve(identifier)
+        entry = self.resolve(name)
+        if entry.storage is None:
+            raise ProjectServiceError(
+                operation="resolve_template",
+                reason=f"Only user templates have versions: {name}",
+            )
+        number = _version_number(version)
+        source = versions.version_dir(entry.storage, number, _has_manifest)
+        return replace(
+            self._build_user_entry(entry.id, source),
+            storage=entry.storage,
+            store_version=number,
+            store_versions=entry.store_versions,
+            store_history=entry.store_history,
+            copied_from=entry.copied_from,
+        )
+
+    def rollback(self, identifier: str, version: str | None = None) -> TemplateEntry:
+        """Render a user template from an older version of WOMM's copy.
+
+        No version is deleted: a later ``update`` adds a new one, and
+        ``rollback`` can move forward again by naming a version.
+
+        Args:
+            identifier: Qualified or short identifier.
+            version: ``vN`` or ``N``; None for the version before the current.
+
+        Returns:
+            TemplateEntry: The entry, rendered from the selected version.
+
+        Raises:
+            ProjectServiceError: If unknown, not user-owned, or no such version.
+        """
+        entry = self.resolve(identifier)
+        if entry.origin is not TemplateOrigin.USER or entry.storage is None:
+            raise ProjectServiceError(
+                operation="rollback_template",
+                reason=f"Only user templates have versions: {identifier}",
+            )
+        number = None if version is None else _version_number(version)
+        with versions.locked(entry.storage):
+            state = versions.select(entry.storage, number, _has_manifest)
+        built = self._build_user_entry(entry.id, state.source)
+        return replace(
+            self._with_state(built, entry.storage, state),
+            copied_from=entry.copied_from,
+        )
+
     def preview(self, identifier: str, source: Path) -> TemplateEntry:
         """Build the entry ``add`` would register, without registering it.
 
@@ -491,6 +551,7 @@ class TemplateStoreService:
             storage=root.expanduser().resolve(),
             store_version=state.current,
             store_versions=state.count,
+            store_history=state.history,
         )
 
     def _is_copy(self, path: Path) -> bool:
@@ -519,6 +580,17 @@ class TemplateStoreService:
 # ///////////////////////////////////////////////////////////////
 # FUNCTIONS
 # ///////////////////////////////////////////////////////////////
+
+
+def _version_number(text: str) -> int:
+    match = re.fullmatch(r"v?([1-9][0-9]*)", text.strip())
+    if match is None:
+        raise ProjectServiceError(
+            operation="resolve_template",
+            reason=f"Not a version: {text!r}",
+            details="Write it vN or N, for instance v2.",
+        )
+    return int(match.group(1))
 
 
 def _has_manifest(root: Path) -> bool:

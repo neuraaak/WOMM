@@ -81,6 +81,28 @@ def ask_update_question(change: FileChange) -> bool:
     return answer == take
 
 
+def choose_stored_version(entry: TemplateEntry, message: str) -> str:
+    """Let the user pick one kept version of a stored template.
+
+    Args:
+        entry: User template with its version history.
+        message: Question shown above the list.
+
+    Returns:
+        str: The chosen version, written ``vN``.
+    """
+    labels = {}
+    for item in reversed(entry.store_history):
+        mark = " (current)" if item.number == entry.store_version else ""
+        details = ", ".join(
+            part for part in (item.template_version, item.created) if part
+        )
+        labels[f"v{item.number}{mark}" + (f" - {details}" if details else "")] = (
+            f"v{item.number}"
+        )
+    return labels[prompt_choice(message, list(labels))]
+
+
 def confirm_action(message: str, *, default: bool = True) -> bool:
     """Ask a yes/no question.
 
@@ -98,4 +120,10 @@ def confirm_action(message: str, *, default: bool = True) -> bool:
 # PUBLIC API
 # ///////////////////////////////////////////////////////////////
 
-__all__ = ["ask_text", "ask_update_question", "choose_template", "confirm_action"]
+__all__ = [
+    "ask_text",
+    "ask_update_question",
+    "choose_stored_version",
+    "choose_template",
+    "confirm_action",
+]

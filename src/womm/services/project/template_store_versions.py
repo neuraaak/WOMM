@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from womm.exceptions.project import ProjectServiceError
+from womm.shared.models.template_source import StoredVersion
 
 # ///////////////////////////////////////////////////////////////
 # CONSTANTS
@@ -60,6 +61,7 @@ class StoreState:
     source: Path
     current: int = 0  # 0: flat copy made before versioning
     count: int = 0
+    history: tuple[StoredVersion, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -90,11 +92,92 @@ def read_state(root: Path) -> StoreState:
     manifest = _read_manifest(root)
     if manifest is None:
         return StoreState(source=root)
+    return _state(root, manifest)
+
+
+def select(
+    root: Path, number: int | None, has_manifest: Callable[[Path], bool]
+) -> StoreState:
+    """Make version ``number`` the one ``root`` renders from; the caller holds its lock.
+
+    Args:
+        root: Stable directory of a stored template.
+        number: Version to render from; None for the one before the current.
+        has_manifest: Callable telling whether a directory holds a Copier
+            manifest.
+
+    Returns:
+        StoreState: The state after the change.
+
+    Raises:
+        ProjectServiceError: If there is no such version, or no history yet.
+    """
+    manifest = _read_manifest(root)
+    if manifest is None:
+        raise ProjectServiceError(
+            operation="rollback_template",
+            reason=f"This template has a single copy, nothing to go back to: {root.name}",
+        )
+    numbers = sorted(v["number"] for v in manifest["versions"])
+    if number is None:
+        older = [n for n in numbers if n < manifest["current"]]
+        if not older:
+            raise ProjectServiceError(
+                operation="rollback_template",
+                reason=f"v{manifest['current']} is the oldest version kept",
+            )
+        number = older[-1]
+    version_dir(root, number, has_manifest)
+    if number != manifest["current"]:
+        manifest["current"] = number
+        try:
+            _write_manifest(root, manifest)
+        except OSError as exc:
+            raise ProjectServiceError(
+                operation="rollback_template",
+                reason=f"Stored template could not be rolled back: {root}",
+                details=str(exc),
+            ) from exc
+    return _state(root, manifest)
+
+
+def version_dir(root: Path, number: int, has_manifest: Callable[[Path], bool]) -> Path:
+    """Directory of version ``number`` of the template stored in ``root``.
+
+    Raises:
+        ProjectServiceError: If that version is not kept, or is not usable.
+    """
+    manifest = _read_manifest(root)
+    numbers = sorted(v["number"] for v in manifest["versions"]) if manifest else []
+    if number not in numbers:
+        kept = ", ".join(f"v{n}" for n in numbers) or "none"
+        raise ProjectServiceError(
+            operation="resolve_template",
+            reason=f"No version v{number} of {root.name}",
+            details=f"Versions kept: {kept}.",
+        )
+    path = root / f"v{number}"
+    if path.is_symlink() or path.is_junction() or not has_manifest(path):
+        raise _invalid(root, f"v{number} is not a usable template")
+    return path
+
+
+def _state(root: Path, manifest: dict[str, Any]) -> StoreState:
     current = manifest["current"]
     source = root / f"v{current}"
     if source.is_symlink() or source.is_junction():
         raise _invalid(root, f"v{current} is a link")
-    return StoreState(source=source, current=current, count=len(manifest["versions"]))
+    history = tuple(
+        StoredVersion(
+            number=v["number"],
+            created=str(v.get("created") or ""),
+            template_version=str(v.get("template_version") or ""),
+        )
+        for v in sorted(manifest["versions"], key=lambda v: v["number"])
+    )
+    return StoreState(
+        source=source, current=current, count=len(history), history=history
+    )
 
 
 def publish(
@@ -137,6 +220,18 @@ def publish(
         if number and current.is_dir() and tree_hash(current) == digest:
             return Publication(read_state(root), created=False)
         versions = manifest["versions"]
+        # After a rollback, the origin may match a newer kept version: render
+        # from it again rather than keeping a duplicate.
+        for kept in sorted(versions, key=lambda v: -v["number"]):
+            path = root / f"v{kept['number']}"
+            if (
+                kept["tree_hash"] == digest
+                and path.is_dir()
+                and tree_hash(path) == digest
+            ):
+                manifest["current"] = kept["number"]
+                _write_manifest(root, manifest)
+                return Publication(read_state(root), created=False)
         number = _next_number(root, versions)
         root.mkdir(exist_ok=True)
         fresh.rename(root / f"v{number}")
@@ -402,5 +497,7 @@ __all__ = [
     "purge",
     "read_state",
     "remove",
+    "select",
+    "version_dir",
     "tree_hash",
 ]

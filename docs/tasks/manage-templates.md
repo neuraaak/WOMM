@@ -132,8 +132,18 @@ rendered from it directly: if it is a git repository, from its current commit
 plus uncommitted changes. `womm template update` turns it into a copy.
 
 WOMM keeps every copy it makes. Each `update` that changes something adds a
-version (`v1`, `v2`…) and renders from the latest; `show -v` tells which one
-is current. An update that changes nothing adds no version.
+version (`v1`, `v2`…) and renders from the latest; `show -v` lists them and
+marks the current one. An update that changes nothing adds no version.
+
+```bash
+womm template rollback mytpl           # render from the version before
+womm template rollback mytpl v1        # render from v1 from now on
+womm create user/mytpl@v1 ./my-app     # render v1 once, current unchanged
+```
+
+`rollback` deletes nothing: name a newer version to move forward again. The
+next `update` renders from what it copies, and reuses a kept version when the
+copy is identical to it.
 
 ### Update a template from its project
 
